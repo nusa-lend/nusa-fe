@@ -11,11 +11,8 @@ const config: Config = {
       colors: {
         // ─── Brand / Primary ───────────────────────────────
         primary: {
-          DEFAULT: "#6BCBFF",
-          light: "#E9F7FF",
-          lighter: "#F0FAFF",
-          dark: "#5098BF",
-          darker: "#305B73",
+          DEFAULT: "#60B7E6",
+          blue: "#60B7E6",
         },
 
         // ─── Secondary / Teal ─────────────────────────────

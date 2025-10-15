@@ -1,8 +1,8 @@
 import { createConfig, http } from "wagmi";
-import { farcasterFrame } from "@farcaster/miniapp-wagmi-connector";
 import { APP_NAME } from "@/constants/app";
 import { base } from 'wagmi/chains';
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
+import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector'
 import {
   rainbowWallet,
   walletConnectWallet,
@@ -27,7 +27,7 @@ export const config = createConfig({
     [base.id]: http(),
   },
   connectors: [
-    farcasterFrame(),
+    miniAppConnector(),
     ...connectors,
   ],
 });

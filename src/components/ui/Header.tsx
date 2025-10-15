@@ -1,12 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ExternalLink } from "lucide-react";
 import BottomSheet from "./BottomSheet";
+import { useHybridDetection } from "@/hooks/useHybridDetection";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -17,9 +19,11 @@ const Header = () => {
   const logoRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
   const lastScrollYRef = useRef(0);
   const isHiddenRef = useRef(false);
   const headerTween = useRef<gsap.core.Tween | null>(null);
+  const { actuallyInMiniApp } = useHybridDetection();
   
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const burgerButtonRef = useRef<HTMLButtonElement>(null);
@@ -175,7 +179,9 @@ const Header = () => {
   };
 
   const handleLaunchApp = () => {
-    window.open("https://app.nusa.finance", "_blank");
+    console.log(actuallyInMiniApp, 'miniapp debug')
+    const dashboardRoute = actuallyInMiniApp ? "/miniapp/dashboard" : "/dashboard";
+    router.push(dashboardRoute);
   };
 
   const toggleBottomSheet = () => {

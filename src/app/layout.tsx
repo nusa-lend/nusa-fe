@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { APP_NAME, APP_DESCRIPTION } from "@/constants/app";
+import Providers from "@/components/providers/Providers";
 import "./globals.css";
 
 const sfUIText = localFont({
@@ -89,7 +90,9 @@ export default function RootLayout({
   return (
     <html lang="en" dir="" className={sfUIText.className}>
       <body>
+        <Providers>
           {children}
+        </Providers>
       </body>
     </html>
   );
