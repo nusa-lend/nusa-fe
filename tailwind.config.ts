@@ -73,6 +73,10 @@ const config: Config = {
           charcoal: "#1E293B",
           light: "#FAFBFB",
           muted: "#707071",
+          tab: "#407A99",
+        },
+        tab: {
+          background: "##F7F7F7",
         },
         white: "#FFFFFF",
         black: "#000000",

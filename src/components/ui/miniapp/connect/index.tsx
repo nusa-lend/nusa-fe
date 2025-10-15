@@ -12,6 +12,7 @@ export default function ConnectPage() {
   const { isConnected } = useAccount();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const logoGroupRef = useRef<HTMLDivElement>(null);
   const loginContentRef = useRef<HTMLDivElement>(null);
@@ -32,11 +33,17 @@ export default function ConnectPage() {
   };
 
   useEffect(() => {
-    if (isConnected && !isTransitioning) {
+    setShowOnboarding(false);
+    setIsTransitioning(false);
+    setHasInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (isConnected && !isTransitioning && hasInitialized) {
       const timer = setTimeout(() => handleLoginComplete(), 1000);
       return () => clearTimeout(timer);
     }
-  }, [isConnected, isTransitioning]);
+  }, [isConnected, isTransitioning, hasInitialized]);
 
   useGSAP(() => {
     if (!isTransitioning) return;

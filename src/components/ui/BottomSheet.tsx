@@ -11,6 +11,7 @@ interface BottomSheetProps {
   children: ReactNode;
   title?: string;
   maxHeight?: string;
+  height?: string;
   showHandle?: boolean;
   showCloseButton?: boolean;
   overlayClassName?: string;
@@ -24,6 +25,7 @@ const BottomSheet = ({
   children,
   title,
   maxHeight = "90vh",
+  height,
   showHandle = true,
   showCloseButton = true,
   overlayClassName = "",
@@ -138,14 +140,14 @@ const BottomSheet = ({
       
       <div
         ref={overlayRef}
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] opacity-0 pointer-events-none ${overlayClassName}`}
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] opacity-0 pointer-events-auto ${overlayClassName}`}
         onClick={handleOverlayClick}
       />
       <div
         ref={bottomSheetRef}
-        className={`fixed top-0 left-0 right-0 bg-white shadow-2xl z-[70] transform translate-y-full ${sheetClassName}`}
+        className={`fixed bottom-0 left-0 right-0 bg-white shadow-2xl z-[90] transform translate-y-full ${sheetClassName}`}
         style={{ 
-          height: maxHeight,
+          height: height || maxHeight,
           paddingTop: 'env(safe-area-inset-top)',
           paddingBottom: 'env(safe-area-inset-bottom)'
         }}

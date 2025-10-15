@@ -112,7 +112,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
       });
 
       gsap.to(getStartedButtonRef.current, {
-        boxShadow: "0 0 20px rgba(34, 197, 94, 0.5)",
+        boxShadow: "0 0 20px rgba(96, 183, 230, 0.6)",
         duration: 0.3,
         ease: "power2.out",
         yoyo: true,
@@ -418,7 +418,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
             <button 
               ref={getStartedButtonRef}
               onClick={handleGetStartedClick}
-              className="bg-primary text-white font-semibold text-sm py-3 px-11 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="bg-primary text-white font-semibold text-sm py-3 px-11 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               Get Started
             </button>
