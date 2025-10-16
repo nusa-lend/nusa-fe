@@ -1,7 +1,11 @@
 import ItemCard from '../ItemCard';
 import { lendingItems } from '@/constants/placeholder';
 
-export default function Lending() {
+interface LendingProps {
+  onItemClick: (item: any) => void;
+}
+
+export default function Lending({ onItemClick }: LendingProps) {
   return (
     <div className="w-full px-4">
       <span className="text-md font-semibold">Lend Local Stable Coin</span>
@@ -44,18 +48,22 @@ export default function Lending() {
            </div>
          </div>
          
-         {/* Lending Items */}
          <div className="space-y-2">
            {lendingItems.map((item) => (
-             <ItemCard
+             <div
                key={item.id}
-               imageSrc={item.imageSrc}
-               imageAlt={item.imageAlt}
-               title={item.title}
-               subtitle={item.subtitle}
-               apy={item.apy}
-               apyColor={item.apyColor}
-             />
+               onClick={() => onItemClick(item)}
+               className="cursor-pointer"
+             >
+               <ItemCard
+                 imageSrc={item.imageSrc}
+                 imageAlt={item.imageAlt}
+                 title={item.title}
+                 subtitle={item.subtitle}
+                 apy={item.apy}
+                 apyColor={item.apyColor}
+               />
+             </div>
            ))}
          </div>
        </div>

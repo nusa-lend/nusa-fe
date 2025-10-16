@@ -10,10 +10,13 @@ import { useRouter } from "next/navigation";
 import Lending from "./lending/Lending";
 import Borrow from "./borrow/Borrow";
 import Portfolio from "./portfolio/Portfolio";
+import LendingForm from "./lending/LendingForm";
 
 export default function DashboardPage() {
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"lending" | "borrow" | "portfolio">("lending");
+  const [isLendingFormOpen, setIsLendingFormOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
   const { disconnect } = useDisconnect();
   const router = useRouter();
 
@@ -35,16 +38,32 @@ export default function DashboardPage() {
     setActiveTab(tab);
   };
 
+  const handleItemClick = (item: any) => {
+    setSelectedItem(item);
+    setIsLendingFormOpen(true);
+  };
+
+  const handleLend = (chain: any, amount: string) => {
+    console.log('Lending amount:', amount, 'on chain:', chain, 'for item:', selectedItem);
+    setIsLendingFormOpen(false);
+    setSelectedItem(null);
+  };
+
+  const handleCloseLendingForm = () => {
+    setIsLendingFormOpen(false);
+    setSelectedItem(null);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "lending":
-        return <Lending />;
+        return <Lending onItemClick={handleItemClick} />;
       case "borrow":
         return <Borrow />;
       case "portfolio":
         return <Portfolio />;
       default:
-        return <Lending />;
+        return <Lending onItemClick={handleItemClick} />;
     }
   };
 
@@ -61,8 +80,7 @@ export default function DashboardPage() {
         <Header onProfileClick={() => setIsProfileSheetOpen(true)} />
       </div>
       
-      {/* Main Content Area */}
-      <div className="flex-1 relative z-10 pb-20">
+      <div className="flex-1 relative z-50 pb-20">
         {renderTabContent()}
       </div>
       
@@ -75,7 +93,7 @@ export default function DashboardPage() {
         isOpen={isProfileSheetOpen}
         onClose={() => setIsProfileSheetOpen(false)}
         height="150px"
-        showHandle={true}
+        showHandle={false}
         showCloseButton={true}
         sheetClassName="rounded-t-3xl"
         contentClassName="px-0 py-0"
@@ -90,6 +108,12 @@ export default function DashboardPage() {
           </button>
         </div>
       </BottomSheet>
+
+      <LendingForm
+        isOpen={isLendingFormOpen}
+        onClose={handleCloseLendingForm}
+        onLend={handleLend}
+      />
     </div>
   );
 }
