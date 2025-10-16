@@ -108,7 +108,7 @@ export default function ConnectPage() {
       
       <div 
         ref={background2Ref}
-        className="absolute inset-0 bg-no-repeat bg-[position:center_-200px] bg-[length:100%_auto] opacity-0"
+        className="absolute inset-0 bg-no-repeat bg-[position:center_-110px] bg-[length:100%_auto] opacity-0"
         style={{
           backgroundImage: `url('/background/bg_onboarding.png')`,
         }}
@@ -118,7 +118,7 @@ export default function ConnectPage() {
         <Logo ref={logoGroupRef} />
       </div>
 
-      <div className="relative px-6 pb-12 flex flex-col items-center justify-end z-10">
+      <div className="relative pb-6 flex flex-col items-center justify-end z-10">
         {!showOnboarding ? (
           <LoginForm
             ref={loginContentRef}

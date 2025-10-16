@@ -6,8 +6,12 @@ import { useGSAP } from "@gsap/react";
 
 type TabType = "lending" | "borrow" | "portfolio";
 
-export default function BottomTabs() {
-  const [activeTab, setActiveTab] = useState<TabType>("lending");
+interface BottomTabsProps {
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
+}
+
+export default function BottomTabs({ activeTab, onTabChange }: BottomTabsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const slidingBgRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -21,7 +25,7 @@ export default function BottomTabs() {
   const handleTabClick = (tabId: TabType) => {
     if (activeTab === tabId) return;
     
-    setActiveTab(tabId);
+    onTabChange(tabId);
     
     const activeIndex = tabs.findIndex(tab => tab.id === tabId);
     const activeButton = tabRefs.current[activeIndex];

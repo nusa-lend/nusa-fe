@@ -8,7 +8,7 @@ interface HeaderProps {
 
 export default function Header({ onProfileClick }: HeaderProps) {
   return (
-    <div className="w-full px-6 py-4 flex items-center justify-between bg-transparent">
+    <div className="w-full px-4 py-4 flex items-center justify-between bg-transparent">
       <div className="flex items-center">
         <Image
           src="/logo/logo-dark.png"

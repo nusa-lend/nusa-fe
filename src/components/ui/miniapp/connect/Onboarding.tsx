@@ -24,7 +24,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
     const selectorContainerRef = useRef<HTMLDivElement>(null);
     const bottomContentRef = useRef<HTMLDivElement>(null);
     const getStartedButtonRef = useRef<HTMLButtonElement>(null);
-
+    const backgroundCircleRef = useRef<HTMLDivElement>(null);
     const options = [
       { id: 0, label: "Local Stablecoin", content: "stablecoin", number: "14" },
       { id: 1, label: "RWA", content: "rwa", number: "12" },
@@ -43,32 +43,32 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
     const findCenteredOption = () => {
       const container = selectorRef.current;
       if (!container) return;
-      
+
       const containerRect = container.getBoundingClientRect();
       const containerCenter = containerRect.left + containerRect.width / 2;
-      
+
       const optionElements = Array.from(container.children) as HTMLElement[];
       let closestOption = 0;
       let minDistance = Infinity;
-      
+
       optionElements.forEach((element, index) => {
         const elementRect = element.getBoundingClientRect();
         const elementCenter = elementRect.left + elementRect.width / 2;
         const distance = Math.abs(elementCenter - containerCenter);
-        
+
         if (distance < minDistance) {
           minDistance = distance;
           closestOption = index;
         }
       });
-      
+
       return closestOption;
     };
 
     const handleTouchEnd = () => {
       if (!isDragging) return;
       setIsDragging(false);
-      
+
       setTimeout(() => {
         const centeredOption = findCenteredOption();
         setSelectedOption(centeredOption || 0);
@@ -76,12 +76,11 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
     };
 
     const handleScroll = () => {
-      
+
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
-      
-      
+
       scrollTimeoutRef.current = setTimeout(() => {
         const centeredOption = findCenteredOption();
         if (centeredOption !== selectedOption) {
@@ -94,22 +93,22 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
       if (!getStartedButtonRef.current) return;
 
       const tl = gsap.timeline();
-      
+
       tl.to(getStartedButtonRef.current, {
         scale: 0.95,
         duration: 0.1,
         ease: "power2.out"
       })
-      .to(getStartedButtonRef.current, {
-        scale: 1.05,
-        duration: 0.15,
-        ease: "back.out(1.7)"
-      })
-      .to(getStartedButtonRef.current, {
-        scale: 1,
-        duration: 0.2,
-        ease: "power2.out"
-      });
+        .to(getStartedButtonRef.current, {
+          scale: 1.05,
+          duration: 0.15,
+          ease: "back.out(1.7)"
+        })
+        .to(getStartedButtonRef.current, {
+          scale: 1,
+          duration: 0.2,
+          ease: "power2.out"
+        });
 
       gsap.to(getStartedButtonRef.current, {
         boxShadow: "0 0 20px rgba(96, 183, 230, 0.6)",
@@ -130,12 +129,12 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
       const container = selectorRef.current;
       const options = Array.from(container.children) as HTMLElement[];
       const selectedElement = options[selectedOption];
-      
+
       if (selectedElement) {
         const containerWidth = container.offsetWidth;
         const elementWidth = selectedElement.offsetWidth;
         const elementLeft = selectedElement.offsetLeft;
-        
+
         const scrollTo = elementLeft - (containerWidth / 2) + (elementWidth / 2);
 
         gsap.killTweensOf(container);
@@ -147,7 +146,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
       }
     }, [selectedOption, isDragging]);
 
-    
+
     useEffect(() => {
       return () => {
         if (scrollTimeoutRef.current) {
@@ -171,26 +170,26 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
         duration: 0.6,
         ease: "power2.out"
       })
-      .to(selectorContainerRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        ease: "power2.out"
-      }, "-=0.2")
-      .to(bottomContentRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        ease: "power2.out"
-      }, "-=0.1");
+        .to(selectorContainerRef.current, {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          ease: "power2.out"
+        }, "-=0.2")
+        .to(bottomContentRef.current, {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          ease: "power2.out"
+        }, "-=0.1");
 
-    }, []);
+    }, [backgroundCircleRef.current]);
 
     const renderContent = () => {
       switch (selectedOption) {
         case 0:
           return (
-            <div className="flex flex-col items-center space-y-6">
+            <div className="flex flex-col items-center space-y-4">
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -205,7 +204,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
                   className="object-contain"
                 />
               </div>
-              
+
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -220,7 +219,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
                   className="object-contain"
                 />
               </div>
-              
+
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -239,7 +238,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
           );
         case 1:
           return (
-            <div className="flex flex-col items-center space-y-6">
+            <div className="flex flex-col items-center space-y-4">
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -254,7 +253,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
                   className="object-contain"
                 />
               </div>
-              
+
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -269,7 +268,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
                   className="object-contain"
                 />
               </div>
-              
+
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -288,7 +287,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
           );
         case 2:
           return (
-            <div className="flex flex-col items-center space-y-6">
+            <div className="flex flex-col items-center space-y-4">
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -303,7 +302,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
                   className="object-contain"
                 />
               </div>
-              
+
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -322,7 +321,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
           );
         case 3:
           return (
-            <div className="flex flex-col items-center space-y-6">
+            <div className="flex flex-col items-center space-y-4">
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -337,7 +336,7 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
                   className="object-contain"
                 />
               </div>
-              
+
               <div className="flex justify-center" ref={(el) => {
                 if (el) {
                   gsap.set(el, { opacity: 0, y: 20 });
@@ -362,14 +361,24 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
     return (
       <div
         ref={ref}
-        className={`w-full flex flex-col items-center justify-center ${className}`}
+        className={`relative w-full flex flex-col items-center justify-center ${className}`}
       >
-        <div ref={contentRef} className="w-full mb-8">
+        <div ref={backgroundCircleRef} className="absolute inset-0 h-screen flex justify-center z-10 pointer-events-none -translate-y-8">
+          <Image
+            src="/background/bg_circle_onboarding.png"
+            alt="Background curve"
+            width={800}
+            height={400}
+            className="h-full w-auto object-cover"
+          />
+        </div>
+
+        <div ref={contentRef} className="w-full mb-8 z-10 h-32 min-h-32 flex items-center justify-center">
           {renderContent()}
         </div>
 
-        <div ref={selectorContainerRef} className="w-full">
-          <div 
+        <div ref={selectorContainerRef} className="w-full z-10">
+          <div
             ref={selectorRef}
             className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory gap-8 pl-[50%] pr-[50%]"
             onTouchStart={handleTouchStart}
@@ -381,16 +390,14 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
             {options.map((option, index) => (
               <div
                 key={option.id}
-                className={`flex-shrink-0 cursor-pointer font-semibold text-lg transition-all duration-300 snap-center flex flex-col items-center ${
-                  selectedOption === index
-                    ? 'text-text'
-                    : 'text-text/40'
-                }`}
+                className={`flex-shrink-0 cursor-pointer font-semibold text-lg transition-all duration-300 snap-center flex flex-col items-center ${selectedOption === index ? 'text-text' : 'text-text/40'
+                  }`}
                 onClick={() => setSelectedOption(index)}
               >
-                <span className={`text-text font-semibold text-lg ${
-                  selectedOption === index ? 'opacity-100' : 'opacity-0'
-                }`}>
+                <span
+                  className={`text-text font-semibold text-lg ${selectedOption === index ? 'opacity-100' : 'opacity-0'
+                    }`}
+                >
                   {option.number}
                 </span>
                 <span>{option.label}</span>
@@ -399,8 +406,8 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
           </div>
         </div>
 
-        <div ref={bottomContentRef} className="flex flex-col items-center">
-          <div className="flex justify-center mt-1">
+        <div ref={bottomContentRef} className="flex flex-col items-center z-10">
+          <div className="flex justify-center">
             <Image
               src="/assets/onboarding/arrow.png"
               alt="Arrow pointing up"
@@ -410,12 +417,14 @@ const Onboarding = forwardRef<HTMLDivElement, OnboardingProps>(
             />
           </div>
 
-          <div className="w-full flex flex-col items-center mt-8">
+          <div className="w-full flex flex-col items-center mt-4">
             <span className="text-center text-text/40 text-xs leading-relaxed">
               Effortless stablecoin lending
             </span>
-            <span className="text-center text-text/40 text-xs leading-relaxed mb-3">and borrowing for everyone</span>
-            <button 
+            <span className="text-center text-text/40 text-xs leading-relaxed mb-3">
+              and borrowing for everyone
+            </span>
+            <button
               ref={getStartedButtonRef}
               onClick={handleGetStartedClick}
               className="bg-primary text-white font-semibold text-sm py-3 px-11 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50"

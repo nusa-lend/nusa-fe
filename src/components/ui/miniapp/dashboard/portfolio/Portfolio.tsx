@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import PortfolioCards from './portfolio/PortfolioCards';
-import TabNavigation from './portfolio/TabNavigation';
+import PortfolioCards from './PortfolioCards';
+import TabNavigation from './TabNavigation';
 
 export default function Portfolio() {
   const [activeTab, setActiveTab] = useState('Active');

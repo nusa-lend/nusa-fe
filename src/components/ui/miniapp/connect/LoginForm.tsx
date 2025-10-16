@@ -11,7 +11,7 @@ interface LoginFormProps {
 const LoginForm = forwardRef<HTMLDivElement, LoginFormProps>(
   ({ isConnected, onLogin, className = "" }, ref) => {
     return (
-      <div ref={ref} className={`w-full transition-opacity ${className}`}>
+      <div ref={ref} className={`w-full transition-opacity ${className} px-6`}>
         <button
           onClick={onLogin}
           disabled={isConnected}

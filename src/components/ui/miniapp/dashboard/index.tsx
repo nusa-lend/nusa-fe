@@ -7,9 +7,13 @@ import BottomSheet from "../../BottomSheet";
 import { LogOut } from "lucide-react";
 import { useDisconnect } from "wagmi";
 import { useRouter } from "next/navigation";
+import Lending from "./lending/Lending";
+import Borrow from "./borrow/Borrow";
+import Portfolio from "./portfolio/Portfolio";
 
 export default function DashboardPage() {
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"lending" | "borrow" | "portfolio">("lending");
   const { disconnect } = useDisconnect();
   const router = useRouter();
 
@@ -27,10 +31,27 @@ export default function DashboardPage() {
     }
   };
 
+  const handleTabChange = (tab: "lending" | "borrow" | "portfolio") => {
+    setActiveTab(tab);
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "lending":
+        return <Lending />;
+      case "borrow":
+        return <Borrow />;
+      case "portfolio":
+        return <Portfolio />;
+      default:
+        return <Lending />;
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-hidden relative">
       <div 
-        className="absolute inset-0 bg-no-repeat bg-[position:center_-200px] bg-[length:100%_auto] z-0"
+        className="absolute inset-0 bg-no-repeat bg-[position:center_-75px] bg-[length:100%_auto] z-0"
         style={{
           backgroundImage: `url('/background/bg_dashboard.png')`,
         }}
@@ -40,7 +61,15 @@ export default function DashboardPage() {
         <Header onProfileClick={() => setIsProfileSheetOpen(true)} />
       </div>
       
-      <BottomTabs />
+      {/* Main Content Area */}
+      <div className="flex-1 relative z-10 pb-20">
+        {renderTabContent()}
+      </div>
+      
+      <BottomTabs 
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
 
       <BottomSheet
         isOpen={isProfileSheetOpen}
