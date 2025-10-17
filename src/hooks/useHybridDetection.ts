@@ -6,9 +6,9 @@ export function useHybridDetection() {
   const [sdkBasedMiniApp, setSdkBasedMiniApp] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const pathname = usePathname();
-  
+
   let searchParams: URLSearchParams | null = null;
   try {
     searchParams = useSearchParams();
@@ -22,7 +22,7 @@ export function useHybridDetection() {
         const isMiniAppPath = pathname?.startsWith('/miniapp');
         const isMiniAppQuery = searchParams?.get('miniApp') === 'true';
         const urlBased = isMiniAppPath || isMiniAppQuery;
-        
+
         setUrlBasedMiniApp(urlBased);
 
         try {
@@ -51,10 +51,10 @@ export function useHybridDetection() {
     isMiniApp: urlBasedMiniApp,
     isLoading,
     isWebApp: !isLoading && !urlBasedMiniApp,
-    
+
     actuallyInMiniApp: sdkBasedMiniApp,
     isVerifiedMiniApp: !isLoading && urlBasedMiniApp && sdkBasedMiniApp === true,
-    
+
     error,
     isReady: !isLoading && urlBasedMiniApp !== null,
     isNotMiniApp: !isLoading && urlBasedMiniApp === false,

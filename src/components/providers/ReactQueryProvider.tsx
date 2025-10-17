@@ -8,23 +8,21 @@ type ReactQueryProviderProps = {
   children: ReactNode;
 };
 
-export default function ReactQueryProvider({
-  children
-}: ReactQueryProviderProps) {
+export default function ReactQueryProvider({ children }: ReactQueryProviderProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000
-          }
-        }
+            staleTime: 60 * 1000,
+          },
+        },
       })
   );
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools buttonPosition='bottom-left' initialIsOpen={false} />
+      <ReactQueryDevtools buttonPosition="bottom-left" initialIsOpen={false} />
       {children}
     </QueryClientProvider>
   );

@@ -1,13 +1,9 @@
-"use client";
+'use client';
 
 import { useEffect } from 'react';
 import { useHybridDetection } from '@/hooks/useHybridDetection';
 
-export default function FarcasterMiniAppProvider({ 
-  children 
-}: { 
-  children: React.ReactNode 
-}) {
+export default function FarcasterMiniAppProvider({ children }: { children: React.ReactNode }) {
   const { isLoading } = useHybridDetection();
 
   useEffect(() => {

@@ -1,15 +1,15 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #F8FAFC;
-  --foreground: #1E293B;
-  
-  --primary-blue: #6BCBFF;
-  --secondary-teal: #4FD1C5;
-  --success-green: #34D399;
-  --error-coral: #FB7185;
-  --text-charcoal: #1E293B;
-  --white: #FFFFFF;
+  --background: #f8fafc;
+  --foreground: #1e293b;
+
+  --primary-blue: #6bcbff;
+  --secondary-teal: #4fd1c5;
+  --success-green: #34d399;
+  --error-coral: #fb7185;
+  --text-charcoal: #1e293b;
+  --white: #ffffff;
 }
 
 @theme inline {
@@ -26,12 +26,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sf-ui-text), "SF UI Text", system-ui, sans-serif;
+  font-family: var(--font-sf-ui-text), 'SF UI Text', system-ui, sans-serif;
   min-height: 100vh;
 }
 
 .bg-gradient-soft {
-  background: linear-gradient(90deg, #6BCBFF 0%, #4FD1C5 100%);
+  background: linear-gradient(90deg, #6bcbff 0%, #4fd1c5 100%);
 }
 
 /* Custom scrollbar styles */

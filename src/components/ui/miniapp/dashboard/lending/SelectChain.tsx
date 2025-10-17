@@ -1,80 +1,15 @@
 'use client';
 
-import Image from 'next/image';
-
-interface ChainOption {
-  id: string;
-  name: string;
-  displayName: string;
-  apy: string;
-  icon: string;
-}
+import TokenNetworkPair from '../../TokenNetworkPair';
+import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
 
 interface SelectChainProps {
-  onSelect: (chain: ChainOption) => void;
+  market: LendingMarket;
+  onSelect: (network: LendingNetworkOption) => void;
 }
 
-const chainOptions: ChainOption[] = [
-  {
-    id: 'eth',
-    name: 'ETH',
-    displayName: 'IDRX on ETH',
-    apy: '7.91%',
-    icon: '/placeholder/placeholder_selectchain.png'
-  },
-  {
-    id: 'arb',
-    name: 'ARB',
-    displayName: 'IDRX on ARB',
-    apy: '7.91%',
-    icon: '/placeholder/placeholder_selectchain.png'
-  },
-  {
-    id: 'base',
-    name: 'BASE',
-    displayName: 'IDRX on BASE',
-    apy: '7.91%',
-    icon: '/placeholder/placeholder_selectchain.png'
-  },
-  {
-    id: 'bnb',
-    name: 'BNB',
-    displayName: 'IDRX on BNB',
-    apy: '7.91%',
-    icon: '/placeholder/placeholder_selectchain.png'
-  },
-  {
-    id: 'op',
-    name: 'OP',
-    displayName: 'IDRX on OP',
-    apy: '7.91%',
-    icon: '/placeholder/placeholder_selectchain.png'
-  },
-  {
-    id: 'matic',
-    name: 'MATIC',
-    displayName: 'IDRX on MATIC',
-    apy: '7.91%',
-    icon: '/placeholder/placeholder_selectchain.png'
-  },
-  {
-    id: 'avax',
-    name: 'AVAX',
-    displayName: 'IDRX on AVAX',
-    apy: '7.91%',
-    icon: '/placeholder/placeholder_selectchain.png'
-  },
-  {
-    id: 'ftm',
-    name: 'FTM',
-    displayName: 'IDRX on FTM',
-    apy: '7.91%',
-    icon: '/placeholder/placeholder_selectchain.png'
-  }
-];
-
-export default function SelectChain({ onSelect }: SelectChainProps) {
-  const handleChainSelect = (chain: ChainOption) => {
+export default function SelectChain({ market, onSelect }: SelectChainProps) {
+  const handleChainSelect = (chain: LendingNetworkOption) => {
     onSelect(chain);
   };
 
@@ -97,31 +32,23 @@ export default function SelectChain({ onSelect }: SelectChainProps) {
       </div>
 
       <div className="space-y-3">
-        {chainOptions.map((chain) => (
+        {market.networks.map(chain => (
           <button
             key={chain.id}
             onClick={() => handleChainSelect(chain)}
             className="w-full p-2 bg-[#F8FAFC] rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden">
-                <Image
-                  src={chain.icon}
-                  alt={chain.name}
-                  width={56}
-                  height={56}
-                  className="w-full h-full object-contain"
-                />
-              </div>
+              <TokenNetworkPair tokenLogo={market.tokenLogo} networkLogo={chain.networkLogo} size={30} overlap={25} />
               <div className="text-left">
                 <div className="font-medium text-gray-900">
-                  <div className="text-gray-900">IDRX</div>
+                  <div className="text-gray-900">{market.tokenSymbol}</div>
                   <div className="text-gray-500 text-sm">on {chain.name}</div>
                 </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium text-green-600">{chain.apy}</div>
+              <div className="text-sm font-medium text-green-600">{chain.apy || market.defaultApy}</div>
             </div>
           </button>
         ))}

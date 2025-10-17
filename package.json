@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:staged": "prettier --write"
   },
   "dependencies": {
     "@farcaster/miniapp-sdk": "^0.2.0",
@@ -39,6 +42,7 @@
     "@types/react-dom": "^19",
     "crypto": "^1.0.1",
     "pino-pretty": "^13.1.1",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -15,7 +15,7 @@ export default function TabNavigation({
   defaultTab,
   onTabChange,
   showFilter = true,
-  filterLabel = 'All'
+  filterLabel = 'All',
 }: TabNavigationProps) {
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
@@ -42,7 +42,7 @@ export default function TabNavigation({
           {tabs.map((tab, index) => (
             <button
               key={tab}
-              ref={(el) => {
+              ref={el => {
                 tabRefs.current[index] = el;
               }}
               onClick={() => handleTabClick(tab)}
@@ -66,12 +66,7 @@ export default function TabNavigation({
         {showFilter && (
           <div className="flex items-center space-x-1">
             <span className="text-sm text-gray-500">{filterLabel}</span>
-            <svg
-              className="w-4 h-4 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>

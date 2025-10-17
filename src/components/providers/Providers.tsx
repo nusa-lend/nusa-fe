@@ -7,9 +7,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ReactQueryProvider>
       <RainbowKitProviders>
-        <FarcasterMiniAppProvider>
-          {children}
-        </FarcasterMiniAppProvider>
+        <FarcasterMiniAppProvider>{children}</FarcasterMiniAppProvider>
       </RainbowKitProviders>
     </ReactQueryProvider>
   );

@@ -23,9 +23,9 @@ export default function Portfolio() {
   return (
     <div className="w-full px-4">
       <span className="text-md font-semibold">My Portfolio</span>
-      
+
       <PortfolioCards data={portfolioData} />
-      
+
       <TabNavigation
         tabs={['Active', 'History']}
         defaultTab="Active"
@@ -33,14 +33,10 @@ export default function Portfolio() {
         showFilter={true}
         filterLabel="All"
       />
-      
+
       <div className="mt-8 flex flex-col justify-center items-center text-center" style={{ height: '150px' }}>
-        <div className="text-sm font-bold text-gray-800 mb-2">
-          You don't have any positions.
-        </div>
-        <div className="text-xs text-gray-500">
-          Start by earning or borrowing.
-        </div>
+        <div className="text-sm font-bold text-gray-800 mb-2">You don't have any positions.</div>
+        <div className="text-xs text-gray-500">Start by earning or borrowing.</div>
       </div>
     </div>
   );

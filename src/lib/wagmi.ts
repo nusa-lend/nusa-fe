@@ -1,24 +1,22 @@
-import { createConfig, http } from "wagmi";
-import { APP_NAME } from "@/constants/app";
+import { createConfig, http } from 'wagmi';
+import { APP_NAME } from '@/constants/app';
 import { base } from 'wagmi/chains';
-import { connectorsForWallets } from "@rainbow-me/rainbowkit";
-import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector'
-import {
-  rainbowWallet,
-  walletConnectWallet,
-  coinbaseWallet
-} from '@rainbow-me/rainbowkit/wallets';
+import { connectorsForWallets } from '@rainbow-me/rainbowkit';
+import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector';
+import { rainbowWallet, walletConnectWallet, coinbaseWallet } from '@rainbow-me/rainbowkit/wallets';
 
-const connectors = connectorsForWallets([
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Recommended',
+      wallets: [rainbowWallet, walletConnectWallet, coinbaseWallet],
+    },
+  ],
   {
-    groupName: 'Recommended',
-    wallets: [rainbowWallet, walletConnectWallet, coinbaseWallet],
-  },
-],
-{
-  appName: APP_NAME,
-  projectId: process.env.NEXT_PUBLIC_PROJECT_ID!,
-});
+    appName: APP_NAME,
+    projectId: process.env.NEXT_PUBLIC_PROJECT_ID!,
+  }
+);
 
 export const config = createConfig({
   chains: [base],
@@ -26,8 +24,5 @@ export const config = createConfig({
   transports: {
     [base.id]: http(),
   },
-  connectors: [
-    miniAppConnector(),
-    ...connectors,
-  ],
+  connectors: [miniAppConnector(), ...connectors],
 });
