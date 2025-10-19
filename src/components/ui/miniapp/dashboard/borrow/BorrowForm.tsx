@@ -6,19 +6,21 @@ import BottomSheet from '@/components/ui/miniapp/BottomSheet';
 import SelectCoin from './SelectCoin';
 import InputAmount from './InputAmount';
 import BorrowNotif from './BorrowNotif';
+import type { BorrowingMarket } from '@/types/borrowing';
 
 interface BorrowFormProps {
   isOpen: boolean;
   onClose: () => void;
   onBorrow: (stablecoin: any, amount: string) => void;
+  selectedMarket?: BorrowingMarket | null;
 }
 
-export default function BorrowForm({ isOpen, onClose, onBorrow }: BorrowFormProps) {
+export default function BorrowForm({ isOpen, onClose, onBorrow, selectedMarket }: BorrowFormProps) {
   const [currentStep, setCurrentStep] = useState<'select' | 'input' | 'notification'>('select');
   const [selectedStablecoin, setSelectedStablecoin] = useState<any>(null);
   const [borrowedAmount, setBorrowedAmount] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState(false);
-  const sheetHeight = '100vh';
+  const sheetHeight = currentStep === 'notification' ? '75vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -90,7 +92,7 @@ export default function BorrowForm({ isOpen, onClose, onBorrow }: BorrowFormProp
 
     if (isAnimating) return;
     setIsAnimating(true);
-    // onBorrow(selectedStablecoin, amount);
+    onBorrow(selectedStablecoin, amount);
 
     setTimeout(() => {
       const tl = gsap.timeline({

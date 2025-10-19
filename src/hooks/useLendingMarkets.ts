@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchLendingMarkets } from '@/services/lendingService';
+import { fetchLendingMarkets } from '@/services/lendingMarketService';
 import { LendingMarket } from '@/types/lending';
 
 export const useLendingMarkets = () => {

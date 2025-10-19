@@ -15,7 +15,6 @@ export interface ApiLendingNetwork {
   apy: string;
 }
 
-
 // Mock
 export const getLendingMarketsFromAPI = async (): Promise<ApiLendingMarket[]> => {
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -67,4 +66,3 @@ export const fetchLendingMarkets = async (): Promise<LendingMarket[]> => {
     return [];
   }
 };
-

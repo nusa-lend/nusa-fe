@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import PortfolioCards from './PortfolioCards';
 import TabNavigation from './TabNavigation';
+import ActiveTab from './ActiveTab';
+import HistoryTab from './HistoryTab';
 
 export default function Portfolio() {
   const [activeTab, setActiveTab] = useState('Active');

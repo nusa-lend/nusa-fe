@@ -2,20 +2,55 @@
 
 import { useState } from 'react';
 import ItemCard from '../ItemCard';
-import { borrowItems } from '@/constants/placeholder';
-import BorrowForm from './BorrowForm';
+import { useBorrowingMarkets } from '@/hooks/useBorrowMarkets';
+import type { BorrowingMarket } from '@/types/borrowing';
 
-export default function Borrow() {
-  const [isBorrowFormOpen, setIsBorrowFormOpen] = useState(false);
+interface BorrowProps {
+  onItemClick: (market: BorrowingMarket) => void;
+}
 
-  const handleBorrow = (stablecoin: any, amount: string) => {
-    console.log('Borrowing:', stablecoin, amount);
-    // Handle borrow logic here
+export default function Borrow({ onItemClick }: BorrowProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const { data: borrowingMarkets = [], isLoading, error } = useBorrowingMarkets();
+
+  const handleItemClick = (market: BorrowingMarket) => {
+    onItemClick(market);
   };
 
-  const handleItemClick = () => {
-    setIsBorrowFormOpen(true);
-  };
+  const filteredMarkets = borrowingMarkets.filter(market =>
+    market.token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    market.token.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isLoading) {
+    return (
+      <div className="w-full px-4">
+        <span className="text-md font-semibold">Borrow with your Collateral</span>
+        <div className="mt-4 p-4 rounded-3xl border border-white/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0)_100%)] backdrop-blur-[25.3px]">
+          <div className="space-y-2">
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className="animate-pulse">
+                <div className="bg-gray-200 rounded-xl h-16"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full px-4">
+        <span className="text-md font-semibold">Borrow with your Collateral</span>
+        <div className="mt-4 p-4 rounded-3xl border border-white/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0)_100%)] backdrop-blur-[25.3px]">
+          <div className="text-center text-red-500 py-8">
+            Failed to load borrowing markets
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -36,6 +71,8 @@ export default function Borrow() {
             <input
               type="text"
               placeholder="Search coin"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-[#F8FAFC] rounded-3xl text-sm border-0 focus:outline-none focus:ring-2 focus:ring-white/20 text-gray-700 placeholder-gray-500 placeholder:text-sm"
             />
           </div>
@@ -56,14 +93,14 @@ export default function Borrow() {
           </div>
 
           <div className="space-y-2">
-            {borrowItems.map(item => (
-              <div key={item.id} onClick={handleItemClick} className="cursor-pointer">
+            {filteredMarkets.map(market => (
+              <div key={market.id} onClick={() => handleItemClick(market)} className="cursor-pointer">
                 <ItemCard
-                  imageSrc={item.imageSrc}
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  apy={item.apy}
-                  apyColor={item.apyColor}
+                  imageSrc={market.token.logo}
+                  title={market.token.symbol}
+                  subtitle={`Balance 0.00`}
+                  apy={market.networks[0]?.interestRate || '0%'}
+                  apyColor="#279E73"
                   imageSize={36}
                 />
               </div>
@@ -71,8 +108,6 @@ export default function Borrow() {
           </div>
         </div>
       </div>
-
-      <BorrowForm isOpen={isBorrowFormOpen} onClose={() => setIsBorrowFormOpen(false)} onBorrow={handleBorrow} />
     </>
   );
 }

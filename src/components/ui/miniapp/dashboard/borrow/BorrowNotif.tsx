@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import TokenNetworkPair from '../../TokenNetworkPair';
 
 interface BorrowNotifProps {
   selectedStablecoin?: {
@@ -51,10 +52,13 @@ export default function BorrowNotif({ selectedStablecoin, amount, onDone }: Borr
 
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <h2 className="text-md font-semibold text-gray-900">Borrow {selectedStablecoin.name}</h2>
-            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-xs">
-              {selectedStablecoin.name.charAt(0)}
-            </div>
+            <h2 className="text-md font-semibold text-gray-900">Borrow bNVDA / IDRX</h2>
+            <TokenNetworkPair
+              tokenLogo="/assets/rwa/bNVDA.png"
+              networkLogo="/assets/stablecoins/idrx.png"
+              size={24}
+              overlap={25}
+            />
           </div>
           <p className="text-gray-700 font-medium text-sm">Successful!</p>
         </div>

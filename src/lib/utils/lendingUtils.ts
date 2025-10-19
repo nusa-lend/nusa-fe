@@ -1,7 +1,7 @@
 import { getTokenById } from '@/constants/token';
 import { getNetworkById } from '@/constants/network';
 import { LendingMarket, LendingNetworkOption } from '@/types/lending';
-import { ApiLendingMarket } from '@/services/lendingService';
+import { ApiLendingMarket } from '@/services/lendingMarketService';
 
 export const transformLendingMarkets = (apiData: ApiLendingMarket[] | ApiLendingMarket): LendingMarket[] => {
   const transform = (data: ApiLendingMarket): LendingMarket => {
@@ -31,4 +31,3 @@ export const transformLendingMarkets = (apiData: ApiLendingMarket[] | ApiLending
     return [transform(apiData)];
   }
 };
-

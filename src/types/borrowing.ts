@@ -1,5 +1,4 @@
 import { Token } from './token';
-import { Network } from './network';
 
 export interface BorrowingMarket {
   id: string;

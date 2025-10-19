@@ -11,13 +11,17 @@ import Lending from './lending/Lending';
 import Borrow from './borrow/Borrow';
 import Portfolio from './portfolio/Portfolio';
 import LendingForm from './lending/LendingForm';
+import BorrowForm from './borrow/BorrowForm';
 import type { LendingMarket } from '@/types/lending';
+import type { BorrowingMarket } from '@/types/borrowing';
 
 export default function DashboardPage() {
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'lending' | 'borrow' | 'portfolio'>('lending');
   const [isLendingFormOpen, setIsLendingFormOpen] = useState(false);
+  const [isBorrowFormOpen, setIsBorrowFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<LendingMarket | null>(null);
+  const [selectedBorrowingItem, setSelectedBorrowingItem] = useState<BorrowingMarket | null>(null);
   const { disconnect } = useDisconnect();
   const router = useRouter();
 
@@ -39,7 +43,7 @@ export default function DashboardPage() {
     setActiveTab(tab);
   };
 
-  const handleItemClick = (item: LendingMarket) => {
+  const handleLendClick = (item: LendingMarket) => {
     setSelectedItem(item);
     setIsLendingFormOpen(true);
   };
@@ -54,16 +58,32 @@ export default function DashboardPage() {
     setSelectedItem(null);
   };
 
+  const handleBorrowClick = (market: BorrowingMarket) => {
+    setSelectedBorrowingItem(market);
+    setIsBorrowFormOpen(true);
+  };
+
+  const handleBorrow = (stablecoin: any, amount: string) => {
+    console.log('Borrowing:', stablecoin, amount);
+    setIsBorrowFormOpen(false);
+    setSelectedBorrowingItem(null);
+  };
+
+  const handleCloseBorrowForm = () => {
+    setIsBorrowFormOpen(false);
+    setSelectedBorrowingItem(null);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'lending':
-        return <Lending onItemClick={handleItemClick} />;
+        return <Lending onItemClick={handleLendClick} />;
       case 'borrow':
-        return <Borrow />;
+        return <Borrow onItemClick={handleBorrowClick} />;
       case 'portfolio':
         return <Portfolio />;
       default:
-        return <Lending onItemClick={handleItemClick} />;
+        return <Lending onItemClick={handleLendClick} />;
     }
   };
 
@@ -109,6 +129,13 @@ export default function DashboardPage() {
         onClose={handleCloseLendingForm}
         onLend={handleLend}
         selectedMarket={selectedItem}
+      />
+
+      <BorrowForm 
+        isOpen={isBorrowFormOpen} 
+        onClose={handleCloseBorrowForm} 
+        onBorrow={handleBorrow}
+        selectedMarket={selectedBorrowingItem}
       />
     </div>
   );
