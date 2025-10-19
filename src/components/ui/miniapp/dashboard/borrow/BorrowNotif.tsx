@@ -3,29 +3,24 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import TokenNetworkPair from '../../TokenNetworkPair';
+import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 
 interface BorrowNotifProps {
-  selectedStablecoin?: {
-    id: string;
-    name: string;
-    lltv: string;
-    apr: string;
-    icon: string;
-    flag: string;
-  } | null;
+  selectedMarket: BorrowingMarket;
+  selectedNetwork: BorrowingNetworkOption;
   amount?: string;
   onDone: () => void;
 }
 
-export default function BorrowNotif({ selectedStablecoin, amount, onDone }: BorrowNotifProps) {
+export default function BorrowNotif({ selectedMarket, selectedNetwork, amount, onDone }: BorrowNotifProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   const transactionData = {
     date: '2025-01-13 15:00',
     txHash: '09a6...df6i',
     amount: amount || '1,000',
-    apr: selectedStablecoin?.apr || '0.03%',
-    stablecoin: selectedStablecoin?.name || 'USDC',
+    apr: selectedNetwork?.interestRate || '0%',
+    stablecoin: selectedMarket?.token?.symbol || 'Unknown',
   };
 
   const handleDone = () => {
@@ -33,7 +28,7 @@ export default function BorrowNotif({ selectedStablecoin, amount, onDone }: Borr
     onDone();
   };
 
-  if (!selectedStablecoin) return <></>;
+  if (!selectedNetwork || !selectedMarket) return <></>;
 
   return (
     <motion.div
@@ -52,10 +47,12 @@ export default function BorrowNotif({ selectedStablecoin, amount, onDone }: Borr
 
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <h2 className="text-md font-semibold text-gray-900">Borrow bNVDA / IDRX</h2>
+            <h2 className="text-md font-semibold text-gray-900">
+              Borrow {selectedMarket?.token?.symbol || 'Unknown'} / {selectedNetwork?.name || 'Unknown'}
+            </h2>
             <TokenNetworkPair
-              tokenLogo="/assets/rwa/bNVDA.png"
-              networkLogo="/assets/stablecoins/idrx.png"
+              tokenLogo={selectedMarket?.token?.logo || '/assets/placeholder/placeholder_selectcoin.png'}
+              networkLogo={selectedNetwork?.networkLogo || '/assets/placeholder/placeholder_selectchain.png'}
               size={24}
               overlap={25}
             />

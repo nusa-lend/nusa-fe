@@ -2,12 +2,17 @@
 
 import { useState } from 'react';
 import PortfolioCards from './PortfolioCards';
-import TabNavigation from './TabNavigation';
-import ActiveTab from './ActiveTab';
-import HistoryTab from './HistoryTab';
+import TabNavigation from './tabs/TabNavigation';
+import ActiveTab from './tabs/active/ActiveTab';
+import HistoryTab from './tabs/history/HistoryTab';
 
-export default function Portfolio() {
+interface PortfolioProps {
+  onPositionClick?: (position: any, isFromHistory?: boolean) => void;
+}
+
+export default function Portfolio({ onPositionClick }: PortfolioProps) {
   const [activeTab, setActiveTab] = useState('Active');
+  const [activeFilter, setActiveFilter] = useState('All');
 
   const portfolioData = [
     { title: 'Lending', value: '$0.00', sub: '0% APY' },
@@ -18,8 +23,11 @@ export default function Portfolio() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    // Handle tab change logic here
-    console.log('Active tab:', tab);
+  };
+
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+    console.log('Filter changed to:', filter);
   };
 
   return (
@@ -34,11 +42,15 @@ export default function Portfolio() {
         onTabChange={handleTabChange}
         showFilter={true}
         filterLabel="All"
+        onFilterChange={handleFilterChange}
       />
 
-      <div className="mt-8 flex flex-col justify-center items-center text-center" style={{ height: '150px' }}>
-        <div className="text-sm font-bold text-gray-800 mb-2">You don't have any positions.</div>
-        <div className="text-xs text-gray-500">Start by earning or borrowing.</div>
+      <div className="mt-4">
+        {activeTab === 'Active' ? (
+          <ActiveTab onPositionClick={position => onPositionClick?.(position, false)} />
+        ) : (
+          <HistoryTab onTransactionClick={transaction => onPositionClick?.(transaction, true)} />
+        )}
       </div>
     </div>
   );

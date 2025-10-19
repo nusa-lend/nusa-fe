@@ -3,25 +3,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import BottomSheet from '@/components/ui/miniapp/BottomSheet';
-import SelectChain from './SelectChain';
-import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
+import SelectCoin from './SelectCoin';
 import InputAmount from './InputAmount';
-import LendNotif from './LendNotif';
+import BorrowNotif from './BorrowNotif';
+import type { BorrowingMarket } from '@/types/borrowing';
 
-interface LendingFormProps {
+interface BorrowFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onLend: (chain: any, amount: string) => void;
-  selectedMarket: LendingMarket | null;
+  onBorrow: (stablecoin: any, amount: string) => void;
+  selectedMarket?: BorrowingMarket | null;
 }
 
-export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }: LendingFormProps) {
+export default function BorrowForm({ isOpen, onClose, onBorrow, selectedMarket }: BorrowFormProps) {
   const [currentStep, setCurrentStep] = useState<'select' | 'input' | 'notification'>('select');
-  const [selectedChain, setSelectedChain] = useState<LendingNetworkOption | null>(null);
-
-  const [lentAmount, setLentAmount] = useState<string>('');
+  const [selectedStablecoin, setSelectedStablecoin] = useState<any>(null);
+  const [borrowedAmount, setBorrowedAmount] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState(false);
-  const sheetHeight = currentStep === 'notification' ? '75vh' : '96vh';
+  const sheetHeight = currentStep === 'notification' ? '75vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -29,10 +28,10 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
   const notificationRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null!);
 
-  const handleChainSelect = (chain: LendingNetworkOption) => {
+  const handleStablecoinSelect = (stablecoin: any) => {
     if (isAnimating) return;
     setIsAnimating(true);
-    setSelectedChain(chain);
+    setSelectedStablecoin(stablecoin);
 
     const tl = gsap.timeline({
       defaults: { duration: 0.3, ease: 'power2.inOut' },
@@ -62,7 +61,7 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
       defaults: { duration: 0.3, ease: 'power2.inOut' },
       onComplete: () => {
         setCurrentStep('select');
-        setSelectedChain(null);
+        setSelectedStablecoin(null);
         setIsAnimating(false);
       },
     });
@@ -82,19 +81,17 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
         visibility: 'hidden',
       });
       setCurrentStep('select');
-      setSelectedChain(null);
-
-      setLentAmount('');
+      setBorrowedAmount('');
       setIsAnimating(false);
     }
   }, [isOpen]);
 
-  const handleLend = (amount: string) => {
-    setLentAmount(amount);
+  const handleBorrow = (amount: string) => {
+    setBorrowedAmount(amount);
 
     if (isAnimating) return;
     setIsAnimating(true);
-    // onLend(selectedChain, amount);
+    onBorrow(selectedStablecoin, amount);
 
     setTimeout(() => {
       const tl = gsap.timeline({
@@ -120,16 +117,15 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
 
   const handleNotificationDone = () => {
     setCurrentStep('select');
-    setSelectedChain(null);
-    setLentAmount('');
+    setSelectedStablecoin(null);
+    setBorrowedAmount('');
     onClose();
   };
 
   const handleClose = () => {
     setCurrentStep('select');
-    setSelectedChain(null);
-
-    setLentAmount('');
+    setSelectedStablecoin(null);
+    setBorrowedAmount('');
     onClose();
   };
 
@@ -152,7 +148,7 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
             visibility: currentStep === 'select' ? 'visible' : 'hidden',
           }}
         >
-          {selectedMarket && <SelectChain market={selectedMarket} onSelect={handleChainSelect} />}
+          {selectedMarket && <SelectCoin market={selectedMarket} onSelect={handleStablecoinSelect} />}
         </div>
 
         <div
@@ -163,12 +159,14 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
             visibility: currentStep === 'input' ? 'visible' : 'hidden',
           }}
         >
-          <InputAmount
-            selectedMarket={selectedMarket}
-            selectedChain={selectedChain}
-            onBack={handleBack}
-            onLend={handleLend}
-          />
+          {selectedMarket && (
+            <InputAmount
+              selectedMarket={selectedMarket}
+              selectedNetwork={selectedStablecoin}
+              onBack={handleBack}
+              onBorrow={handleBorrow}
+            />
+          )}
         </div>
 
         <div
@@ -179,12 +177,14 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
             visibility: currentStep === 'notification' ? 'visible' : 'hidden',
           }}
         >
-          <LendNotif
-            selectedMarket={selectedMarket}
-            selectedChain={selectedChain}
-            amount={lentAmount}
-            onDone={handleNotificationDone}
-          />
+          {selectedMarket && (
+            <BorrowNotif
+              selectedMarket={selectedMarket}
+              selectedNetwork={selectedStablecoin}
+              amount={borrowedAmount}
+              onDone={handleNotificationDone}
+            />
+          )}
         </div>
       </div>
     </BottomSheet>

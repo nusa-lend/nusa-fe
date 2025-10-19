@@ -2,87 +2,30 @@
 
 import Image from 'next/image';
 import TokenWithFlag from '../../TokenWithFlag';
-
-interface StablecoinOption {
-  id: string;
-  name: string;
-  lltv: string;
-  apr: string;
-  icon: string;
-  flag: string;
-}
+import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
+import { LOCAL_STABLECOIN_OPTIONS } from '@/constants/placeholder';
 
 interface SelectCoinProps {
-  onSelect: (stablecoin: StablecoinOption) => void;
+  market: BorrowingMarket;
+  onSelect: (network: BorrowingNetworkOption) => void;
 }
 
-const stablecoinOptions: StablecoinOption[] = [
-  {
-    id: 'idrx',
-    name: 'IDRX',
-    lltv: '80%',
-    apr: '0.03%',
-    icon: '/assets/stablecoins/eurc.png',
-    flag: '/assets/flags/flag-id.png',
-  },
-  {
-    id: 'xidr',
-    name: 'XIDR',
-    lltv: '80%',
-    apr: '0.07%',
-    icon: '/assets/stablecoins/eurc.png',
-    flag: '/assets/flags/flag-id.png',
-  },
-  {
-    id: 'usdc',
-    name: 'USDC',
-    lltv: '80%',
-    apr: '0.033%',
-    icon: '/assets/stablecoins/eurc.png',
-    flag: '/assets/flags/flag-id.png',
-  },
-  {
-    id: 'usde',
-    name: 'USDe',
-    lltv: '80%',
-    apr: '0.033%',
-    icon: '/assets/stablecoins/eurc.png',
-    flag: '/assets/flags/flag-id.png',
-  },
-  {
-    id: 'xsgd',
-    name: 'XSGD',
-    lltv: '80%',
-    apr: '0.033%',
-    icon: '/assets/stablecoins/eurc.png',
-    flag: '/assets/flags/flag-id.png',
-  },
-  {
-    id: 'eurc',
-    name: 'EURC',
-    lltv: '80%',
-    apr: '0.033%',
-    icon: '/assets/stablecoins/eurc.png',
-    flag: '/assets/flags/flag-id.png',
-  },
-  {
-    id: 'jeur',
-    name: 'jEUR',
-    lltv: '80%',
-    apr: '0.033%',
-    icon: '/assets/stablecoins/eurc.png',
-    flag: '/assets/flags/flag-id.png',
-  },
-];
-
-export default function SelectCoin({ onSelect }: SelectCoinProps) {
-  const handleStablecoinSelect = (stablecoin: StablecoinOption) => {
-    onSelect(stablecoin);
+export default function SelectCoin({ market, onSelect }: SelectCoinProps) {
+  const handleStablecoinSelect = (stablecoin: any) => {
+    const networkOption: BorrowingNetworkOption = {
+      id: stablecoin.id,
+      name: stablecoin.name,
+      networkLogo: stablecoin.icon,
+      interestRate: stablecoin.apr,
+      maxBorrowAmount: 100000,
+    };
+    onSelect(networkOption);
   };
 
   return (
     <div className="space-y-6">
       <p className="text-md font-semibold">Select a Local Stablecoin to Borrow</p>
+
       <div className="space-y-3">
         <div className="flex items-center space-x-1">
           <span className="text-sm text-gray-500">Collateral</span>
@@ -93,23 +36,18 @@ export default function SelectCoin({ onSelect }: SelectCoinProps) {
 
         <div className="p-4 bg-white rounded-xl border border-gray-100">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
               <Image
-                src="/placeholder/placeholder_selectcoin.png"
-                alt="Collateral Logo"
-                width={48}
-                height={48}
+                src={market.token.logo}
+                alt={market.token.symbol}
+                width={36}
+                height={36}
                 className="w-full h-full object-contain"
               />
             </div>
             <div>
-              <div className="font-semibold text-gray-900">bNVDA</div>
-              <div
-                className="text-sm text-gray-400\
-              "
-              >
-                Balance 0.00
-              </div>
+              <div className="font-semibold text-gray-900">{market.token.symbol}</div>
+              <div className="text-sm text-gray-400">Balance 0.00</div>
             </div>
           </div>
         </div>
@@ -132,28 +70,28 @@ export default function SelectCoin({ onSelect }: SelectCoinProps) {
         </div>
 
         <div className="space-y-3">
-          {stablecoinOptions.map(stablecoin => (
+          {LOCAL_STABLECOIN_OPTIONS.map(localStablecoin => (
             <button
-              key={stablecoin.id}
-              onClick={() => handleStablecoinSelect(stablecoin)}
+              key={localStablecoin.id}
+              onClick={() => handleStablecoinSelect(localStablecoin)}
               className="w-full p-4 bg-[#F8FAFC] rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
             >
               <div className="flex items-center space-x-3">
                 <TokenWithFlag
-                  tokenLogo={stablecoin.icon}
-                  flag={stablecoin.flag}
+                  tokenLogo={localStablecoin.icon}
+                  flag={localStablecoin.flag}
                   size={36}
                   flagSize={14}
-                  tokenAlt={`${stablecoin.name} logo`}
+                  tokenAlt={`${localStablecoin.name} logo`}
                   flagAlt="Flag"
                 />
                 <div className="text-left">
-                  <div className="font-semibold text-gray-900">{stablecoin.name}</div>
-                  <div className="text-sm text-gray-400">LLTV: {stablecoin.lltv}</div>
+                  <div className="font-semibold text-gray-900">{localStablecoin.name}</div>
+                  <div className="text-sm text-gray-400">LLTV: {localStablecoin.lltv}</div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-semibold text-green-600">{stablecoin.apr}</div>
+                <div className="text-sm font-semibold text-green-600">{localStablecoin.apr}</div>
               </div>
             </button>
           ))}

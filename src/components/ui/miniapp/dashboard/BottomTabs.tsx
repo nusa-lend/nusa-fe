@@ -91,7 +91,7 @@ export default function BottomTabs({ activeTab, onTabChange }: BottomTabsProps) 
   }, []);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 z-60">
+    <div className="fixed bottom-0 left-0 right-0 p-4">
       <div ref={containerRef} className="bg-gray-100 rounded-4xl px-4 py-2 flex items-center justify-between relative">
         <div ref={slidingBgRef} className="absolute bg-primary rounded-4xl z-0" />
 

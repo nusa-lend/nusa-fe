@@ -193,7 +193,7 @@ const BottomSheet = ({
           )}
         </div>
 
-        <div ref={contentRef} className="flex-1 overflow-y-auto px-6 mt-11 relative z-0">
+        <div ref={contentRef} className="flex-1 overflow-y-auto px-6 mt-11 relative z-0 scrollbar-thin">
           {children}
         </div>
       </div>

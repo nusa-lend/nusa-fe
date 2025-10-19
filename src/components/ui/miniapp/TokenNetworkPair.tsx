@@ -9,6 +9,7 @@ interface TokenNetworkPairProps {
   className?: string;
   tokenClassName?: string;
   networkClassName?: string;
+  useOutline?: boolean;
 }
 
 const TokenNetworkPair: React.FC<TokenNetworkPairProps> = ({
@@ -19,6 +20,7 @@ const TokenNetworkPair: React.FC<TokenNetworkPairProps> = ({
   className = '',
   tokenClassName = '',
   networkClassName = '',
+  useOutline = true,
 }) => {
   const overlapOffset = (size * overlap) / 100;
 
@@ -43,13 +45,17 @@ const TokenNetworkPair: React.FC<TokenNetworkPairProps> = ({
           marginLeft: `-${overlapOffset}px`,
         }}
       >
-        <Image
-          src={networkLogo}
-          alt={networkAlt}
-          width={size + 4}
-          height={size + 4}
-          className="rounded-full border-2 border-white"
-        />
+        {useOutline ? (
+          <Image
+            src={networkLogo}
+            alt={networkAlt}
+            width={size + 4}
+            height={size + 4}
+            className="rounded-full border-2 border-white"
+          />
+        ) : (
+          <Image src={networkLogo} alt={networkAlt} width={size} height={size} className="rounded-full" />
+        )}
       </div>
     </div>
   );

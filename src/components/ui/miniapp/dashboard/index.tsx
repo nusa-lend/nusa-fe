@@ -7,33 +7,27 @@ import BottomSheet from '../BottomSheet';
 import { LogOut } from 'lucide-react';
 import { useDisconnect } from 'wagmi';
 import { useRouter } from 'next/navigation';
-import Lending from './lending/Lending';
-import Borrow from './borrow/Borrow';
-import Portfolio from './portfolio/Portfolio';
-import LendingForm from './lending/LendingForm';
-import BorrowForm from './borrow/BorrowForm';
-import type { LendingMarket } from '@/types/lending';
-import type { BorrowingMarket } from '@/types/borrowing';
+import LendingContainer from './lending';
+import BorrowContainer from './borrow';
+import PortfolioContainer from './portfolio';
+import { useLendingMarkets } from '@/hooks/useLendingMarkets';
+import { useBorrowingMarkets } from '@/hooks/useBorrowMarkets';
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { disconnect } = useDisconnect();
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'lending' | 'borrow' | 'portfolio'>('lending');
-  const [isLendingFormOpen, setIsLendingFormOpen] = useState(false);
-  const [isBorrowFormOpen, setIsBorrowFormOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<LendingMarket | null>(null);
-  const [selectedBorrowingItem, setSelectedBorrowingItem] = useState<BorrowingMarket | null>(null);
-  const { disconnect } = useDisconnect();
-  const router = useRouter();
+
+  const { data: lendingMarkets = [], isLoading: lendingLoading, error: lendingError } = useLendingMarkets();
+  const { data: borrowingMarkets = [], isLoading: borrowingLoading, error: borrowingError } = useBorrowingMarkets();
 
   const handleLogout = async () => {
     try {
-      await disconnect();
+      disconnect();
       setIsProfileSheetOpen(false);
-      setTimeout(() => {
-        router.push('/miniapp/connect');
-      }, 100);
+      router.push('/miniapp/connect');
     } catch (error) {
-      console.error('Logout error:', error);
       setIsProfileSheetOpen(false);
       router.push('/miniapp/connect');
     }
@@ -43,47 +37,16 @@ export default function DashboardPage() {
     setActiveTab(tab);
   };
 
-  const handleLendClick = (item: LendingMarket) => {
-    setSelectedItem(item);
-    setIsLendingFormOpen(true);
-  };
-
-  const handleLend = (chain: any, amount: string) => {
-    setIsLendingFormOpen(false);
-    setSelectedItem(null);
-  };
-
-  const handleCloseLendingForm = () => {
-    setIsLendingFormOpen(false);
-    setSelectedItem(null);
-  };
-
-  const handleBorrowClick = (market: BorrowingMarket) => {
-    setSelectedBorrowingItem(market);
-    setIsBorrowFormOpen(true);
-  };
-
-  const handleBorrow = (stablecoin: any, amount: string) => {
-    console.log('Borrowing:', stablecoin, amount);
-    setIsBorrowFormOpen(false);
-    setSelectedBorrowingItem(null);
-  };
-
-  const handleCloseBorrowForm = () => {
-    setIsBorrowFormOpen(false);
-    setSelectedBorrowingItem(null);
-  };
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'lending':
-        return <Lending onItemClick={handleLendClick} />;
+        return <LendingContainer markets={lendingMarkets} isLoading={lendingLoading} error={lendingError} />;
       case 'borrow':
-        return <Borrow onItemClick={handleBorrowClick} />;
+        return <BorrowContainer markets={borrowingMarkets} isLoading={borrowingLoading} error={borrowingError} />;
       case 'portfolio':
-        return <Portfolio />;
+        return <PortfolioContainer />;
       default:
-        return <Lending onItemClick={handleLendClick} />;
+        return <LendingContainer markets={lendingMarkets} isLoading={lendingLoading} error={lendingError} />;
     }
   };
 
@@ -100,7 +63,7 @@ export default function DashboardPage() {
         <Header onProfileClick={() => setIsProfileSheetOpen(true)} />
       </div>
 
-      <div className="flex-1 relative z-50 pb-20">{renderTabContent()}</div>
+      <div className="flex-1 relative pb-20 scrollbar-thin overflow-y-auto">{renderTabContent()}</div>
 
       <BottomTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
@@ -123,20 +86,6 @@ export default function DashboardPage() {
           </button>
         </div>
       </BottomSheet>
-
-      <LendingForm
-        isOpen={isLendingFormOpen}
-        onClose={handleCloseLendingForm}
-        onLend={handleLend}
-        selectedMarket={selectedItem}
-      />
-
-      <BorrowForm 
-        isOpen={isBorrowFormOpen} 
-        onClose={handleCloseBorrowForm} 
-        onBorrow={handleBorrow}
-        selectedMarket={selectedBorrowingItem}
-      />
     </div>
   );
 }

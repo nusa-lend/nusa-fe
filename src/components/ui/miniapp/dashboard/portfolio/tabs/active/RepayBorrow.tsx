@@ -1,17 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import TokenNetworkPair from '../../TokenNetworkPair';
-import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 
-interface InputAmountProps {
-  selectedMarket: BorrowingMarket;
-  selectedNetwork: BorrowingNetworkOption;
-  onBack: () => void;
-  onBorrow: (amount: string) => void;
-}
-
-export default function InputAmount({ selectedMarket, selectedNetwork, onBack, onBorrow }: InputAmountProps) {
+export default function RepayBorrow() {
   const [borrowAmount, setBorrowAmount] = useState('');
   const [amount, setAmount] = useState('');
   const [balance] = useState(1000000);
@@ -22,7 +13,6 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
 
   const handleBorrow = () => {
     if (borrowAmount && parseFloat(borrowAmount.replace(/,/g, '')) >= minBorrow) {
-      onBorrow(borrowAmount);
     }
   };
 
@@ -30,42 +20,16 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
     setAmount(balance.toString());
   };
 
-  if (!selectedNetwork || !selectedMarket) return null;
-
   return (
-    <div className="w-full max-w-md mx-auto pb-4 bg-white">
-      <div className="flex items-center mb-3">
-        <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full transition">
-          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <div className="w-full flex items-center justify-between">
-          <h2 className="text-md font-semibold text-gray-900">
-            Borrow {selectedMarket.token.symbol} / {selectedNetwork.name}
-          </h2>
-          <TokenNetworkPair
-            tokenLogo={selectedMarket.token.logo}
-            networkLogo={selectedNetwork.networkLogo}
-            size={30}
-            overlap={25}
-          />
-        </div>
-      </div>
+    <div className="w-full pb-4 bg-white">
       <div className="flex flex-col items-center gap-2">
         <div className="w-full rounded-xl border border-gray-200 bg-[#f8fafc] p-3">
-          <div className="text-sm text-gray-600 mb-3">Collateral {selectedMarket.token.symbol}</div>
+          <div className="text-sm text-gray-600 mb-3">Repay IDRX</div>
 
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                <img
-                  src={selectedMarket.token.logo}
-                  alt={selectedMarket.token.symbol}
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
+                <img src="/assets/stablecoins/idrx.png" alt="IDRX" width={24} height={24} className="object-contain" />
               </div>
               <input
                 type="text"
@@ -98,18 +62,12 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
           </div>
         </div>
         <div className="w-full rounded-xl border border-gray-200 bg-[#f8fafc] p-3">
-          <div className="text-sm text-gray-600 mb-3">Borrow {selectedNetwork.name}</div>
+          <div className="text-sm text-gray-600 mb-3">Withdraw bNVDA</div>
 
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                <img
-                  src={selectedNetwork.networkLogo}
-                  alt={selectedNetwork.name}
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
+                <img src="/assets/rwa/bNVDA.png" alt="bNVDA" width={24} height={24} className="object-contain" />
               </div>
               <input
                 type="text"
@@ -142,9 +100,7 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
         </div>
       </div>
 
-      <span className="text-xs text-gray-400">
-        Minimum borrow: {selectedNetwork.maxBorrowAmount.toLocaleString()} {selectedMarket.token.symbol}
-      </span>
+      <span className="text-xs text-gray-400">Minimum borrow: 100,000 IDRX</span>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 mt-3 space-y-2">
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Risk Level</h3>
@@ -157,7 +113,7 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
               </div>
             </div>
             <span className="text-gray-900 font-semibold text-[15px]">
-              <span className="text-green-600">0%</span> / {selectedMarket.maxLtv}%
+              <span className="text-green-600">0%</span> / 80%
             </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
@@ -178,15 +134,23 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
                 <span className="text-gray-400 text-xs font-bold">i</span>
               </div>
             </div>
-            <span className="text-green-600 font-semibold text-[15px]">~{selectedNetwork.interestRate}%</span>
+            <span className="text-red-600 font-semibold text-[15px]">~0.03%</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span>Daily</span>
-            <span className="text-green-600 font-semibold text-[15px]">0</span>
+            <span>Collateral</span>
+            <span className="text-black font-semibold text-[15px]">bNVDA 100</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span>Monthly</span>
-            <span className="text-green-600 font-semibold text-[15px]">0</span>
+            <span>Borrowing</span>
+            <span className="text-black font-semibold text-[15px]">IDRX 16,500,000</span>
+          </div>
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>Duration</span>
+            <span className="text-black font-semibold text-[15px]">3M:11D:8H</span>
+          </div>
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>Total Interest</span>
+            <span className="text-black font-semibold text-[15px]">IDRX 3,500</span>
           </div>
         </div>
       </div>
@@ -198,7 +162,7 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
           hasAmount && !isInsufficientBalance ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80' : 'bg-[#a8cfe5] cursor-not-allowed'
         }`}
       >
-        {hasAmount ? 'Start Borrowing' : 'Enter an amount'}
+        {hasAmount ? 'Borrow More' : 'Enter an amount'}
       </button>
     </div>
   );
