@@ -198,15 +198,34 @@ export const RWA_TOKENS: Token[] = [
   },
 ];
 
-export const ALL_TOKENS = [...STABLECOINS, ...RWA_TOKENS];
+export const COINS: Token[] = [
+  {
+    id: 'eth',
+    symbol: 'ETH',
+    name: 'Ethereum',
+    logo: '/assets/coins/eth.png',
+    category: 'coin',
+    description: 'Ethereum',
+  },
+];
+
+export const ALL_TOKENS = [...STABLECOINS, ...RWA_TOKENS, ...COINS];
 
 export const getTokenById = (id: string): Token | undefined => {
   return ALL_TOKENS.find(token => token.id === id);
 };
 
-export const getTokensByCategory = (category: 'stablecoin' | 'rwa'): Token[] => {
-  return ALL_TOKENS.filter(token => token.category === category);
+export const getTokensByCategory = (category: 'stablecoin' | 'rwa' | 'coin'): Token[] => {
+  switch (category) {
+    case 'stablecoin':
+      return getStablecoins();
+    case 'rwa':
+      return getRwaTokens();
+    case 'coin':
+      return getCoins();
+  }
 };
 
-export const getStablecoins = () => STABLECOINS;
-export const getRwaTokens = () => RWA_TOKENS;
+export const getStablecoins = (): Token[] => STABLECOINS;
+export const getRwaTokens = (): Token[] => RWA_TOKENS;
+export const getCoins = (): Token[] => COINS;

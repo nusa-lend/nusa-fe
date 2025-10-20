@@ -1,12 +1,18 @@
 'use client';
 
 import Image from 'next/image';
+import { useFarcasterUser } from '@/hooks/useFarcasterUser';
 
 interface HeaderProps {
   onProfileClick: () => void;
 }
 
 export default function Header({ onProfileClick }: HeaderProps) {
+  const { user, hasUser } = useFarcasterUser();
+
+  const profileImageSrc = hasUser && user?.pfpUrl ? user.pfpUrl : '/placeholder/placeholder_profile.jpg';
+  const profileImageAlt = hasUser && user?.displayName ? user.displayName : 'Profile';
+
   return (
     <div className="w-full px-4 py-4 flex items-center justify-between bg-transparent">
       <div className="flex items-center">
@@ -18,13 +24,7 @@ export default function Header({ onProfileClick }: HeaderProps) {
           onClick={onProfileClick}
           className="focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full transition-all duration-200 hover:scale-105"
         >
-          <Image
-            src="/placeholder/placeholder_profile.jpg"
-            alt="Profile"
-            width={33}
-            height={33}
-            className="rounded-full"
-          />
+          <Image src={profileImageSrc} alt={profileImageAlt} width={33} height={33} className="rounded-full" />
         </button>
       </div>
     </div>

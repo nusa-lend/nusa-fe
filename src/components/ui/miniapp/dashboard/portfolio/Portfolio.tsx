@@ -15,8 +15,8 @@ export default function Portfolio({ onPositionClick }: PortfolioProps) {
   const [activeFilter, setActiveFilter] = useState('All');
 
   const portfolioData = [
-    { title: 'Lending', value: '$0.00', sub: '0% APY' },
-    { title: 'Borrow', value: '$0.00', sub: '0% APY' },
+    { title: 'Lending', value: '$0.00', sub: '0%' },
+    { title: 'Borrow', value: '$0.00', sub: '0%' },
     { title: 'Yield Earned', value: '$0.00' },
     { title: 'Active Position', value: '0' },
   ];
@@ -27,7 +27,6 @@ export default function Portfolio({ onPositionClick }: PortfolioProps) {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
-    console.log('Filter changed to:', filter);
   };
 
   return (

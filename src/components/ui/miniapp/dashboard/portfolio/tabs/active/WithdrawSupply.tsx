@@ -2,12 +2,32 @@
 
 import { useState } from 'react';
 
-export default function WithdrawSupply() {
+interface WithdrawSupplyProps {
+  onTransactionComplete?: (data: any) => void;
+}
+
+export default function WithdrawSupply({ onTransactionComplete }: WithdrawSupplyProps) {
   const [amount, setAmount] = useState('');
   const [balance] = useState(1000000);
 
-  const handleSupply = () => {
+  const handleWithdraw = () => {
     if (amount && parseFloat(amount.replace(/,/g, '')) > 0) {
+      const transactionData = {
+        type: 'withdraw-supply',
+        supplyToken: {
+          symbol: 'IDRX',
+          logo: '/assets/stablecoins/idrx.png',
+          amount: amount,
+        },
+        supplyNetwork: {
+          name: 'Arbitrum',
+          logo: '/assets/network/arbitrum.png',
+          apy: '12.5%',
+        },
+        amount: amount,
+      };
+
+      onTransactionComplete?.(transactionData);
     }
   };
 
@@ -90,13 +110,13 @@ export default function WithdrawSupply() {
       </div>
 
       <button
-        onClick={handleSupply}
+        onClick={handleWithdraw}
         disabled={!hasAmount || isInsufficientBalance}
         className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition ${
           hasAmount && !isInsufficientBalance ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80' : 'bg-[#a8cfe5] cursor-not-allowed'
         }`}
       >
-        {hasAmount ? 'Supply More' : 'Enter an amount'}
+        {hasAmount ? 'Withdraw Supply' : 'Enter an amount'}
       </button>
     </div>
   );

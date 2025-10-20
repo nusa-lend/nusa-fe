@@ -2,9 +2,11 @@
 
 import { useEffect } from 'react';
 import { useHybridDetection } from '@/hooks/useHybridDetection';
+import { useMiniAppAutoConnect } from '@/hooks/useMiniAppAutoConnect';
 
 export default function FarcasterMiniAppProvider({ children }: { children: React.ReactNode }) {
   const { isLoading } = useHybridDetection();
+  useMiniAppAutoConnect();
 
   useEffect(() => {
     if (isLoading) return;

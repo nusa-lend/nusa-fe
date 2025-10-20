@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Tooltip from '@/components/ui/miniapp/Tooltip';
 
-export default function BorrowMore() {
+interface BorrowMoreProps {
+  onTransactionComplete?: (data: any) => void;
+}
+
+export default function BorrowMore({ onTransactionComplete }: BorrowMoreProps) {
   const [borrowAmount, setBorrowAmount] = useState('');
-  const [amount, setAmount] = useState('');
   const [balance] = useState(1000000);
   const minBorrow = 100000;
 
@@ -13,11 +17,32 @@ export default function BorrowMore() {
 
   const handleBorrow = () => {
     if (borrowAmount && parseFloat(borrowAmount.replace(/,/g, '')) >= minBorrow) {
+      const transactionData = {
+        type: 'borrow-more',
+        collateralToken: {
+          symbol: 'bNVDA',
+          logo: '/assets/rwa/bNVDA.png',
+          amount: '100',
+        },
+        borrowToken: {
+          symbol: 'IDRX',
+          logo: '/assets/stablecoins/idrx.png',
+          amount: borrowAmount,
+        },
+        borrowNetwork: {
+          name: 'Arbitrum',
+          logo: '/assets/network/arbitrum.png',
+          apr: '0.03%',
+        },
+        amount: borrowAmount,
+      };
+
+      onTransactionComplete?.(transactionData);
     }
   };
 
   const handleMaxClick = () => {
-    setAmount(balance.toString());
+    setBorrowAmount(balance.toString());
   };
 
   return (
@@ -108,9 +133,16 @@ export default function BorrowMore() {
           <div className="flex justify-between text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <span>LTV / LLTV</span>
-              <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
-                <span className="text-gray-400 text-xs font-bold">i</span>
-              </div>
+              <Tooltip
+                content="If your Loan-to-value ratio (LTV) reaches 80% (Limit-LTV), your loan will be liquidated"
+                trigger="click"
+                position="right"
+                className="z-50"
+              >
+                <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
+                  <span className="text-gray-400 text-xs font-bold">i</span>
+                </div>
+              </Tooltip>
             </div>
             <span className="text-gray-900 font-semibold text-[15px]">
               <span className="text-green-600">0%</span> / 80%

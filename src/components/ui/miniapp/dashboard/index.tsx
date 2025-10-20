@@ -10,17 +10,12 @@ import { useRouter } from 'next/navigation';
 import LendingContainer from './lending';
 import BorrowContainer from './borrow';
 import PortfolioContainer from './portfolio';
-import { useLendingMarkets } from '@/hooks/useLendingMarkets';
-import { useBorrowingMarkets } from '@/hooks/useBorrowMarkets';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { disconnect } = useDisconnect();
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'lending' | 'borrow' | 'portfolio'>('lending');
-
-  const { data: lendingMarkets = [], isLoading: lendingLoading, error: lendingError } = useLendingMarkets();
-  const { data: borrowingMarkets = [], isLoading: borrowingLoading, error: borrowingError } = useBorrowingMarkets();
 
   const handleLogout = async () => {
     try {
@@ -40,13 +35,13 @@ export default function DashboardPage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'lending':
-        return <LendingContainer markets={lendingMarkets} isLoading={lendingLoading} error={lendingError} />;
+        return <LendingContainer />;
       case 'borrow':
-        return <BorrowContainer markets={borrowingMarkets} isLoading={borrowingLoading} error={borrowingError} />;
+        return <BorrowContainer />;
       case 'portfolio':
         return <PortfolioContainer />;
       default:
-        return <LendingContainer markets={lendingMarkets} isLoading={lendingLoading} error={lendingError} />;
+        return <LendingContainer />;
     }
   };
 

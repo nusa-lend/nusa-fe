@@ -45,6 +45,33 @@ export const NETWORKS: Network[] = [
     description: 'Decentralized derivatives exchange',
     isTestnet: false,
   },
+  {
+    id: 'eth',
+    name: 'Ethereum',
+    displayName: 'Ethereum Mainnet',
+    logo: '/assets/network/ethereum.png',
+    chainId: 1,
+    rpcUrl: 'https://mainnet.ethereum.org',
+    explorerUrl: 'https://etherscan.io',
+  },
+  {
+    id: 'bsc',
+    name: 'BNB Chain',
+    displayName: 'BNB Chain Mainnet',
+    logo: '/assets/network/bsc.png',
+    chainId: 56,
+    rpcUrl: 'https://mainnet.bsc.org',
+    explorerUrl: 'https://bscscan.com',
+  },
+  {
+    id: 'optimism',
+    name: 'Optimism',
+    displayName: 'Optimism Mainnet',
+    logo: '/assets/network/optimism.png',
+    chainId: 10,
+    rpcUrl: 'https://mainnet.optimism.io',
+    explorerUrl: 'https://optimistic.etherscan.io',
+  },
 ];
 
 export const getNetworkById = (id: string): Network | undefined => {

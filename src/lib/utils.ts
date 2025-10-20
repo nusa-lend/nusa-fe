@@ -14,7 +14,7 @@ import {
   APP_TAGS,
   APP_WEBHOOK_URL,
   APP_ACCOUNT_ASSOCIATION,
-} from '@/constants/app';
+} from '@/constants/appConstants';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

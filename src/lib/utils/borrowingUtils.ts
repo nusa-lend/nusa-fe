@@ -1,5 +1,5 @@
-import { getTokenById } from '@/constants/token';
-import { getNetworkById } from '@/constants/network';
+import { getTokenById } from '@/constants/tokenConstants';
+import { getNetworkById } from '@/constants/networkConstants';
 import { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 import { ApiBorrowingMarket } from '@/services/borrowingMarketService';
 

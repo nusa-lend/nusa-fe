@@ -1,8 +1,13 @@
 'use client';
 
+import Tooltip from '@/components/ui/miniapp/Tooltip';
 import { useState } from 'react';
 
-export default function RepayBorrow() {
+interface RepayBorrowProps {
+  onTransactionComplete?: (data: any) => void;
+}
+
+export default function RepayBorrow({ onTransactionComplete }: RepayBorrowProps) {
   const [borrowAmount, setBorrowAmount] = useState('');
   const [amount, setAmount] = useState('');
   const [balance] = useState(1000000);
@@ -11,8 +16,29 @@ export default function RepayBorrow() {
   const isInsufficientBalance = balance === 0;
   const hasAmount = borrowAmount && parseFloat(borrowAmount.replace(/,/g, '')) > 0;
 
-  const handleBorrow = () => {
+  const handleRepay = () => {
     if (borrowAmount && parseFloat(borrowAmount.replace(/,/g, '')) >= minBorrow) {
+      const transactionData = {
+        type: 'repay-borrow',
+        collateralToken: {
+          symbol: 'bNVDA',
+          logo: '/assets/rwa/bNVDA.png',
+          amount: '100',
+        },
+        borrowToken: {
+          symbol: 'IDRX',
+          logo: '/assets/stablecoins/idrx.png',
+          amount: borrowAmount,
+        },
+        borrowNetwork: {
+          name: 'Arbitrum',
+          logo: '/assets/network/arbitrum.png',
+          apr: '0.03%',
+        },
+        amount: borrowAmount,
+      };
+
+      onTransactionComplete?.(transactionData);
     }
   };
 
@@ -108,9 +134,16 @@ export default function RepayBorrow() {
           <div className="flex justify-between text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <span>LTV / LLTV</span>
-              <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
-                <span className="text-gray-400 text-xs font-bold">i</span>
-              </div>
+              <Tooltip
+                content="If your Loan-to-value ratio (LTV) reaches 80% (Limit-LTV), your loan will be liquidated"
+                trigger="click"
+                position="right"
+                className="z-50"
+              >
+                <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
+                  <span className="text-gray-400 text-xs font-bold">i</span>
+                </div>
+              </Tooltip>
             </div>
             <span className="text-gray-900 font-semibold text-[15px]">
               <span className="text-green-600">0%</span> / 80%
@@ -156,13 +189,13 @@ export default function RepayBorrow() {
       </div>
 
       <button
-        onClick={handleBorrow}
+        onClick={handleRepay}
         disabled={!hasAmount || isInsufficientBalance}
         className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition mt-3 ${
           hasAmount && !isInsufficientBalance ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80' : 'bg-[#a8cfe5] cursor-not-allowed'
         }`}
       >
-        {hasAmount ? 'Borrow More' : 'Enter an amount'}
+        {hasAmount ? 'Repay Borrow' : 'Enter an amount'}
       </button>
     </div>
   );

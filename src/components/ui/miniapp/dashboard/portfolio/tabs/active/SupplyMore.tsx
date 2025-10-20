@@ -2,13 +2,34 @@
 
 import { useState } from 'react';
 
-export default function SupplyMore() {
+interface SupplyMoreProps {
+  onTransactionComplete?: (data: any) => void;
+}
+
+export default function SupplyMore({ onTransactionComplete }: SupplyMoreProps) {
   const [amount, setAmount] = useState('');
   const [balance] = useState(1000000);
   const [isDisclaimerExpanded, setIsDisclaimerExpanded] = useState(true);
 
   const handleSupply = () => {
     if (amount && parseFloat(amount.replace(/,/g, '')) > 0) {
+      // Simulate transaction completion
+      const transactionData = {
+        type: 'supply-more',
+        supplyToken: {
+          symbol: 'IDRX',
+          logo: '/assets/stablecoins/idrx.png',
+          amount: amount,
+        },
+        supplyNetwork: {
+          name: 'Arbitrum',
+          logo: '/assets/network/arbitrum.png',
+          apy: '12.5%',
+        },
+        amount: amount,
+      };
+
+      onTransactionComplete?.(transactionData);
     }
   };
 

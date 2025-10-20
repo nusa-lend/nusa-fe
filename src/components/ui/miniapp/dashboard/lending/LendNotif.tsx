@@ -9,17 +9,19 @@ interface LendNotifProps {
   selectedMarket: LendingMarket | null;
   selectedChain: LendingNetworkOption | null;
   amount?: string;
+  tx?: { hash?: `0x${string}`; success: boolean };
   onDone: () => void;
 }
 
-export default function LendNotif({ selectedMarket, selectedChain, amount, onDone }: LendNotifProps) {
+export default function LendNotif({ selectedMarket, selectedChain, amount, tx, onDone }: LendNotifProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   const transactionData = {
-    date: '2025-01-13 15:00',
-    txHash: '09a6...df6i',
-    amount: amount || '10,000,000',
-    apy: selectedChain?.apy || selectedMarket?.defaultApy || '7.91%',
+    date: new Date().toLocaleString(),
+    txHash: tx?.hash ? `${tx.hash.slice(0, 6)}...${tx.hash.slice(-4)}` : '-',
+    amount: amount || '-',
+    apy: selectedChain?.apy || selectedMarket?.defaultApy || '-',
+    success: tx?.success ?? true,
   };
 
   const handleDone = () => {
@@ -38,10 +40,16 @@ export default function LendNotif({ selectedMarket, selectedChain, amount, onDon
       className="w-full max-w-md mx-auto space-y-6 pb-4"
     >
       <div className="flex flex-col items-center space-y-4">
-        <div className="w-16 h-16 rounded-full border-4 border-teal-200 flex items-center justify-center bg-white">
-          <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
+        <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center bg-white ${transactionData.success ? 'border-teal-200' : 'border-red-200'}`}>
+          {transactionData.success ? (
+            <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
         </div>
 
         <div className="text-center">
@@ -56,7 +64,7 @@ export default function LendNotif({ selectedMarket, selectedChain, amount, onDon
               overlap={25}
             />
           </div>
-          <p className="text-gray-700 font-medium text-sm">Successful!</p>
+          <p className={`text-gray-700 font-medium text-sm`}>{transactionData.success ? 'Successful!' : 'Failed'}</p>
         </div>
       </div>
 

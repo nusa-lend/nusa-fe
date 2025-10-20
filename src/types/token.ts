@@ -1,4 +1,4 @@
-export type TokenCategory = 'stablecoin' | 'rwa';
+export type TokenCategory = 'stablecoin' | 'rwa' | 'coin';
 
 export interface Token {
   id: string;

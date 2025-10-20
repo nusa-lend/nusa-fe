@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Portfolio from './Portfolio';
-import PortfolioBottomSheet from './PortfolioBottomSheet';
+import ActiveBottomSheet from './ActiveBottomSheet';
 import HistoryBottomSheet from './HistoryBottomSheet';
 
 interface ActivePosition {
@@ -61,7 +61,7 @@ export default function PortfolioContainer() {
               transaction={selectedItem as HistoryTransaction}
             />
           ) : (
-            <PortfolioBottomSheet
+            <ActiveBottomSheet
               isOpen={isBottomSheetOpen}
               onClose={handleCloseBottomSheet}
               position={selectedItem as ActivePosition}

@@ -102,7 +102,7 @@ export default function Borrow({ onItemClick, markets, isLoading, error }: Borro
               className="z-50"
             >
               <div className="flex items-center space-x-1 cursor-pointer">
-                <span className="text-[14px] font-normal text-[#767676]">est. APY</span>
+                <span className="text-[14px] font-normal text-[#767676]">est. APR</span>
                 <div className="w-4 h-4 border border-[#767676] rounded-full flex items-center justify-center">
                   <span className="text-xs text-[#767676] font-bold">!</span>
                 </div>

@@ -32,7 +32,7 @@ export default function HistoryBottomSheet({ isOpen, onClose, transaction }: His
       isOpen={isOpen}
       onClose={onClose}
       title=""
-      height="100vh"
+      height="70vh"
       showHandle={false}
       showCloseButton={true}
       contentRef={contentRef}

@@ -1,0 +1,194 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { gsap } from 'gsap';
+import TabNavigation from './tabs/TabNavigation';
+import SupplyMore from './tabs/active/SupplyMore';
+import WithdrawSupply from './tabs/active/WithdrawSupply';
+import BorrowMore from './tabs/active/BorrowMore';
+import RepayBorrow from './tabs/active/RepayBorrow';
+import TransactionNotif from './tabs/active/TransactionNotif';
+
+import BottomSheet from '@/components/ui/miniapp/BottomSheet';
+import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+
+interface ActivePosition {
+  id: string;
+  token1: string;
+  token2: string;
+  imageSize: number;
+  title: string;
+  subtitle: string;
+  apy: string;
+  apyColor: string;
+  type: 'lend' | 'borrow';
+}
+
+interface ActiveBottomSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  position: ActivePosition;
+}
+
+export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveBottomSheetProps) {
+  const [activeTab, setActiveTab] = useState<string>('');
+  const [currentStep, setCurrentStep] = useState<'form' | 'notification'>('form');
+  const [transactionData, setTransactionData] = useState<any>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null) as React.MutableRefObject<HTMLDivElement>;
+  const formRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  const getTabsAndDefault = () => {
+    if (position.type === 'lend') {
+      return {
+        tabs: ['Supply', 'Withdraw'],
+        defaultTab: 'Supply',
+      };
+    } else {
+      return {
+        tabs: ['Borrow', 'Repay'],
+        defaultTab: 'Borrow',
+      };
+    }
+  };
+
+  const { tabs, defaultTab } = getTabsAndDefault();
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
+
+  const handleTransactionComplete = (data: any) => {
+    setTransactionData(data);
+
+    if (isAnimating) return;
+    setIsAnimating(true);
+
+    setTimeout(() => {
+      const tl = gsap.timeline({
+        defaults: { duration: 0.3, ease: 'power2.inOut' },
+        onComplete: () => {
+          setCurrentStep('notification');
+          setIsAnimating(false);
+
+          if (contentRef.current) {
+            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+          }
+        },
+      });
+
+      tl.to(formRef.current, { xPercent: -100, opacity: 0 }, 0).fromTo(
+        notificationRef.current,
+        { xPercent: 100, opacity: 0, visibility: 'hidden' },
+        { xPercent: 0, opacity: 1, visibility: 'visible' },
+        0
+      );
+    }, 100);
+  };
+
+  const handleNotificationDone = () => {
+    setCurrentStep('form');
+    setTransactionData(null);
+    onClose();
+  };
+
+  const renderTabContent = () => {
+    if (position.type === 'lend') {
+      return activeTab === 'Supply' ? (
+        <SupplyMore onTransactionComplete={handleTransactionComplete} />
+      ) : (
+        <WithdrawSupply onTransactionComplete={handleTransactionComplete} />
+      );
+    } else {
+      return activeTab === 'Borrow' ? (
+        <BorrowMore onTransactionComplete={handleTransactionComplete} />
+      ) : (
+        <RepayBorrow onTransactionComplete={handleTransactionComplete} />
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(defaultTab);
+      setCurrentStep('form');
+      setTransactionData(null);
+      setIsAnimating(false);
+
+      // Initialize GSAP animations
+      gsap.set(formRef.current, { xPercent: 0, opacity: 1 });
+      gsap.set(notificationRef.current, {
+        xPercent: 100,
+        opacity: 0,
+        visibility: 'hidden',
+      });
+    }
+  }, [isOpen, defaultTab]);
+
+  const sheetHeight = currentStep === 'notification' ? '70vh' : '100vh';
+
+  return (
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title=""
+      height={sheetHeight}
+      showHandle={false}
+      showCloseButton={true}
+      contentRef={contentRef}
+    >
+      <div className="relative w-full h-full">
+        <div
+          ref={formRef}
+          className="absolute inset-0 w-full"
+          style={{
+            zIndex: currentStep === 'form' ? 30 : 1,
+            visibility: currentStep === 'form' ? 'visible' : 'hidden',
+          }}
+        >
+          <div className="w-full h-full mt-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-md font-semibold text-gray-900">
+                {position.type === 'lend' ? `IDRX on Base` : `bNVDA / IDRX`}
+              </h2>
+              <TokenNetworkPair tokenLogo={position.token1} networkLogo={position.token2} size={25} overlap={25} />
+            </div>
+
+            <TabNavigation
+              tabs={tabs}
+              defaultTab={defaultTab}
+              onTabChange={handleTabChange}
+              fullWidth={true}
+              showFilter={false}
+            />
+
+            <div className="mt-6">{renderTabContent()}</div>
+          </div>
+        </div>
+
+        <div
+          ref={notificationRef}
+          className="absolute inset-0 w-full"
+          style={{
+            zIndex: currentStep === 'notification' ? 40 : 1,
+            visibility: currentStep === 'notification' ? 'visible' : 'hidden',
+          }}
+        >
+          {transactionData && (
+            <TransactionNotif
+              type={transactionData.type}
+              collateralToken={transactionData.collateralToken}
+              borrowToken={transactionData.borrowToken}
+              borrowNetwork={transactionData.borrowNetwork}
+              supplyToken={transactionData.supplyToken}
+              supplyNetwork={transactionData.supplyNetwork}
+              amount={transactionData.amount}
+              onDone={handleNotificationDone}
+            />
+          )}
+        </div>
+      </div>
+    </BottomSheet>
+  );
+}

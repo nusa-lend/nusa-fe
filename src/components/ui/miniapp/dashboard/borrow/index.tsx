@@ -3,15 +3,11 @@
 import { useState } from 'react';
 import Borrow from './Borrow';
 import BorrowForm from './BorrowBottomSheet';
+import { useBorrowingMarkets } from '@/hooks/useBorrowMarkets';
 import type { BorrowingMarket } from '@/types/borrowing';
 
-interface BorrowContainerProps {
-  markets: BorrowingMarket[];
-  isLoading: boolean;
-  error: any;
-}
-
-export default function BorrowContainer({ markets, isLoading, error }: BorrowContainerProps) {
+export default function BorrowContainer() {
+  const { data: markets = [], isLoading, error } = useBorrowingMarkets();
   const [isBorrowFormOpen, setIsBorrowFormOpen] = useState(false);
   const [selectedBorrowingItem, setSelectedBorrowingItem] = useState<BorrowingMarket | null>(null);
 

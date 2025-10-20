@@ -1,6 +1,4 @@
 import { Token } from './token';
-import { LendingPosition } from './lending';
-import { BorrowingPosition } from './borrowing';
 
 export interface PortfolioSummary {
   totalValue: number;

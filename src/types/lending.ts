@@ -1,45 +1,44 @@
-import { Token } from './token';
-import { Network } from './network';
-
-export interface LendingNetworkOption {
+export type LendingNetworkOption = {
   id: string;
   name: string;
   networkLogo: string;
   apy: string;
-}
+  chainId?: number;
+  address?: string;
+  decimals?: number;
+  isActive?: boolean;
+  userBalance?: string;
+};
 
-export interface LendingMarket {
+export type LendingMarket = {
   id: string;
   tokenSymbol: string;
   tokenName: string;
   tokenLogo: string;
   defaultApy: string;
   networks: LendingNetworkOption[];
-}
+  userBalance?: string;
+};
 
-export interface LendingPosition {
-  market: LendingMarket;
-  network: LendingNetworkOption;
-  amount: number;
-  apy: string;
-  earned: number;
-  timestamp: number;
-}
-
-export interface LendingTransaction {
+export type SupportedLendingNetworkConfig = {
   id: string;
-  type: 'supply' | 'withdraw';
-  market: LendingMarket;
-  network: LendingNetworkOption;
-  amount: number;
-  txHash: string;
-  timestamp: number;
-  status: 'pending' | 'confirmed' | 'failed';
-}
+  name: string;
+  logo: string;
+  chainId?: number;
+  address?: string;
+  decimals?: number;
+  isActive?: boolean;
+};
 
-export interface LendingStats {
-  totalSupplied: number;
-  totalEarned: number;
-  averageApy: number;
-  activePositions: number;
-}
+export type SupportedLendingPoolConfig = {
+  id: string;
+  name: string;
+  logo: string;
+  logoCountry?: string;
+  networks: SupportedLendingNetworkConfig[];
+};
+
+export type SupportedLendingPoolsMap = Record<string, SupportedLendingPoolConfig>;
+
+export type GetAprFn = (tokenId: string, networkId: string) => Promise<string>;
+export type FetchUserBalanceFn = (tokenId: string, networkId: string, userAddress?: string) => Promise<string>;

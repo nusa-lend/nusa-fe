@@ -20,7 +20,7 @@ export default function BorrowForm({ isOpen, onClose, onBorrow, selectedMarket }
   const [selectedStablecoin, setSelectedStablecoin] = useState<any>(null);
   const [borrowedAmount, setBorrowedAmount] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState(false);
-  const sheetHeight = currentStep === 'notification' ? '75vh' : '100vh';
+  const sheetHeight = currentStep === 'notification' ? '65vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -91,7 +91,7 @@ export default function BorrowForm({ isOpen, onClose, onBorrow, selectedMarket }
 
     if (isAnimating) return;
     setIsAnimating(true);
-    onBorrow(selectedStablecoin, amount);
+    // onBorrow(selectedStablecoin, amount);
 
     setTimeout(() => {
       const tl = gsap.timeline({

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import TokenNetworkPair from '../../TokenNetworkPair';
 import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
+import Tooltip from '@/components/ui/miniapp/Tooltip';
 
 interface InputAmountProps {
   selectedMarket: BorrowingMarket;
@@ -152,9 +153,16 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
           <div className="flex justify-between text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <span>LTV / LLTV</span>
-              <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
-                <span className="text-gray-400 text-xs font-bold">i</span>
-              </div>
+              <Tooltip
+                content="If your Loan-to-value ratio (LTV) reaches 80% (Limit-LTV), your loan will be liquidated"
+                trigger="click"
+                position="right"
+                className="z-50"
+              >
+                <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
+                  <span className="text-gray-400 text-xs font-bold">i</span>
+                </div>
+              </Tooltip>
             </div>
             <span className="text-gray-900 font-semibold text-[15px]">
               <span className="text-green-600">0%</span> / {selectedMarket.maxLtv}%
@@ -174,9 +182,16 @@ export default function InputAmount({ selectedMarket, selectedNetwork, onBack, o
           <div className="flex justify-between text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <span>APR</span>
-              <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
-                <span className="text-gray-400 text-xs font-bold">i</span>
-              </div>
+              <Tooltip
+                content="This is Net Borrow Rate of your position"
+                trigger="click"
+                position="right"
+                className="z-50"
+              >
+                <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
+                  <span className="text-gray-400 text-xs font-bold">i</span>
+                </div>
+              </Tooltip>
             </div>
             <span className="text-green-600 font-semibold text-[15px]">~{selectedNetwork.interestRate}%</span>
           </div>

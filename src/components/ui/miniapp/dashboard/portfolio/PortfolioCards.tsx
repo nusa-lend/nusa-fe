@@ -18,7 +18,12 @@ export default function PortfolioCards({ data }: PortfolioCardsProps) {
         >
           <div className="text-xs text-gray-600 font-medium mb-1">{item.title}</div>
           <div className="text-lg font-bold text-[#279E73] mb-1">{item.value}</div>
-          {item.sub && <div className="text-xs text-[#767676] font-medium">{item.sub}</div>}
+          {item.sub && (
+            <div className="text-xs text-[#767676] font-medium">
+              <span className={`${item.title === 'Lending' ? 'text-green-600' : 'text-red-600'}`}>{item.sub}</span> Avg
+              APY
+            </div>
+          )}
         </div>
       ))}
     </div>

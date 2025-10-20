@@ -11,7 +11,7 @@ import LendNotif from './LendNotif';
 interface LendingFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onLend: (chain: any, amount: string) => void;
+  onLend: (chain: any, amount: string, tx?: { hash?: `0x${string}`; success: boolean }) => void;
   selectedMarket: LendingMarket | null;
 }
 
@@ -21,7 +21,7 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
 
   const [lentAmount, setLentAmount] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState(false);
-  const sheetHeight = currentStep === 'notification' ? '75vh' : '100vh';
+  const sheetHeight = currentStep === 'notification' ? '65vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -89,8 +89,10 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
     }
   }, [isOpen]);
 
-  const handleLend = (amount: string) => {
+  const [txInfo, setTxInfo] = useState<{ hash?: `0x${string}`; success: boolean } | undefined>();
+  const handleLend = (amount: string, tx?: { hash?: `0x${string}`; success: boolean }) => {
     setLentAmount(amount);
+    setTxInfo(tx);
 
     if (isAnimating) return;
     setIsAnimating(true);
@@ -183,6 +185,7 @@ export default function LendingForm({ isOpen, onClose, onLend, selectedMarket }:
             selectedMarket={selectedMarket}
             selectedChain={selectedChain}
             amount={lentAmount}
+            tx={txInfo}
             onDone={handleNotificationDone}
           />
         </div>

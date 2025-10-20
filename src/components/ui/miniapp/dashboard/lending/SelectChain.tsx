@@ -2,6 +2,9 @@
 
 import TokenNetworkPair from '../../TokenNetworkPair';
 import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
+import { Wallet } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { useTokenBalances } from '@/hooks/useUserBalances';
 
 interface SelectChainProps {
   market: LendingMarket;
@@ -9,6 +12,9 @@ interface SelectChainProps {
 }
 
 export default function SelectChain({ market, onSelect }: SelectChainProps) {
+  const { address } = useAccount();
+  const { data: balances } = useTokenBalances({ userAddress: address, market });
+
   const handleChainSelect = (chain: LendingNetworkOption) => {
     onSelect(chain);
   };
@@ -36,7 +42,7 @@ export default function SelectChain({ market, onSelect }: SelectChainProps) {
           <button
             key={chain.id}
             onClick={() => handleChainSelect(chain)}
-            className="w-full p-2 bg-[#F8FAFC] rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
+            className="w-full p-3 bg-[#F8FAFC] rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
           >
             <div className="flex items-center space-x-3">
               <TokenNetworkPair tokenLogo={market.tokenLogo} networkLogo={chain.networkLogo} size={30} overlap={25} />
@@ -47,7 +53,11 @@ export default function SelectChain({ market, onSelect }: SelectChainProps) {
                 </div>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right space-y-2">
+              <div className="flex items-center justify-end gap-1 text-xs text-gray-500">
+                <Wallet className="w-4 h-4" />
+                <span>{(balances && (balances as any)[chain.id]) || '0'}</span>
+              </div>
               <div className="text-sm font-medium text-green-600">{chain.apy || market.defaultApy}</div>
             </div>
           </button>

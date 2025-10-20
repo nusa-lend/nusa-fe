@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import { APP_NAME, APP_DESCRIPTION } from '@/constants/app';
+import { APP_NAME, APP_DESCRIPTION } from '@/constants/appConstants';
 import Providers from '@/components/providers/Providers';
 import './globals.css';
 
