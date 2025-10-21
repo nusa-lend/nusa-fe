@@ -36,9 +36,9 @@ export function useAggregatedBalances(markets: LendingMarket[] | BorrowingMarket
               })
             );
 
-            results[market.id] = totalBalance.toFixed(2);
+            results[market.id] = totalBalance.toString();
           } catch {
-            results[market.id] = '0.00';
+            results[market.id] = '0';
           }
         })
       );

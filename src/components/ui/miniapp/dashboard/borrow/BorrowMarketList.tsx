@@ -87,7 +87,7 @@ export default function BorrowMarketList({ onMarketSelect, markets, isLoading, e
           >
             <div className="flex items-center space-x-1 cursor-pointer">
               <ChevronsLeftRight className="w-5 h-5 text-[#767676] rotate-90 hover:text-[#5a5a5a] transition-colors" />
-              <span className="text-[14px] font-normal text-[#767676]">RWA Collateral</span>
+              <span className="text-[14px] font-normal text-[#767676]">Collateral</span>
               <div className="w-4 h-4 border border-[#767676] rounded-full flex items-center justify-center">
                 <span className="text-xs text-[#767676] font-bold">!</span>
               </div>
@@ -116,7 +116,7 @@ export default function BorrowMarketList({ onMarketSelect, markets, isLoading, e
                 <ItemCard
                   imageSrc={market.token.logo}
                   title={market.token.symbol}
-                  subtitle={`${(marketBalances?.[market.id] || '0.00')}`}
+                  subtitle={`${(marketBalances?.[market.id] || '0')}`}
                   apy={market.networks[0]?.interestRate || '0%'}
                   apyColor="#279E73"
                   imageSize={36}

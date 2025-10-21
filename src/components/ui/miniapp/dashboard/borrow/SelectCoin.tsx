@@ -3,21 +3,39 @@
 import Image from 'next/image';
 import TokenWithFlag from '../../TokenWithFlag';
 import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
-import { LOCAL_STABLECOIN_OPTIONS } from '@/constants/placeholder';
+import { Wallet } from 'lucide-react';
+import { formatBalance } from '@/utils/formatBalance';
+import type { BorrowingTokenOption } from '@/utils/borrowingUtils';
+import { SUPPORTED_BORROWING_POOLS } from '@/constants/borrowConstants';
 
 interface SelectCoinProps {
   market: BorrowingMarket;
   onSelect: (network: BorrowingNetworkOption) => void;
+  balance?: string;
+  borrowingTokens: BorrowingTokenOption[];
+  selectedMarketId?: string;
 }
 
-export default function SelectCoin({ market, onSelect }: SelectCoinProps) {
+export default function SelectCoin({ market, onSelect, balance, borrowingTokens, selectedMarketId }: SelectCoinProps) {
+
   const handleStablecoinSelect = (stablecoin: any) => {
+    const stablecoinPool = SUPPORTED_BORROWING_POOLS[stablecoin.id as keyof typeof SUPPORTED_BORROWING_POOLS];
+    if (!stablecoinPool) {
+      console.error('Stablecoin pool not found:', stablecoin.id);
+      return;
+    }
+    
+    const selectedNetwork = stablecoinPool.networks[0];
+    
     const networkOption: BorrowingNetworkOption = {
-      id: stablecoin.id,
+      id: selectedNetwork.id,
       name: stablecoin.name,
       networkLogo: stablecoin.icon,
       interestRate: stablecoin.apr,
       maxBorrowAmount: 100000,
+      chainId: selectedNetwork.chainId,
+      address: selectedNetwork.address,
+      decimals: selectedNetwork.decimals,
     };
     onSelect(networkOption);
   };
@@ -47,7 +65,10 @@ export default function SelectCoin({ market, onSelect }: SelectCoinProps) {
             </div>
             <div>
               <div className="font-semibold text-gray-900">{market.token.symbol}</div>
-              <div className="text-sm text-gray-400">Balance 0.00</div>
+              <div className="text-sm text-gray-400 flex items-center space-x-1">
+                <Wallet className="w-4 h-4 text-gray-400" />
+                <span>{formatBalance(balance)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -70,7 +91,9 @@ export default function SelectCoin({ market, onSelect }: SelectCoinProps) {
         </div>
 
         <div className="space-y-3">
-          {LOCAL_STABLECOIN_OPTIONS.map(localStablecoin => (
+          {borrowingTokens
+            .filter(token => !selectedMarketId || token.id !== selectedMarketId)
+            .map(localStablecoin => (
             <button
               key={localStablecoin.id}
               onClick={() => handleStablecoinSelect(localStablecoin)}

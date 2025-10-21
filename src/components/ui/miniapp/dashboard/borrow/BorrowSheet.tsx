@@ -5,13 +5,14 @@ import { gsap } from 'gsap';
 import BottomSheet from '@/components/ui/miniapp/BottomSheet';
 import SelectCoin from './SelectCoin';
 import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
+import type { BorrowingTokenOption } from '@/utils/borrowingUtils';
 import BorrowForm from './BorrowForm';
 import TransactionResult from './TransactionResult';
 import { useAccount } from 'wagmi';
 import { useTokenBalances } from '@/hooks/useUserBalances';
 import { useAllowances } from '@/hooks/useAllowances';
 import { useApproveToken } from '@/hooks/useApproveToken';
-import { BORROWING_CONTRACTS } from '@/constants/borrowConstants';
+import { CONTRACTS } from '@/constants/contractsConstants';
 import { writeContract, waitForTransactionReceipt } from '@wagmi/core';
 import { config } from '@/lib/wagmi';
 import BorrowingPoolAbi from '@/abis/LendingPool.json';
@@ -24,16 +25,17 @@ interface BorrowSheetProps {
   onClose: () => void;
   onBorrowComplete: (chain: any, amount: string, tx?: { hash?: `0x${string}`; success: boolean }) => void;
   selectedMarket: BorrowingMarket | null;
+  borrowingTokens: BorrowingTokenOption[];
 }
 
-export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selectedMarket }: BorrowSheetProps) {
+export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selectedMarket, borrowingTokens }: BorrowSheetProps) {
   const [currentStep, setCurrentStep] = useState<'select' | 'form' | 'result'>('select');
   const [selectedNetwork, setSelectedNetwork] = useState<BorrowingNetworkOption | null>(null);
   const [borrowedAmount, setBorrowedAmount] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isBorrowing, setIsBorrowing] = useState(false);
   const [transactionInfo, setTransactionInfo] = useState<{ hash?: `0x${string}`; success: boolean } | undefined>();
-  const sheetHeight = currentStep === 'result' ? '75vh' : '100vh';
+  const sheetHeight = currentStep === 'result' ? '70vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -45,31 +47,44 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
   const queryClient = useQueryClient();
   const { data: balances } = useTokenBalances({ userAddress: address, market: selectedMarket });
 
+  const aggregatedBalance = balances ? Object.values(balances).reduce((total, balance) => {
+    return total + parseFloat(balance || '0');
+  }, 0) : 0;
+
   const spenderAddress = (() => {
     if (!selectedNetwork?.chainId) return undefined;
-    if (selectedNetwork.chainId === 8453) return BORROWING_CONTRACTS.base.Proxy as `0x${string}`;
-    if (selectedNetwork.chainId === 42161) return BORROWING_CONTRACTS.arbitrum.Proxy as `0x${string}`;
+    if (selectedNetwork.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
+    if (selectedNetwork.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
     return undefined;
   })();
 
-  const { data: allowances, refetch: refetchAllowances } = useAllowances({
+  const { data: allowances } = useAllowances({
     userAddress: address,
     spenderAddress,
     market: selectedMarket,
   });
 
+  const collateralNetworkOption = selectedMarket ? {
+    id: selectedMarket.networks[0].id,
+    name: selectedMarket.token.symbol,
+    networkLogo: selectedMarket.token.logo,
+    interestRate: '0%',
+    maxBorrowAmount: 100000,
+    chainId: selectedMarket.networks[0].chainId,
+    address: selectedMarket.networks[0].address,
+    decimals: selectedMarket.networks[0].decimals,
+  } : null;
+
   const { approveToken, isApproving, resetApproving } = useApproveToken({
     userAddress: address,
     spenderAddress,
-    selectedNetwork: selectedNetwork,
+    selectedNetwork: collateralNetworkOption,
     selectedMarketId: selectedMarket?.id,
   });
 
   const handleApprove = async (amount: string) => {
     try {
       await approveToken(amount);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      await refetchAllowances();
     } catch (e) {
       console.error('Approve failed:', e);
     }
@@ -87,40 +102,68 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
       const borrowNum = parseFloat(borrowAmt);
       if (!borrowAmt || Number.isNaN(borrowNum) || borrowNum <= 0) return;
       
-      const decimals = selectedNetwork.decimals ?? 6;
-      const collateralValue = parseUnitsString(collateralAmt, decimals);
-      const borrowValue = parseUnitsString(borrowAmt, decimals);
+      const collateralDecimals = selectedMarket.networks[0].decimals ?? 18;
+      const borrowDecimals = selectedNetwork.decimals ?? 6;
+      const collateralValue = parseUnitsString(collateralAmt, collateralDecimals);
+      const borrowValue = parseUnitsString(borrowAmt, borrowDecimals);
       
       const proxy = (() => {
-        if (selectedNetwork.chainId === 8453) return BORROWING_CONTRACTS.base.Proxy as `0x${string}`;
-        if (selectedNetwork.chainId === 42161) return BORROWING_CONTRACTS.arbitrum.Proxy as `0x${string}`;
+        if (selectedNetwork.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
+        if (selectedNetwork.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
         return undefined;
       })();
+      
       if (!proxy) return;
       
       setIsBorrowing(true);
+      
+      const collateralTokenAddress = selectedMarket.networks.find(net => net.id === selectedNetwork.id)?.address;
+      if (!collateralTokenAddress) return;
       
       const supplyHash = await writeContract(config, {
         abi: BorrowingPoolAbi as any,
         address: proxy,
         chainId: selectedNetwork.chainId as any,
         functionName: 'supplyCollateral',
-        args: [address, selectedMarket.token.id as `0x${string}`, collateralValue],
+        args: [address, collateralTokenAddress as `0x${string}`, collateralValue],
       });
       await waitForTransactionReceipt(config, { hash: supplyHash });
       
-      const borrowHash = await writeContract(config, {
-        abi: BorrowingPoolAbi as any,
-        address: proxy,
-        chainId: selectedNetwork.chainId as any,
-        functionName: 'borrow',
-        args: [address, selectedNetwork.address as `0x${string}`, borrowValue, selectedNetwork.chainId || 0],
-      });
-      await waitForTransactionReceipt(config, { hash: borrowHash });
+      let borrowHash: `0x${string}`;
+      try {
+        borrowHash = await writeContract(config, {
+          abi: BorrowingPoolAbi as any,
+          address: proxy,
+          chainId: selectedNetwork.chainId as any,
+          functionName: 'borrow',
+          args: [address, selectedNetwork.address as `0x${string}`, borrowValue, selectedNetwork.chainId || 0],
+        });
+        await waitForTransactionReceipt(config, { hash: borrowHash });
+      } catch (borrowError) {
+        console.error('Borrow failed after supply success, attempting to withdraw collateral:', borrowError);
+        
+        try {
+          const withdrawHash = await writeContract(config, {
+            abi: BorrowingPoolAbi as any,
+            address: proxy,
+            chainId: selectedNetwork.chainId as any,
+            functionName: 'withdrawCollateral',
+            args: [address, collateralTokenAddress as `0x${string}`, collateralValue],
+          });
+          await waitForTransactionReceipt(config, { hash: withdrawHash });
+          console.log('Successfully withdrew collateral after borrow failure');
+        } catch (withdrawError) {
+          console.error('Failed to withdraw collateral after borrow failure:', withdrawError);
+          throw new Error('Borrow failed and unable to withdraw collateral. Your collateral has been supplied but you did not receive the borrowed tokens. Please contact support.');
+        }
+        
+        throw borrowError;
+      }
       
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['tokenBalances', address, selectedMarket.id] }),
         queryClient.invalidateQueries({ queryKey: ['allowances', address, proxy, selectedMarket.id] }),
+        queryClient.invalidateQueries({ queryKey: ['aggregatedBalances', address] }),
       ]);
 
       handleBorrowComplete(borrowAmount, { hash: borrowHash, success: true });
@@ -278,7 +321,7 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
             visibility: currentStep === 'select' ? 'visible' : 'hidden',
           }}
         >
-          {selectedMarket && <SelectCoin market={selectedMarket} onSelect={handleNetworkSelect} />}
+          {selectedMarket && <SelectCoin market={selectedMarket} onSelect={handleNetworkSelect} balance={aggregatedBalance.toString()} borrowingTokens={borrowingTokens} selectedMarketId={selectedMarket.id} />}
         </div>
 
         <div

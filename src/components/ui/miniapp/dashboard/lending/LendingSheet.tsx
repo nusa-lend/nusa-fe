@@ -11,7 +11,7 @@ import { useAccount } from 'wagmi';
 import { useTokenBalances } from '@/hooks/useUserBalances';
 import { useAllowances } from '@/hooks/useAllowances';
 import { useApproveToken } from '@/hooks/useApproveToken';
-import { LENDING_CONTRACTS } from '@/constants/lendingConstants';
+import { CONTRACTS } from '@/constants/contractsConstants';
 import { writeContract, waitForTransactionReceipt } from '@wagmi/core';
 import { config } from '@/lib/wagmi';
 import LendingPoolAbi from '@/abis/LendingPool.json';
@@ -33,7 +33,7 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSupplying, setIsSupplying] = useState(false);
   const [transactionInfo, setTransactionInfo] = useState<{ hash?: `0x${string}`; success: boolean } | undefined>();
-  const sheetHeight = currentStep === 'result' ? '75vh' : '100vh';
+  const sheetHeight = currentStep === 'result' ? '70vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -47,17 +47,17 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
 
   const spenderAddress = (() => {
     if (!selectedNetwork?.chainId) return undefined;
-    if (selectedNetwork.chainId === 8453) return LENDING_CONTRACTS.base.Proxy as `0x${string}`;
-    if (selectedNetwork.chainId === 42161) return LENDING_CONTRACTS.arbitrum.Proxy as `0x${string}`;
+    if (selectedNetwork.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
+    if (selectedNetwork.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
     return undefined;
   })();
 
-  const { data: allowances, refetch: refetchAllowances } = useAllowances({
+  const { data: allowances } = useAllowances({
     userAddress: address,
     spenderAddress,
     market: selectedMarket,
   });
-
+  
   const { approveToken, isApproving, resetApproving } = useApproveToken({
     userAddress: address,
     spenderAddress,
@@ -68,8 +68,6 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
   const handleApprove = async (amount: string) => {
     try {
       await approveToken(amount);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      await refetchAllowances();
     } catch (e) {
       console.error('Approve failed:', e);
     }
@@ -84,8 +82,8 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
       const decimals = selectedNetwork.decimals ?? 6;
       const value = parseUnitsString(amt, decimals);
       const proxy = (() => {
-        if (selectedNetwork.chainId === 8453) return LENDING_CONTRACTS.base.Proxy as `0x${string}`;
-        if (selectedNetwork.chainId === 42161) return LENDING_CONTRACTS.arbitrum.Proxy as `0x${string}`;
+        if (selectedNetwork.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
+        if (selectedNetwork.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
         return undefined;
       })();
       if (!proxy) return;
@@ -101,6 +99,7 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['tokenBalances', address, selectedMarket.id] }),
         queryClient.invalidateQueries({ queryKey: ['allowances', address, proxy, selectedMarket.id] }),
+        queryClient.invalidateQueries({ queryKey: ['aggregatedBalances', address] }),
       ]);
 
       handleLendingComplete(amount, { hash, success: true });

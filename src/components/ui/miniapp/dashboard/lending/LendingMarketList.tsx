@@ -110,7 +110,7 @@ export default function LendingMarketList({ onMarketSelect, markets, isLoading, 
                 <ItemCard
                   imageSrc={market.tokenLogo}
                   title={market.tokenSymbol}
-                  subtitle={`${(marketBalances?.[market.id] || '0.00')}`}
+                  subtitle={`${(marketBalances?.[market.id] || '0')}`}
                   apy={market.defaultApy}
                   imageSize={36}
                   isLoading={balancesLoading}

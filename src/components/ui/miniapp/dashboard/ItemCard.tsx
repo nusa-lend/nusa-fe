@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { Wallet } from 'lucide-react';
+import { formatBalance } from '@/utils/formatBalance';
 
 interface ItemCardProps {
   imageSrc: string;
@@ -66,7 +67,7 @@ export default function ItemCard({
               ) : (
                 <div className="text-[14px] text-gray-400 font-light flex items-center gap-1">
                   <Wallet className="w-4 h-4" />
-                   {subtitle}
+                   {formatBalance(subtitle)}
                 </div>
               )}
           </div>

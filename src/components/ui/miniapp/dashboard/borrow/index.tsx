@@ -3,12 +3,14 @@
 import BorrowSheet from './BorrowSheet';
 import { useState, useEffect } from 'react';
 import BorrowMarketList from './BorrowMarketList';
-import { formatBorrowingMarkets } from '@/utils/borrowingUtils';
+import { formatBorrowingMarkets, formatBorrowingTokens } from '@/utils/borrowingUtils';
 import { SUPPORTED_BORROWING_POOLS } from '@/constants/borrowConstants';
 import type { BorrowingMarket, SupportedBorrowingPoolsMap } from '@/types/borrowing';
+import type { BorrowingTokenOption } from '@/utils/borrowingUtils';
 
 export default function BorrowContainer() {
   const [markets, setMarkets] = useState<BorrowingMarket[]>([]);
+  const [borrowingTokens, setBorrowingTokens] = useState<BorrowingTokenOption[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMarket, setSelectedMarket] = useState<BorrowingMarket | null>(null);
@@ -36,8 +38,10 @@ export default function BorrowContainer() {
         setIsLoading(true);
         const pools = SUPPORTED_BORROWING_POOLS as unknown as SupportedBorrowingPoolsMap;
         const result = await formatBorrowingMarkets(pools);
+        const tokens = await formatBorrowingTokens();
         if (!isCancelled) {
           setMarkets(result);
+          setBorrowingTokens(tokens);
           setError(null);
         }
       } catch (e) {
@@ -60,6 +64,7 @@ export default function BorrowContainer() {
         onClose={handleCloseModal}
         onBorrowComplete={handleBorrowComplete}
         selectedMarket={selectedMarket}
+        borrowingTokens={borrowingTokens}
       />
     </>
   );

@@ -7,6 +7,7 @@ import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing'
 import Tooltip from '@/components/ui/miniapp/Tooltip';
 import { hasSufficientAllowance } from '@/hooks/useAllowances';
 import { Wallet } from 'lucide-react';
+import { formatBalance } from '@/utils/formatBalance';
 
 interface BorrowFormProps {
   selectedMarket: BorrowingMarket | null;
@@ -37,11 +38,29 @@ export default function BorrowForm({
   const [borrowAmount, setBorrowAmount] = useState('');
   const [isDisclaimerExpanded, setIsDisclaimerExpanded] = useState(true);
 
-  const selectedBalanceStr = selectedNetwork ? (balances && (balances as any)[selectedNetwork.id]) || '0' : '0';
+  const selectedBalanceStr = balances ? Object.values(balances as Record<string, string>).reduce((total: number, balance: string) => {
+    return total + parseFloat(balance || '0');
+  }, 0).toString() : '0';
   const isInsufficientBalance = parseFloat(selectedBalanceStr || '0') === 0;
-  const hasAllowance = selectedNetwork ? hasSufficientAllowance(allowances, selectedNetwork.id, collateralAmount || '0') : false;
+  // For allowance check, we need to use the collateral token's network ID, not the borrowed token's network ID
+  const collateralNetworkId = selectedMarket?.networks[0]?.id; // Use collateral token's network
+  const hasAllowance = collateralNetworkId ? hasSufficientAllowance(allowances, collateralNetworkId, collateralAmount || '0') : false;
   const hasCollateralAmount = collateralAmount && parseFloat(collateralAmount.replace(/,/g, '')) > 0;
   const hasBorrowAmount = borrowAmount && parseFloat(borrowAmount.replace(/,/g, '')) > 0;
+
+  const collateralValue = parseFloat(collateralAmount.replace(/,/g, '') || '0');
+  const maxBorrowAmount = collateralValue * (selectedMarket?.maxLtv || 80) / 100;
+  
+  const currentLtv = collateralValue > 0 ? (parseFloat(borrowAmount.replace(/,/g, '') || '0') / collateralValue) * 100 : 0;
+  const marginCallLtv = (selectedMarket?.maxLtv || 80) * 0.8;
+  const liquidationLtv = selectedMarket?.maxLtv || 80;
+
+  const handlePercentageClick = (percentage: number) => {
+    if (!hasCollateralAmount) return;
+    const amount = (maxBorrowAmount * percentage / 100);
+    const formattedAmount = parseFloat(amount.toFixed(6)).toString();
+    setBorrowAmount(formattedAmount);
+  };
 
   const handleBorrow = async () => {
     await onBorrow(collateralAmount, borrowAmount);
@@ -60,14 +79,10 @@ export default function BorrowForm({
     const dustFactor = 0.999;
     const decimals = selectedNetwork?.decimals ?? 6;
     const maxUsable = bal * dustFactor;
-    setCollateralAmount(maxUsable.toFixed(Math.min(6, decimals)));
+    const formattedAmount = parseFloat(maxUsable.toFixed(Math.min(6, decimals))).toString();
+    setCollateralAmount(formattedAmount);
   };
 
-  const formatBalance = (value: string) => {
-    const num = parseFloat(value || '0');
-    if (Number.isNaN(num)) return '0';
-    return num.toLocaleString('id-ID');
-  };
 
   const toggleDisclaimer = () => {
     setIsDisclaimerExpanded(!isDisclaimerExpanded);
@@ -151,20 +166,39 @@ export default function BorrowForm({
               type="text"
               value={borrowAmount}
               onChange={e => setBorrowAmount(e.target.value)}
-              placeholder="Amount"
-              className="bg-transparent text-gray-900 font-semibold placeholder-gray-400 focus:outline-none flex-1"
+              placeholder={hasCollateralAmount ? "Amount" : "Enter collateral first"}
+              disabled={!hasCollateralAmount}
+              className={`bg-transparent font-semibold placeholder-gray-400 focus:outline-none flex-1 ${
+                hasCollateralAmount 
+                  ? 'text-gray-900' 
+                  : 'text-gray-400 cursor-not-allowed'
+              }`}
             />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-900 font-semibold">{selectedNetwork.name}</span>
           </div>
         </div>
-        <div className="mt-5 flex items-center justify-between">
-          <span className="text-sm text-gray-500">Available: 0</span>
-          <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-            MAX
-          </button>
-        </div>
+        
+        {hasCollateralAmount && (
+          <div className="mt-3 flex gap-2">
+            {[25, 50, 75, 100].map((percentage) => (
+              <button
+                key={percentage}
+                onClick={() => handlePercentageClick(percentage)}
+                className="px-3 py-1.5 text-xs font-medium bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                {percentage}%
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {hasCollateralAmount && (
+          <div className="mt-2 text-xs text-gray-500">
+            Max borrow: {formatBalance(maxBorrowAmount.toString())} {selectedNetwork.name}
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -187,16 +221,18 @@ export default function BorrowForm({
               </Tooltip>
             </div>
             <span className="text-gray-900 font-semibold text-[15px]">
-              <span className="text-green-600">0%</span> / {selectedMarket.maxLtv}%
+              <span className={currentLtv > liquidationLtv ? 'text-red-600' : currentLtv > marginCallLtv ? 'text-yellow-600' : 'text-green-600'}>
+                {currentLtv.toFixed(1)}%
+              </span> / {selectedMarket.maxLtv}%
             </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Margin Call LTV</span>
-            <span className="text-gray-900 font-semibold text-[15px]">0</span>
+            <span className="text-gray-900 font-semibold text-[15px]">{marginCallLtv.toFixed(1)}%</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Liquidation LTV</span>
-            <span className="text-gray-900 font-semibold text-[15px]">0</span>
+            <span className="text-gray-900 font-semibold text-[15px]">{liquidationLtv.toFixed(1)}%</span>
           </div>
         </div>
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3 mt-4">Borrow Rate</h3>

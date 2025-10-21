@@ -54,7 +54,8 @@ export default function LendingForm({
     const dustFactor = 0.999;
     const decimals = selectedNetwork?.decimals ?? 6;
     const maxUsable = bal * dustFactor;
-    setAmount(maxUsable.toFixed(Math.min(6, decimals)));
+    const formattedAmount = parseFloat(maxUsable.toFixed(Math.min(6, decimals))).toString();
+    setAmount(formattedAmount);
   };
 
   const formatBalance = (value: string) => {
