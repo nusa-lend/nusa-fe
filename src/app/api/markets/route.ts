@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { NETWORKS } from '@/constants/network';
-import type { ApiLendingMarket } from '@/services/lendingMarketService';
+import { NETWORKS } from '@/constants/networkConstants';
 
 type PonderMarket = {
   id: string;
@@ -15,6 +14,20 @@ type PonderMarket = {
 
 type PonderResponse = {
   data: PonderMarket[];
+};
+
+type ApiLendingMarketNetwork = {
+  networkId: string;
+  apy: string;
+};
+
+type ApiLendingMarket = {
+  id: string;
+  tokenSymbol: string;
+  tokenName: string;
+  tokenId: string;
+  defaultApy: string;
+  networks: ApiLendingMarketNetwork[];
 };
 
 const RAY = 10n ** 27n;
