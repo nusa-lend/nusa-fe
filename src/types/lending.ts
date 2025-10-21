@@ -39,6 +39,3 @@ export type SupportedLendingPoolConfig = {
 };
 
 export type SupportedLendingPoolsMap = Record<string, SupportedLendingPoolConfig>;
-
-export type GetAprFn = (tokenId: string, networkId: string) => Promise<string>;
-export type FetchUserBalanceFn = (tokenId: string, networkId: string, userAddress?: string) => Promise<string>;

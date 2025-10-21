@@ -1,40 +1,65 @@
 'use client';
 
-import { useState } from 'react';
-import Borrow from './Borrow';
-import BorrowForm from './BorrowBottomSheet';
-import { useBorrowingMarkets } from '@/hooks/useBorrowMarkets';
-import type { BorrowingMarket } from '@/types/borrowing';
+import BorrowSheet from './BorrowSheet';
+import { useState, useEffect } from 'react';
+import BorrowMarketList from './BorrowMarketList';
+import { formatBorrowingMarkets } from '@/utils/borrowingUtils';
+import { SUPPORTED_BORROWING_POOLS } from '@/constants/borrowConstants';
+import type { BorrowingMarket, SupportedBorrowingPoolsMap } from '@/types/borrowing';
 
 export default function BorrowContainer() {
-  const { data: markets = [], isLoading, error } = useBorrowingMarkets();
-  const [isBorrowFormOpen, setIsBorrowFormOpen] = useState(false);
-  const [selectedBorrowingItem, setSelectedBorrowingItem] = useState<BorrowingMarket | null>(null);
-
-  const handleBorrowClick = (market: BorrowingMarket) => {
-    setSelectedBorrowingItem(market);
-    setIsBorrowFormOpen(true);
+  const [markets, setMarkets] = useState<BorrowingMarket[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMarket, setSelectedMarket] = useState<BorrowingMarket | null>(null);
+  const [error, setError] = useState<any>(null);
+  
+  const handleMarketSelect = (market: BorrowingMarket) => {
+    setSelectedMarket(market);
+    setIsModalOpen(true);
   };
 
-  const handleBorrow = (stablecoin: any, amount: string) => {
-    setIsBorrowFormOpen(false);
-    setSelectedBorrowingItem(null);
+  const handleBorrowComplete = () => {
+    setIsModalOpen(false);
+    setSelectedMarket(null);
   };
 
-  const handleCloseBorrowForm = () => {
-    setIsBorrowFormOpen(false);
-    setSelectedBorrowingItem(null);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMarket(null);
   };
+
+  useEffect(() => {
+    let isCancelled = false;
+    (async () => {
+      try {
+        setIsLoading(true);
+        const pools = SUPPORTED_BORROWING_POOLS as unknown as SupportedBorrowingPoolsMap;
+        const result = await formatBorrowingMarkets(pools);
+        if (!isCancelled) {
+          setMarkets(result);
+          setError(null);
+        }
+      } catch (e) {
+        if (!isCancelled) setError(e);
+      } finally {
+        if (!isCancelled) setIsLoading(false);
+      }
+    })();
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   return (
     <>
-      <Borrow onItemClick={handleBorrowClick} markets={markets} isLoading={isLoading} error={error} />
+      <BorrowMarketList onMarketSelect={handleMarketSelect} markets={markets} isLoading={isLoading} error={error} />
 
-      <BorrowForm
-        isOpen={isBorrowFormOpen}
-        onClose={handleCloseBorrowForm}
-        onBorrow={handleBorrow}
-        selectedMarket={selectedBorrowingItem}
+      <BorrowSheet
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onBorrowComplete={handleBorrowComplete}
+        selectedMarket={selectedMarket}
       />
     </>
   );

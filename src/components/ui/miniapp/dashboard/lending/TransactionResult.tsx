@@ -1,35 +1,37 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import TokenNetworkPair from '../../TokenNetworkPair';
 import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
 
-interface LendNotifProps {
+interface TransactionResultProps {
   selectedMarket: LendingMarket | null;
-  selectedChain: LendingNetworkOption | null;
+  selectedNetwork: LendingNetworkOption | null;
   amount?: string;
-  tx?: { hash?: `0x${string}`; success: boolean };
-  onDone: () => void;
+  transaction?: { hash?: `0x${string}`; success: boolean };
+  onComplete: () => void;
 }
 
-export default function LendNotif({ selectedMarket, selectedChain, amount, tx, onDone }: LendNotifProps) {
-  const [isVisible, setIsVisible] = useState(true);
-
+export default function TransactionResult({
+  selectedMarket,
+  selectedNetwork,
+  amount,
+  transaction,
+  onComplete,
+}: TransactionResultProps) {
   const transactionData = {
     date: new Date().toLocaleString(),
-    txHash: tx?.hash ? `${tx.hash.slice(0, 6)}...${tx.hash.slice(-4)}` : '-',
+    txHash: transaction?.hash ? `${transaction.hash.slice(0, 6)}...${transaction.hash.slice(-4)}` : '-',
     amount: amount || '-',
-    apy: selectedChain?.apy || selectedMarket?.defaultApy || '-',
-    success: tx?.success ?? true,
+    apy: selectedNetwork?.apy || selectedMarket?.defaultApy || '-',
+    success: transaction?.success ?? true,
   };
 
-  const handleDone = () => {
-    setIsVisible(false);
-    onDone();
+  const handleComplete = () => {
+    onComplete();
   };
 
-  if (!selectedChain || !selectedMarket) return <></>;
+  if (!selectedNetwork || !selectedMarket) return <></>;
 
   return (
     <motion.div
@@ -40,7 +42,9 @@ export default function LendNotif({ selectedMarket, selectedChain, amount, tx, o
       className="w-full max-w-md mx-auto space-y-6 pb-4"
     >
       <div className="flex flex-col items-center space-y-4">
-        <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center bg-white ${transactionData.success ? 'border-teal-200' : 'border-red-200'}`}>
+        <div
+          className={`w-16 h-16 rounded-full border-4 flex items-center justify-center bg-white ${transactionData.success ? 'border-teal-200' : 'border-red-200'}`}
+        >
           {transactionData.success ? (
             <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -55,11 +59,11 @@ export default function LendNotif({ selectedMarket, selectedChain, amount, tx, o
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <h2 className="text-md font-semibold text-gray-900">
-              Lend {selectedMarket.tokenSymbol} on {selectedChain.name}
+              Lend {selectedMarket.tokenSymbol} on {selectedNetwork.name}
             </h2>
             <TokenNetworkPair
               tokenLogo={selectedMarket.tokenLogo}
-              networkLogo={selectedChain.networkLogo}
+              networkLogo={selectedNetwork.networkLogo}
               size={24}
               overlap={25}
             />
@@ -98,7 +102,7 @@ export default function LendNotif({ selectedMarket, selectedChain, amount, tx, o
       </div>
 
       <button
-        onClick={handleDone}
+        onClick={handleComplete}
         className="w-full py-3.5 rounded-xl font-semibold text-[15px] text-white bg-[#56a2cc] hover:bg-[#4085a6] transition"
       >
         Done

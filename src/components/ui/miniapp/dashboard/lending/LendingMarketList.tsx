@@ -3,19 +3,21 @@ import ItemCard from '../ItemCard';
 import { LendingMarket } from '@/types/lending';
 import { ChevronsLeftRight } from 'lucide-react';
 import Tooltip from '../../Tooltip';
+import { useAggregatedBalances } from '@/hooks/useAggregatedBalances';
 
-interface LendingProps {
-  onItemClick: (item: LendingMarket) => void;
+interface LendingMarketListProps {
+  onMarketSelect: (market: LendingMarket) => void;
   markets: LendingMarket[];
   isLoading: boolean;
   error: any;
 }
 
-export default function Lending({ onItemClick, markets, isLoading, error }: LendingProps) {
+export default function LendingMarketList({ onMarketSelect, markets, isLoading, error }: LendingMarketListProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const { data: marketBalances, isLoading: balancesLoading } = useAggregatedBalances(markets);
 
-  const handleItemClick = (market: LendingMarket) => {
-    onItemClick(market);
+  const handleMarketClick = (market: LendingMarket) => {
+    onMarketSelect(market);
   };
 
   const filteredMarkets = markets.filter(
@@ -104,13 +106,14 @@ export default function Lending({ onItemClick, markets, isLoading, error }: Lend
         <div className="space-y-2">
           {filteredMarkets.length > 0 ? (
             filteredMarkets.map(market => (
-              <div key={market.id} onClick={() => handleItemClick(market)} className="cursor-pointer">
+              <div key={market.id} onClick={() => handleMarketClick(market)} className="cursor-pointer">
                 <ItemCard
                   imageSrc={market.tokenLogo}
                   title={market.tokenSymbol}
-                  subtitle={market.tokenName}
+                  subtitle={`${(marketBalances?.[market.id] || '0.00')}`}
                   apy={market.defaultApy}
                   imageSize={36}
+                  isLoading={balancesLoading}
                 />
               </div>
             ))

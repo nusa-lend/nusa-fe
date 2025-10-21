@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { Wallet } from 'lucide-react';
 
 interface ItemCardProps {
   imageSrc: string;
@@ -9,6 +10,7 @@ interface ItemCardProps {
   imageSize?: number;
   flagSrc?: string;
   flagSize?: number;
+  isLoading?: boolean;
 }
 
 export default function ItemCard({
@@ -20,6 +22,7 @@ export default function ItemCard({
   imageSize = 48,
   flagSrc,
   flagSize = 20,
+  isLoading = false,
 }: ItemCardProps) {
   return (
     <div className="mt-2 bg-[#f8fafc] rounded-xl p-4">
@@ -56,7 +59,16 @@ export default function ItemCard({
           </div>
           <div>
             <div className="text-black font-bold text-md">{title}</div>
-            <div className="text-sm text-gray-400 font-light">{subtitle}</div>
+              {isLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-300 rounded w-24 mt-1"></div>
+                </div>
+              ) : (
+                <div className="text-[14px] text-gray-400 font-light flex items-center gap-1">
+                  <Wallet className="w-4 h-4" />
+                   {subtitle}
+                </div>
+              )}
           </div>
         </div>
         <div className="text-right">

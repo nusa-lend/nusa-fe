@@ -126,8 +126,6 @@ export default function RepayBorrow({ onTransactionComplete }: RepayBorrowProps)
         </div>
       </div>
 
-      <span className="text-xs text-gray-400">Minimum borrow: 100,000 IDRX</span>
-
       <div className="rounded-xl border border-gray-200 bg-white p-4 mt-3 space-y-2">
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Risk Level</h3>
         <div className="space-y-3">

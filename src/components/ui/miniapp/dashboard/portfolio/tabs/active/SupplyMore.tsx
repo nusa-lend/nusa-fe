@@ -82,8 +82,6 @@ export default function SupplyMore({ onTransactionComplete }: SupplyMoreProps) {
         </div>
       </div>
 
-      <div className="text-sm text-gray-500 -mt-2">Minimum deposit: 100,000 IDRX</div>
-
       <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Estimated Yield Earned (IDRX)</h3>
         <div className="space-y-3">

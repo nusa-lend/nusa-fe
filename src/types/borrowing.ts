@@ -14,6 +14,9 @@ export interface BorrowingNetworkOption {
   networkLogo: string;
   interestRate: string;
   maxBorrowAmount: number;
+  chainId?: number;
+  address?: string;
+  decimals?: number;
 }
 
 export interface BorrowingPosition {
@@ -35,4 +38,22 @@ export interface BorrowingTransaction {
   txHash: string;
   timestamp: number;
   status: 'pending' | 'confirmed' | 'failed';
+}
+
+export interface SupportedBorrowingPoolsMap {
+  [key: string]: {
+    id: string;
+    name: string;
+    logo: string;
+    logoCountry: string;
+    networks: Array<{
+      id: string;
+      name: string;
+      logo: string;
+      chainId: number;
+      address: string;
+      decimals: number;
+      isActive: boolean;
+    }>;
+  };
 }

@@ -2,10 +2,11 @@ import { getBalance } from '@wagmi/core';
 import { config } from '@/lib/wagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { LendingMarket } from '@/types/lending';
+import type { BorrowingMarket } from '@/types/borrowing';
 
 type UseTokenBalancesArgs = {
   userAddress?: `0x${string}`;
-  market: LendingMarket | null;
+  market: LendingMarket | BorrowingMarket | null;
 };
 
 export function useTokenBalances({ userAddress, market }: UseTokenBalancesArgs) {

@@ -7,6 +7,7 @@ import BottomSheet from '../BottomSheet';
 import { LogOut } from 'lucide-react';
 import { useDisconnect } from 'wagmi';
 import { useRouter } from 'next/navigation';
+
 import LendingContainer from './lending';
 import BorrowContainer from './borrow';
 import PortfolioContainer from './portfolio';
@@ -16,7 +17,7 @@ export default function DashboardPage() {
   const { disconnect } = useDisconnect();
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'lending' | 'borrow' | 'portfolio'>('lending');
-
+  
   const handleLogout = async () => {
     try {
       disconnect();

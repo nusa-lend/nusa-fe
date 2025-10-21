@@ -1,22 +1,22 @@
 'use client';
 
-import TokenNetworkPair from '../../TokenNetworkPair';
-import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
-import { Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
+import { Wallet } from 'lucide-react';
 import { useTokenBalances } from '@/hooks/useUserBalances';
+import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
 
-interface SelectChainProps {
+interface NetworkSelectorProps {
   market: LendingMarket;
-  onSelect: (network: LendingNetworkOption) => void;
+  onNetworkSelect: (network: LendingNetworkOption) => void;
 }
 
-export default function SelectChain({ market, onSelect }: SelectChainProps) {
+export default function NetworkSelector({ market, onNetworkSelect }: NetworkSelectorProps) {
   const { address } = useAccount();
   const { data: balances } = useTokenBalances({ userAddress: address, market });
 
-  const handleChainSelect = (chain: LendingNetworkOption) => {
-    onSelect(chain);
+  const handleNetworkSelect = (network: LendingNetworkOption) => {
+    onNetworkSelect(network);
   };
 
   return (
@@ -38,27 +38,25 @@ export default function SelectChain({ market, onSelect }: SelectChainProps) {
       </div>
 
       <div className="space-y-3">
-        {market.networks.map(chain => (
+        {market.networks.map(network => (
           <button
-            key={chain.id}
-            onClick={() => handleChainSelect(chain)}
+            key={network.id}
+            onClick={() => handleNetworkSelect(network)}
             className="w-full p-3 bg-[#F8FAFC] rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
           >
-            <div className="flex items-center space-x-3">
-              <TokenNetworkPair tokenLogo={market.tokenLogo} networkLogo={chain.networkLogo} size={30} overlap={25} />
-              <div className="text-left">
-                <div className="font-medium text-gray-900">
-                  <div className="text-gray-900">{market.tokenSymbol}</div>
-                  <div className="text-gray-500 text-sm">on {chain.name}</div>
+            <div className="flex flex-col">
+              <div className="flex items-center space-x-3">
+                <TokenNetworkPair tokenLogo={market.tokenLogo} networkLogo={network.networkLogo} size={30} overlap={25} />
+                <div className="text-left">
+                  <div className="font-medium text-gray-900">
+                    <div className="text-gray-900">{market.tokenSymbol}</div>
+                    <div className="text-gray-500 text-sm">on {network.name}</div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="text-right space-y-2">
-              <div className="flex items-center justify-end gap-1 text-xs text-gray-500">
-                <Wallet className="w-4 h-4" />
-                <span>{(balances && (balances as any)[chain.id]) || '0'}</span>
-              </div>
-              <div className="text-sm font-medium text-green-600">{chain.apy || market.defaultApy}</div>
+            <div className="text-right">
+              <div className="text-sm font-medium text-green-600">{network.apy || market.defaultApy}</div>
             </div>
           </button>
         ))}

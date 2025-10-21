@@ -1,31 +1,34 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import TokenNetworkPair from '../../TokenNetworkPair';
 import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 
-interface BorrowNotifProps {
-  selectedMarket: BorrowingMarket;
-  selectedNetwork: BorrowingNetworkOption;
+interface TransactionResultProps {
+  selectedMarket: BorrowingMarket | null;
+  selectedNetwork: BorrowingNetworkOption | null;
   amount?: string;
-  onDone: () => void;
+  transaction?: { hash?: `0x${string}`; success: boolean };
+  onComplete: () => void;
 }
 
-export default function BorrowNotif({ selectedMarket, selectedNetwork, amount, onDone }: BorrowNotifProps) {
-  const [isVisible, setIsVisible] = useState(true);
-
+export default function TransactionResult({
+  selectedMarket,
+  selectedNetwork,
+  amount,
+  transaction,
+  onComplete,
+}: TransactionResultProps) {
   const transactionData = {
-    date: '2025-01-13 15:00',
-    txHash: '09a6...df6i',
-    amount: amount || '1,000',
-    apr: selectedNetwork?.interestRate || '0%',
-    stablecoin: selectedMarket?.token?.symbol || 'Unknown',
+    date: new Date().toLocaleString(),
+    txHash: transaction?.hash ? `${transaction.hash.slice(0, 6)}...${transaction.hash.slice(-4)}` : '-',
+    amount: amount || '-',
+    apr: selectedNetwork?.interestRate || '-',
+    success: transaction?.success ?? true,
   };
 
-  const handleDone = () => {
-    setIsVisible(false);
-    onDone();
+  const handleComplete = () => {
+    onComplete();
   };
 
   if (!selectedNetwork || !selectedMarket) return <></>;
@@ -39,25 +42,33 @@ export default function BorrowNotif({ selectedMarket, selectedNetwork, amount, o
       className="w-full max-w-md mx-auto space-y-6 pb-4"
     >
       <div className="flex flex-col items-center space-y-4">
-        <div className="w-16 h-16 rounded-full border-4 border-teal-200 flex items-center justify-center bg-white">
-          <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
+        <div
+          className={`w-16 h-16 rounded-full border-4 flex items-center justify-center bg-white ${transactionData.success ? 'border-teal-200' : 'border-red-200'}`}
+        >
+          {transactionData.success ? (
+            <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
         </div>
 
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <h2 className="text-md font-semibold text-gray-900">
-              Borrow {selectedMarket?.token?.symbol || 'Unknown'} / {selectedNetwork?.name || 'Unknown'}
+              Borrow {selectedMarket.token.symbol} on {selectedNetwork.name}
             </h2>
             <TokenNetworkPair
-              tokenLogo={selectedMarket?.token?.logo || '/assets/placeholder/placeholder_selectcoin.png'}
-              networkLogo={selectedNetwork?.networkLogo || '/assets/placeholder/placeholder_selectchain.png'}
+              tokenLogo={selectedMarket.token.logo}
+              networkLogo={selectedNetwork.networkLogo}
               size={24}
               overlap={25}
             />
           </div>
-          <p className="text-gray-700 font-medium text-sm">Successful!</p>
+          <p className={`text-gray-700 font-medium text-sm`}>{transactionData.success ? 'Successful!' : 'Failed'}</p>
         </div>
       </div>
 
@@ -75,7 +86,7 @@ export default function BorrowNotif({ selectedMarket, selectedNetwork, amount, o
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Amount</span>
           <span className="text-sm font-semibold text-gray-900">
-            {transactionData.amount} {transactionData.stablecoin}
+            {selectedMarket.token.symbol} {transactionData.amount}
           </span>
         </div>
 
@@ -86,12 +97,12 @@ export default function BorrowNotif({ selectedMarket, selectedNetwork, amount, o
               <span className="text-gray-400 text-xs font-bold">i</span>
             </div>
           </div>
-          <span className="text-sm font-semibold text-red-600">~{transactionData.apr}</span>
+          <span className="text-sm font-semibold text-green-600">~{transactionData.apr}%</span>
         </div>
       </div>
 
       <button
-        onClick={handleDone}
+        onClick={handleComplete}
         className="w-full py-3.5 rounded-xl font-semibold text-[15px] text-white bg-[#56a2cc] hover:bg-[#4085a6] transition"
       >
         Done

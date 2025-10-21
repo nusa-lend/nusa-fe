@@ -2,13 +2,14 @@ import { readContract } from '@wagmi/core';
 import { config } from '@/lib/wagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { LendingMarket } from '@/types/lending';
-import { formatUnitsString } from '@/lib/utils/lendingUtils';
+import type { BorrowingMarket } from '@/types/borrowing';
+import { formatUnitsString } from '@/utils/lendingUtils';
 import Erc20Abi from '@/abis/Erc20.json';
 
 type UseAllowancesArgs = {
   userAddress?: `0x${string}`;
   spenderAddress?: `0x${string}`;
-  market: LendingMarket | null;
+  market: LendingMarket | BorrowingMarket | null;
 };
 
 export type AllowancePerNetwork = Record<string, { formatted: string; value: string; decimals: number }>;

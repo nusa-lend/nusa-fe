@@ -2,83 +2,47 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import TokenNetworkPair from '../../TokenNetworkPair';
+import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
 import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
 import Tooltip from '@/components/ui/miniapp/Tooltip';
-import { useAccount } from 'wagmi';
-import { useTokenBalances } from '@/hooks/useUserBalances';
-import { useAllowances, hasSufficientAllowance } from '@/hooks/useAllowances';
-import { LENDING_CONTRACTS } from '@/constants/lendingConstants';
-import { writeContract, waitForTransactionReceipt } from '@wagmi/core';
-import { config } from '@/lib/wagmi';
-import Erc20Abi from '@/abis/Erc20.json';
-import LendingPoolAbi from '@/abis/LendingPool.json';
-import { parseUnitsString } from '@/lib/utils/lendingUtils';
-import { useQueryClient } from '@tanstack/react-query';
+import { hasSufficientAllowance } from '@/hooks/useAllowances';
+import { Wallet } from 'lucide-react';
 
-interface InputAmountProps {
+interface LendingFormProps {
   selectedMarket: LendingMarket | null;
-  selectedChain: LendingNetworkOption | null;
+  selectedNetwork: LendingNetworkOption | null;
   onBack: () => void;
-  onLend: (amount: string, tx?: { hash?: `0x${string}`; success: boolean }) => void;
+  onApprove: (amount: string) => Promise<void>;
+  onSupply: (amount: string) => Promise<void>;
+  isApproving: boolean;
+  isSupplying: boolean;
+  balances: any;
+  allowances: any;
+  spenderAddress: `0x${string}` | undefined;
 }
 
-export default function InputAmount({ selectedMarket, selectedChain, onBack, onLend }: InputAmountProps) {
+export default function LendingForm({
+  selectedMarket,
+  selectedNetwork,
+  onBack,
+  onApprove,
+  onSupply,
+  isApproving,
+  isSupplying,
+  balances,
+  allowances,
+  spenderAddress,
+}: LendingFormProps) {
   const [amount, setAmount] = useState('');
-  const [isApproving, setIsApproving] = useState(false);
   const [isDisclaimerExpanded, setIsDisclaimerExpanded] = useState(true);
-  const [isSupplying, setIsSupplying] = useState(false);
-  const queryClient = useQueryClient();
 
-  const { address } = useAccount();
-  const { data: balances } = useTokenBalances({ userAddress: address, market: selectedMarket });
-  const selectedBalanceStr = selectedChain ? (balances && (balances as any)[selectedChain.id]) || '0' : '0';
-
-  const spenderAddress = (() => {
-    if (!selectedChain?.chainId) return undefined;
-    if (selectedChain.chainId === 8453) return LENDING_CONTRACTS.base.Proxy as `0x${string}`;
-    if (selectedChain.chainId === 42161) return LENDING_CONTRACTS.arbitrum.Proxy as `0x${string}`;
-    return undefined;
-  })();
-  const { data: allowances, refetch: refetchAllowances } = useAllowances({
-    userAddress: address,
-    spenderAddress,
-    market: selectedMarket,
-  });
+  const selectedBalanceStr = selectedNetwork ? (balances && (balances as any)[selectedNetwork.id]) || '0' : '0';
+  const isInsufficientBalance = parseFloat(selectedBalanceStr || '0') === 0;
+  const hasAllowance = selectedNetwork ? hasSufficientAllowance(allowances, selectedNetwork.id, amount || '0') : false;
+  const hasAmount = amount && parseFloat(amount.replace(/,/g, '')) > 0;
 
   const handleSupply = async () => {
-    try {
-      if (!address || !selectedMarket || !selectedChain) return;
-      const amt = (amount || '').replace(/,/g, '');
-      const num = parseFloat(amt);
-      if (!amt || Number.isNaN(num) || num <= 0) return;
-      const decimals = selectedChain.decimals ?? 6;
-      const value = parseUnitsString(amt, decimals);
-      const proxy = (() => {
-        if (selectedChain.chainId === 8453) return LENDING_CONTRACTS.base.Proxy as `0x${string}`;
-        if (selectedChain.chainId === 42161) return LENDING_CONTRACTS.arbitrum.Proxy as `0x${string}`;
-        return undefined;
-      })();
-      if (!proxy) return;
-      setIsSupplying(true);
-      const hash = await writeContract(config, {
-        abi: LendingPoolAbi as any,
-        address: proxy,
-        chainId: selectedChain.chainId as any,
-        functionName: 'supplyLiquidity',
-        args: [address, selectedChain.address as `0x${string}`, value],
-      });
-      await waitForTransactionReceipt(config, { hash });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['tokenBalances', address, selectedMarket.id] }),
-        queryClient.invalidateQueries({ queryKey: ['allowances', address, proxy, selectedMarket.id] }),
-      ]);
-      onLend(amount, { hash, success: true });
-    } catch (e) {
-      onLend(amount, { success: false });
-    } finally {
-      setIsSupplying(false);
-    }
+    await onSupply(amount);
   };
 
   const handleMaxClick = () => {
@@ -88,7 +52,7 @@ export default function InputAmount({ selectedMarket, selectedChain, onBack, onL
       return;
     }
     const dustFactor = 0.999;
-    const decimals = selectedChain?.decimals ?? 6;
+    const decimals = selectedNetwork?.decimals ?? 6;
     const maxUsable = bal * dustFactor;
     setAmount(maxUsable.toFixed(Math.min(6, decimals)));
   };
@@ -103,38 +67,11 @@ export default function InputAmount({ selectedMarket, selectedChain, onBack, onL
     setIsDisclaimerExpanded(!isDisclaimerExpanded);
   };
 
-  const isInsufficientBalance = parseFloat(selectedBalanceStr || '0') === 0;
-  const hasAllowance = selectedChain ? hasSufficientAllowance(allowances, selectedChain.id, amount || '0') : false;
-  
   const handleApprove = async () => {
-    try {
-      if (!address || !selectedMarket || !selectedChain || !spenderAddress) return;
-      const amt = (amount || '').replace(/,/g, '');
-      const num = parseFloat(amt);
-      if (!amt || Number.isNaN(num) || num <= 0) return;
-      const decimals = selectedChain.decimals ?? 6;
-      const value = parseUnitsString(amt, decimals);
-      setIsApproving(true);
-      const hash = await writeContract(config, {
-        abi: Erc20Abi as any,
-        address: selectedChain.address as `0x${string}`,
-        chainId: selectedChain.chainId as any,
-        functionName: 'approve',
-        args: [spenderAddress, value],
-      });
-      await waitForTransactionReceipt(config, { hash });
-      await queryClient.invalidateQueries({ queryKey: ['allowances', address, spenderAddress, selectedMarket.id] });
-      await new Promise(resolve => setTimeout(resolve, 100));
-      await refetchAllowances();
-    } catch (e) {
-    } finally {
-      setIsApproving(false);
-    }
+    await onApprove(amount);
   };
 
-  const hasAmount = amount && parseFloat(amount.replace(/,/g, '')) > 0;
-
-  if (!selectedChain || !selectedMarket) return <></>;
+  if (!selectedNetwork || !selectedMarket) return <></>;
 
   return (
     <div className="w-full max-w-md mx-auto space-y-5 pb-4 bg-white">
@@ -146,11 +83,11 @@ export default function InputAmount({ selectedMarket, selectedChain, onBack, onL
         </button>
         <div className="w-full flex items-center justify-between">
           <h2 className="text-md font-semibold text-gray-900">
-            Lend {selectedMarket.tokenSymbol} on {selectedChain.name}
+            Lend {selectedMarket.tokenSymbol} on {selectedNetwork.name}
           </h2>
           <TokenNetworkPair
             tokenLogo={selectedMarket.tokenLogo}
-            networkLogo={selectedChain.networkLogo}
+            networkLogo={selectedNetwork.networkLogo}
             size={30}
             overlap={25}
           />
@@ -179,7 +116,7 @@ export default function InputAmount({ selectedMarket, selectedChain, onBack, onL
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-900 font-semibold">{selectedMarket.tokenSymbol}</span>
-            <button className="p-1 hover:bg-gray-200 rounded transition">
+            {/* <button className="p-1 hover:bg-gray-200 rounded transition">
               <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -188,18 +125,19 @@ export default function InputAmount({ selectedMarket, selectedChain, onBack, onL
                   d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
                 />
               </svg>
-            </button>
+            </button> */}
           </div>
         </div>
         <div className="mt-5 flex items-center justify-between">
-          <span className="text-sm text-gray-500">Balance: {formatBalance(selectedBalanceStr)}</span>
+          <span className="text-sm text-gray-500 flex items-center gap-1">
+            <Wallet className="w-4 h-4" />
+            {formatBalance(selectedBalanceStr)}
+          </span>
           <button onClick={handleMaxClick} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
             MAX
           </button>
         </div>
       </div>
-
-      <div className="text-sm text-gray-500 -mt-2">Minimum deposit: 100,000 {selectedMarket.tokenSymbol}</div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3">
@@ -225,7 +163,7 @@ export default function InputAmount({ selectedMarket, selectedChain, onBack, onL
               </Tooltip>
             </div>
             <span className="text-green-600 font-semibold text-[15px]">
-              ~{selectedChain.apy || selectedMarket.defaultApy}
+              ~{selectedNetwork.apy || selectedMarket.defaultApy}
             </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">

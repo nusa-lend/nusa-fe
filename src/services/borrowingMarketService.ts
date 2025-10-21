@@ -1,5 +1,5 @@
 import { BorrowingMarket } from '@/types/borrowing';
-import { transformBorrowingMarkets } from '@/lib/utils/borrowingUtils';
+import { transformBorrowingMarkets } from '@/utils/borrowingUtils';
 
 export interface ApiBorrowingMarket {
   id: string;

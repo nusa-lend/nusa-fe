@@ -93,6 +93,17 @@ const config: Config = {
       fontFamily: {
         sans: ['SF UI Text', 'system-ui', 'sans-serif'],
       },
+
+      // ─── Animations ──────────────────────────────────────
+      animation: {
+        shimmer: 'shimmer 2s infinite',
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
     },
   },
   plugins: [],
