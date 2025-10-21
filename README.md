@@ -2,7 +2,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, copy the environment template and set the indexer endpoint:
+
+```bash
+cp .env.local.example .env.local
+# then edit .env.local if Ponder runs on a different host/port
+```
+
+Then run the development server:
 
 ```bash
 npm run dev
