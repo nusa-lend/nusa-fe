@@ -14,14 +14,61 @@ const toRatioOrUsd = (valueRay: string) => {
 
 const toUsd = toRatioOrUsd;
 
+const rayToPercentString = (value: string) => {
+  try {
+    const ray = BigInt(value);
+    const hundredthPercents = ray * 10000n / RAY;
+    const integerPart = hundredthPercents / 100n;
+    const fractionalPart = Number(hundredthPercents % 100n);
+    return `${integerPart.toString()}.${fractionalPart.toString().padStart(2, '0')}%`;
+  } catch {
+    return '0.00%';
+  }
+};
+
+const bpsToPercent = (bps?: number | null) => {
+  if (typeof bps !== 'number') return null;
+  return `${(bps / 100).toFixed(2)}%`;
+};
+
+type PonderToken = {
+  id: string;
+  symbol: string;
+  name?: string | null;
+  decimals: number;
+  collateralFactorBps: number;
+  liquidationThresholdBps?: number | null;
+};
+
+type PonderMarket = {
+  id: string;
+  tokenId: string;
+  borrowRateRay: string;
+  supplyRateRay: string;
+  utilizationRay: string;
+  reserveFactorBps: number;
+};
+
 type PonderPositionEntry = {
   type: 'supply_collateral' | 'supply_liquidity' | 'borrow';
   tokenId: string;
+  marketId: string;
   amount: string;
   usdValueRay: string;
   updatedAtTimestamp?: string;
   updatedAtBlock?: string;
-  chainDst?: string | null;
+  chainDst?: number | null;
+  market?: PonderMarket | null;
+  token?: PonderToken | null;
+};
+
+type PonderRisk = {
+  ltvRay: string;
+  maxLtvBps: number;
+  maxLiquidationBps: number;
+  collateralUsdRay: string;
+  debtUsdRay: string;
+  healthFactorRay: string;
 };
 
 const mapEntries = (entries?: PonderPositionEntry[]) => {
@@ -30,13 +77,57 @@ const mapEntries = (entries?: PonderPositionEntry[]) => {
   return entries.map((entry) => ({
     type: entry.type,
     tokenId: entry.tokenId,
+    marketId: entry.marketId,
     amount: entry.amount,
     usdValue: toUsd(entry.usdValueRay),
     usdValueRay: entry.usdValueRay,
     updatedAtTimestamp: entry.updatedAtTimestamp ? Number(entry.updatedAtTimestamp) : null,
     updatedAtBlock: entry.updatedAtBlock ? Number(entry.updatedAtBlock) : null,
     chainDst: entry.chainDst ?? null,
+    market: entry.market
+      ? {
+          id: entry.market.id,
+          tokenId: entry.market.tokenId,
+          borrowRateRay: entry.market.borrowRateRay,
+          borrowRatePercent: rayToPercentString(entry.market.borrowRateRay),
+          supplyRateRay: entry.market.supplyRateRay,
+          supplyRatePercent: rayToPercentString(entry.market.supplyRateRay),
+          utilizationRay: entry.market.utilizationRay,
+          utilizationPercent: rayToPercentString(entry.market.utilizationRay),
+          reserveFactorBps: entry.market.reserveFactorBps,
+        }
+      : null,
+    token: entry.token
+      ? {
+          id: entry.token.id,
+          symbol: entry.token.symbol,
+          name: entry.token.name ?? entry.token.symbol,
+          decimals: entry.token.decimals,
+          collateralFactorBps: entry.token.collateralFactorBps,
+          collateralFactorPercent: bpsToPercent(entry.token.collateralFactorBps),
+          liquidationThresholdBps: entry.token.liquidationThresholdBps ?? null,
+          liquidationThresholdPercent: bpsToPercent(entry.token.liquidationThresholdBps ?? null),
+        }
+      : null,
   }));
+};
+
+const mapRisk = (risk?: PonderRisk | null) => {
+  if (!risk) return null;
+  const ltv = toRatioOrUsd(risk.ltvRay);
+  return {
+    ltv,
+    ltvRay: risk.ltvRay,
+    ltvPercent: `${(ltv * 100).toFixed(2)}%`,
+    maxLtvBps: risk.maxLtvBps,
+    maxLtvPercent: bpsToPercent(risk.maxLtvBps),
+    maxLiquidationBps: risk.maxLiquidationBps,
+    maxLiquidationPercent: bpsToPercent(risk.maxLiquidationBps),
+    collateralUsd: toUsd(risk.collateralUsdRay),
+    debtUsd: toUsd(risk.debtUsdRay),
+    healthFactor: toRatioOrUsd(risk.healthFactorRay),
+    healthFactorRay: risk.healthFactorRay,
+  };
 };
 
 export async function GET(request: Request) {
@@ -78,6 +169,7 @@ export async function GET(request: Request) {
       healthFactorRay: string;
       updatedAtTimestamp: string;
       entries?: PonderPositionEntry[];
+      risk?: PonderRisk | null;
     }>;
   };
 
@@ -90,6 +182,7 @@ export async function GET(request: Request) {
       healthFactor: toRatioOrUsd(position.healthFactorRay),
       updatedAtTimestamp: Number(position.updatedAtTimestamp),
       entries: mapEntries(position.entries),
+      risk: mapRisk(position.risk),
     })) ?? [];
 
   return NextResponse.json({ data });
