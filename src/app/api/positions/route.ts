@@ -49,6 +49,22 @@ type PonderMarket = {
   reserveFactorBps: number;
 };
 
+type PonderLoan = {
+  id: string;
+  startTimestamp: string;
+  startBlock: string;
+  startTxHash: string;
+  borrowAmount: string;
+  borrowUsdRay: string;
+  borrowAprRay: string;
+  borrowApyRay: string;
+  repaidAmount: string;
+  repaidUsdRay: string;
+  status: string;
+  estimatedInterestUsdRay?: string | null;
+  durationSeconds?: number | null;
+};
+
 type PonderPositionEntry = {
   type: 'supply_collateral' | 'supply_liquidity' | 'borrow';
   tokenId: string;
@@ -60,6 +76,8 @@ type PonderPositionEntry = {
   chainDst?: number | null;
   market?: PonderMarket | null;
   token?: PonderToken | null;
+  interestUsdRay?: string | null;
+  loan?: PonderLoan | null;
 };
 
 type PonderRisk = {
@@ -84,6 +102,8 @@ const mapEntries = (entries?: PonderPositionEntry[]) => {
     updatedAtTimestamp: entry.updatedAtTimestamp ? Number(entry.updatedAtTimestamp) : null,
     updatedAtBlock: entry.updatedAtBlock ? Number(entry.updatedAtBlock) : null,
     chainDst: entry.chainDst ?? null,
+    interestUsd: entry.interestUsdRay ? toUsd(entry.interestUsdRay) : null,
+    interestUsdRay: entry.interestUsdRay ?? null,
     market: entry.market
       ? {
           id: entry.market.id,
@@ -107,6 +127,15 @@ const mapEntries = (entries?: PonderPositionEntry[]) => {
           collateralFactorPercent: bpsToPercent(entry.token.collateralFactorBps),
           liquidationThresholdBps: entry.token.liquidationThresholdBps ?? null,
           liquidationThresholdPercent: bpsToPercent(entry.token.liquidationThresholdBps ?? null),
+      }
+      : null,
+    loan: entry.loan
+      ? {
+          ...entry.loan,
+          durationSeconds: entry.loan.durationSeconds ?? null,
+          estimatedInterestUsd: entry.loan.estimatedInterestUsdRay
+            ? toUsd(entry.loan.estimatedInterestUsdRay)
+            : null,
         }
       : null,
   }));
