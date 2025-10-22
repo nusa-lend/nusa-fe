@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
 import TabNavigation from './tabs/TabNavigation';
 import SupplyMore from './tabs/active/SupplyMore';
 import WithdrawSupply from './tabs/active/WithdrawSupply';
@@ -61,35 +62,20 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
 
   const handleTransactionComplete = (data: any) => {
     setTransactionData(data);
-
-    if (isAnimating) return;
     setIsAnimating(true);
-
-    setTimeout(() => {
-      const tl = gsap.timeline({
-        defaults: { duration: 0.3, ease: 'power2.inOut' },
-        onComplete: () => {
-          setCurrentStep('notification');
-          setIsAnimating(false);
-
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
-          }
-        },
-      });
-
-      tl.to(formRef.current, { xPercent: -100, opacity: 0 }, 0).fromTo(
-        notificationRef.current,
-        { xPercent: 100, opacity: 0, visibility: 'hidden' },
-        { xPercent: 0, opacity: 1, visibility: 'visible' },
-        0
-      );
-    }, 100);
   };
 
   const handleNotificationDone = () => {
     setCurrentStep('form');
     setTransactionData(null);
+    onClose();
+  };
+
+  const handleClose = () => {
+    setCurrentStep('form');
+    setActiveTab(defaultTab);
+    setTransactionData(null);
+    setIsAnimating(false);
     onClose();
   };
 
@@ -109,29 +95,50 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
     }
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      setActiveTab(defaultTab);
-      setCurrentStep('form');
-      setTransactionData(null);
-      setIsAnimating(false);
-
-      // Initialize GSAP animations
+  useGSAP(() => {
+    if (isOpen && formRef.current && notificationRef.current) {
       gsap.set(formRef.current, { xPercent: 0, opacity: 1 });
       gsap.set(notificationRef.current, {
         xPercent: 100,
         opacity: 0,
         visibility: 'hidden',
       });
+      setActiveTab(defaultTab);
+      setCurrentStep('form');
+      setTransactionData(null);
+      setIsAnimating(false);
     }
   }, [isOpen, defaultTab]);
+
+  useGSAP(() => {
+    if (isAnimating && currentStep === 'form' && transactionData && formRef.current && notificationRef.current) {
+      const tl = gsap.timeline({
+        defaults: { duration: 0.3, ease: 'power2.inOut' },
+        onComplete: () => {
+          setCurrentStep('notification');
+          setIsAnimating(false);
+
+          if (contentRef.current) {
+            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+          }
+        },
+      });
+
+      tl.to(formRef.current, { xPercent: -100, opacity: 0 }, 0).fromTo(
+        notificationRef.current,
+        { xPercent: 100, opacity: 0, visibility: 'hidden' },
+        { xPercent: 0, opacity: 1, visibility: 'visible' },
+        0
+      );
+    }
+  }, [isAnimating, currentStep, transactionData]);
 
   const sheetHeight = currentStep === 'notification' ? '70vh' : '100vh';
 
   return (
     <BottomSheet
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title=""
       height={sheetHeight}
       showHandle={false}

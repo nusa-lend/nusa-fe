@@ -1,6 +1,8 @@
 'use client';
 
 import Tooltip from '@/components/ui/miniapp/Tooltip';
+import { formatBalance } from '@/utils/formatBalance';
+import { Wallet } from 'lucide-react';
 import { useState } from 'react';
 
 interface RepayBorrowProps {
@@ -66,26 +68,26 @@ export default function RepayBorrow({ onTransactionComplete }: RepayBorrowProps)
               />
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-gray-400 text-sm">USD 0</span>
+              <span className="text-gray-400 font-thin text-sm">USD</span>
               <button className="p-1 hover:bg-gray-200 rounded transition">
-                <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                  />
-                </svg>
+                <img
+                  src="/assets/icons/arrow_swap.png"
+                  alt="Swap Arrow"
+                  className="w-4 h-4 object-contain"
+                />
               </button>
-            </div>
+          </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-between">
-            <span className="text-sm text-gray-500">Balance: 0</span>
-            <button onClick={handleMaxClick} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          <div className="mt-5 flex items-center gap-1">
+            <span className="text-sm text-gray-500 flex items-center gap-1">
+              <Wallet className="w-4 h-4" />
+              {formatBalance(balance.toString())}
+            </span>
+            <button onClick={handleMaxClick} className="text-sm text-gray-900">
               MAX
             </button>
-          </div>
+        </div> 
         </div>
         <div className="w-full rounded-xl border border-gray-200 bg-[#f8fafc] p-3">
           <div className="text-sm text-gray-600 mb-3">Withdraw bNVDA</div>
@@ -104,25 +106,25 @@ export default function RepayBorrow({ onTransactionComplete }: RepayBorrowProps)
               />
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-gray-400 text-sm">USD 0</span>
+              <span className="text-gray-400 font-thin text-sm">USD</span>
               <button className="p-1 hover:bg-gray-200 rounded transition">
-                <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                  />
-                </svg>
+                <img
+                  src="/assets/icons/arrow_swap.png"
+                  alt="Swap Arrow"
+                  className="w-4 h-4 object-contain"
+                />
               </button>
-            </div>
           </div>
-          <div className="mt-5 flex items-center justify-between">
-            <span className="text-sm text-gray-500">Balance: 0</span>
-            <button onClick={handleMaxClick} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          </div>
+          <div className="mt-5 flex items-center gap-1">
+            <span className="text-sm text-gray-500 flex items-center gap-1">
+              <Wallet className="w-4 h-4" />
+              {formatBalance(balance.toString())}
+            </span>
+            <button onClick={handleMaxClick} className="text-sm text-gray-900">
               MAX
             </button>
-          </div>
+        </div> 
         </div>
       </div>
 

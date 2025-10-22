@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Tooltip from '@/components/ui/miniapp/Tooltip';
+import { formatBalance } from '@/utils/formatBalance';
+import { Wallet } from 'lucide-react';
 
 interface BorrowMoreProps {
   onTransactionComplete?: (data: any) => void;
@@ -65,63 +67,60 @@ export default function BorrowMore({ onTransactionComplete }: BorrowMoreProps) {
               />
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-gray-400 text-sm">USD 0</span>
+              <span className="text-gray-400 font-thin text-sm">USD</span>
               <button className="p-1 hover:bg-gray-200 rounded transition">
-                <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                  />
-                </svg>
+                <img
+                  src="/assets/icons/arrow_swap.png"
+                  alt="Swap Arrow"
+                  className="w-4 h-4 object-contain"
+                />
               </button>
-            </div>
+          </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-between">
-            <span className="text-sm text-gray-500">Balance: 0</span>
-            <button onClick={handleMaxClick} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          <div className="mt-5 flex items-center gap-1">
+            <span className="text-sm text-gray-500 flex items-center gap-1">
+              <Wallet className="w-4 h-4" />
+              {formatBalance(balance.toString())}
+            </span>
+            <button onClick={handleMaxClick} className="text-sm text-gray-900">
               MAX
             </button>
-          </div>
+        </div>  
         </div>
         <div className="w-full rounded-xl border border-gray-200 bg-[#f8fafc] p-3">
           <div className="text-sm text-gray-600 mb-3">Borrow IDRX</div>
 
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                <img src="/assets/stablecoins/idrx.png" alt="IDRX" width={24} height={24} className="object-contain" />
-              </div>
-              <input
-                type="text"
-                value={borrowAmount}
-                onChange={e => setBorrowAmount(e.target.value)}
-                placeholder="Amount"
-                className="bg-transparent text-gray-900 font-semibold placeholder-gray-300 focus:outline-none flex-1"
+          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+              <img
+                src="/assets/stablecoins/idrx.png"
+                alt="IDRX"
+                width={24}
+                height={24}
+                className="object-contain"
               />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-gray-400 text-sm">USD 0</span>
-              <button className="p-1 hover:bg-gray-200 rounded transition">
-                <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                  />
-                </svg>
-              </button>
-            </div>
+            <input
+              type="text"
+              value={borrowAmount}
+              onChange={e => setBorrowAmount(e.target.value)}
+              placeholder="Amount"
+              className="bg-transparent font-semibold placeholder-gray-400 focus:outline-none flex-1 text-gray-900"
+            />
           </div>
-          <div className="mt-5 flex items-center justify-between">
-            <span className="text-sm text-gray-500">Balance: 0</span>
-            <button onClick={handleMaxClick} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-              MAX
+          <div className="flex items-center gap-1">
+            <span className="text-gray-400 font-thin text-sm">USD</span>
+            <button className="p-1 hover:bg-gray-200 rounded transition">
+              <img
+                src="/assets/icons/arrow_swap.png"
+                alt="Swap Arrow"
+                className="w-4 h-4 object-contain"
+              />
             </button>
           </div>
+        </div>
         </div>
       </div>
 

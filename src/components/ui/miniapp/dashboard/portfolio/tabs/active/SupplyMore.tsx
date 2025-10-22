@@ -1,5 +1,6 @@
 'use client';
 
+import { Wallet } from 'lucide-react';
 import { useState } from 'react';
 
 interface SupplyMoreProps {
@@ -60,23 +61,23 @@ export default function SupplyMore({ onTransactionComplete }: SupplyMoreProps) {
               className="bg-transparent text-gray-900 font-semibold placeholder-gray-400 focus:outline-none flex-1"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-900 font-semibold">IDRX</span>
+          <div className="flex items-center gap-1">
+            <span className="text-gray-400 font-thin text-sm">IDR</span>
             <button className="p-1 hover:bg-gray-200 rounded transition">
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                />
-              </svg>
+              <img
+                src="/assets/icons/arrow_swap.png"
+                alt="Swap Arrow"
+                className="w-4 h-4 object-contain"
+              />
             </button>
           </div>
         </div>
-        <div className="mt-5 flex items-center justify-between">
-          <span className="text-sm text-gray-500">Balance: {formatBalance(balance)}</span>
-          <button onClick={handleMaxClick} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+        <div className="mt-5 flex items-center gap-1">
+          <span className="text-sm text-gray-500 flex items-center gap-1">
+            <Wallet className="w-4 h-4" />
+            {formatBalance(balance)}
+          </span>
+          <button onClick={handleMaxClick} className="text-sm text-gray-900">
             MAX
           </button>
         </div>

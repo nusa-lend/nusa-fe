@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef } from 'react';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
 import BottomSheet from '@/components/ui/miniapp/BottomSheet';
 import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
 import LendingDetail from './tabs/history/LendingDetail';
@@ -27,10 +29,20 @@ interface HistoryBottomSheetProps {
 export default function HistoryBottomSheet({ isOpen, onClose, transaction }: HistoryBottomSheetProps) {
   const contentRef = useRef<HTMLDivElement>(null) as React.MutableRefObject<HTMLDivElement>;
 
+  const handleClose = () => {
+    onClose();
+  };
+
+  useGSAP(() => {
+    if (isOpen && contentRef.current) {
+      gsap.set(contentRef.current, { opacity: 1, y: 0 });
+    }
+  }, [isOpen]);
+
   return (
     <BottomSheet
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title=""
       height="70vh"
       showHandle={false}
