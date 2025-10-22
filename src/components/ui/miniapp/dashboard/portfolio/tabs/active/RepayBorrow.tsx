@@ -70,13 +70,9 @@ export default function RepayBorrow({ onTransactionComplete }: RepayBorrowProps)
             <div className="flex items-center gap-1">
               <span className="text-gray-400 font-thin text-sm">USD</span>
               <button className="p-1 hover:bg-gray-200 rounded transition">
-                <img
-                  src="/assets/icons/arrow_swap.png"
-                  alt="Swap Arrow"
-                  className="w-4 h-4 object-contain"
-                />
+                <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
               </button>
-          </div>
+            </div>
           </div>
 
           <div className="mt-5 flex items-center gap-1">
@@ -87,7 +83,7 @@ export default function RepayBorrow({ onTransactionComplete }: RepayBorrowProps)
             <button onClick={handleMaxClick} className="text-sm text-gray-900">
               MAX
             </button>
-        </div> 
+          </div>
         </div>
         <div className="w-full rounded-xl border border-gray-200 bg-[#f8fafc] p-3">
           <div className="text-sm text-gray-600 mb-3">Withdraw bNVDA</div>
@@ -108,13 +104,9 @@ export default function RepayBorrow({ onTransactionComplete }: RepayBorrowProps)
             <div className="flex items-center gap-1">
               <span className="text-gray-400 font-thin text-sm">USD</span>
               <button className="p-1 hover:bg-gray-200 rounded transition">
-                <img
-                  src="/assets/icons/arrow_swap.png"
-                  alt="Swap Arrow"
-                  className="w-4 h-4 object-contain"
-                />
+                <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
               </button>
-          </div>
+            </div>
           </div>
           <div className="mt-5 flex items-center gap-1">
             <span className="text-sm text-gray-500 flex items-center gap-1">
@@ -124,7 +116,7 @@ export default function RepayBorrow({ onTransactionComplete }: RepayBorrowProps)
             <button onClick={handleMaxClick} className="text-sm text-gray-900">
               MAX
             </button>
-        </div> 
+          </div>
         </div>
       </div>
 

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
 import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 import Tooltip from '@/components/ui/miniapp/Tooltip';
 import { hasSufficientAllowance } from '@/hooks/useAllowances';
+import { useUserBorrowingPosition } from '@/hooks/useUserPositions';
 import { Wallet } from 'lucide-react';
 import { formatBalance } from '@/utils/formatBalance';
 
@@ -38,29 +39,63 @@ export default function BorrowForm({
   const [borrowAmount, setBorrowAmount] = useState('');
   const [isDisclaimerExpanded, setIsDisclaimerExpanded] = useState(true);
 
-  const selectedBalanceStr = balances ? Object.values(balances as Record<string, string>).reduce((total: number, balance: string) => {
-    return total + parseFloat(balance || '0');
-  }, 0).toString() : '0';
+  const {
+    maxLtv: apiMaxLtv,
+    liquidationLtv: apiLiquidationLtv,
+    isLoading: isPositionLoading,
+  } = useUserBorrowingPosition();
+
+  const selectedBalanceStr = balances
+    ? Object.values(balances as Record<string, string>)
+        .reduce((total: number, balance: string) => {
+          return total + parseFloat(balance || '0');
+        }, 0)
+        .toString()
+    : '0';
   const isInsufficientBalance = parseFloat(selectedBalanceStr || '0') === 0;
   const collateralNetworkId = selectedMarket?.networks[0]?.id;
-  const hasAllowance = collateralNetworkId ? hasSufficientAllowance(allowances, collateralNetworkId, collateralAmount || '0') : false;
+  const hasAllowance = collateralNetworkId
+    ? hasSufficientAllowance(allowances, collateralNetworkId, collateralAmount || '0')
+    : false;
   const hasCollateralAmount = collateralAmount && parseFloat(collateralAmount.replace(/,/g, '')) > 0;
   const hasBorrowAmount = borrowAmount && parseFloat(borrowAmount.replace(/,/g, '')) > 0;
-  
+
   const inputCollateralAmount = parseFloat(collateralAmount.replace(/,/g, '') || '0');
   const userBalance = parseFloat(selectedBalanceStr || '0');
   const isCollateralAmountExceedingBalance = hasCollateralAmount && inputCollateralAmount > userBalance;
-
   const collateralValue = parseFloat(collateralAmount.replace(/,/g, '') || '0');
-  const maxBorrowAmount = collateralValue * (selectedMarket?.maxLtv || 80) / 100;
-  
-  const currentLtv = collateralValue > 0 ? (parseFloat(borrowAmount.replace(/,/g, '') || '0') / collateralValue) * 100 : 0;
-  const marginCallLtv = (selectedMarket?.maxLtv || 80) * 0.8;
-  const liquidationLtv = selectedMarket?.maxLtv || 80;
+  const maxBorrowAmount = (collateralValue * (selectedMarket?.maxLtv || 80)) / 100;
+  const currentLtv =
+    collateralValue > 0 ? (parseFloat(borrowAmount.replace(/,/g, '') || '0') / collateralValue) * 100 : 0;
+  const apiLiquidationValue = parseFloat(apiLiquidationLtv.replace('%', ''));
+  const liquidationLtv = !isNaN(apiLiquidationValue) ? apiLiquidationValue : selectedMarket?.maxLtv || 80;
+
+  const marginCallLtv = liquidationLtv * 0.8;
+
+  const interestCalculations = useMemo(() => {
+    if (!selectedNetwork?.interestRate) {
+      return { daily: '0', monthly: '0' };
+    }
+
+    const aprValue = parseFloat(selectedNetwork.interestRate.replace('%', ''));
+    const borrowAmountValue = parseFloat(borrowAmount.replace(/,/g, '') || '0');
+
+    if (isNaN(aprValue) || borrowAmountValue === 0) {
+      return { daily: '0', monthly: '0' };
+    }
+
+    const dailyInterest = (borrowAmountValue * aprValue) / 100 / 365;
+    const monthlyInterest = (borrowAmountValue * aprValue) / 100 / 12;
+
+    return {
+      daily: dailyInterest.toFixed(2),
+      monthly: monthlyInterest.toFixed(2),
+    };
+  }, [selectedNetwork?.interestRate, borrowAmount]);
 
   const handlePercentageClick = (percentage: number) => {
     if (!hasCollateralAmount) return;
-    const amount = (maxBorrowAmount * percentage / 100);
+    const amount = (maxBorrowAmount * percentage) / 100;
     const formattedAmount = parseFloat(amount.toFixed(6)).toString();
     setBorrowAmount(formattedAmount);
   };
@@ -85,7 +120,6 @@ export default function BorrowForm({
     const formattedAmount = parseFloat(maxUsable.toFixed(Math.min(6, decimals))).toString();
     setCollateralAmount(formattedAmount);
   };
-
 
   const toggleDisclaimer = () => {
     setIsDisclaimerExpanded(!isDisclaimerExpanded);
@@ -115,11 +149,11 @@ export default function BorrowForm({
       </div>
 
       {/* Collateral Input */}
-      <div className={`rounded-xl border p-3 ${
-        isCollateralAmountExceedingBalance 
-          ? 'border-[#bc5564] bg-[#f8fafc]' 
-          : 'border-gray-200 bg-[#f8fafc]'
-      }`}>
+      <div
+        className={`rounded-xl border p-3 ${
+          isCollateralAmountExceedingBalance ? 'border-[#bc5564] bg-[#f8fafc]' : 'border-gray-200 bg-[#f8fafc]'
+        }`}
+      >
         <div className="text-sm text-gray-600 mb-3">Collateral {selectedMarket.token.symbol}</div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -143,11 +177,7 @@ export default function BorrowForm({
           <div className="flex items-center gap-1">
             <span className="text-gray-400 font-thin text-sm">USD</span>
             <button className="p-1 hover:bg-gray-200 rounded transition">
-              <img
-                src="/assets/icons/arrow_swap.png"
-                alt="Swap Arrow"
-                className="w-4 h-4 object-contain"
-              />
+              <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
             </button>
           </div>
         </div>
@@ -161,11 +191,9 @@ export default function BorrowForm({
           </button>
         </div>
       </div>
-      
+
       {isCollateralAmountExceedingBalance && (
-        <div className="text-[#bc5564] text-sm">
-          Insufficient balance, deposit to continue
-        </div>
+        <div className="text-[#bc5564] text-sm">Insufficient balance, deposit to continue</div>
       )}
 
       {/* Borrow Input */}
@@ -186,30 +214,24 @@ export default function BorrowForm({
               type="text"
               value={borrowAmount}
               onChange={e => setBorrowAmount(e.target.value)}
-              placeholder={hasCollateralAmount ? "Amount" : "Enter collateral first"}
+              placeholder={hasCollateralAmount ? 'Amount' : 'Enter collateral first'}
               disabled={!hasCollateralAmount}
               className={`bg-transparent font-semibold placeholder-gray-400 focus:outline-none flex-1 ${
-                hasCollateralAmount 
-                  ? 'text-gray-900' 
-                  : 'text-gray-400 cursor-not-allowed'
+                hasCollateralAmount ? 'text-gray-900' : 'text-gray-400 cursor-not-allowed'
               }`}
             />
           </div>
           <div className="flex items-center gap-1">
             <span className="text-gray-400 font-thin text-sm">USD</span>
             <button className="p-1 hover:bg-gray-200 rounded transition">
-              <img
-                src="/assets/icons/arrow_swap.png"
-                alt="Swap Arrow"
-                className="w-4 h-4 object-contain"
-              />
+              <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
             </button>
           </div>
         </div>
-        
+
         {hasCollateralAmount && (
           <div className="mt-3 flex gap-2">
-            {[25, 50, 75, 100].map((percentage) => (
+            {[25, 50, 75, 100].map(percentage => (
               <button
                 key={percentage}
                 onClick={() => handlePercentageClick(percentage)}
@@ -220,7 +242,7 @@ export default function BorrowForm({
             ))}
           </div>
         )}
-        
+
         {hasCollateralAmount && (
           <div className="mt-2 text-xs text-gray-500">
             Max borrow: {formatBalance(maxBorrowAmount.toString())} {selectedNetwork.name}
@@ -229,9 +251,7 @@ export default function BorrowForm({
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="text-[15px] font-semibold text-gray-900 mb-3">
-          Risk Level
-        </h3>
+        <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Risk Level</h3>
         <div className="space-y-3">
           <div className="flex justify-between text-sm text-gray-500">
             <div className="flex items-center gap-1">
@@ -248,9 +268,18 @@ export default function BorrowForm({
               </Tooltip>
             </div>
             <span className="text-gray-900 font-semibold text-[15px]">
-              <span className={currentLtv > liquidationLtv ? 'text-red-600' : currentLtv > marginCallLtv ? 'text-yellow-600' : 'text-green-600'}>
+              <span
+                className={
+                  currentLtv > liquidationLtv
+                    ? 'text-red-600'
+                    : currentLtv > marginCallLtv
+                      ? 'text-yellow-600'
+                      : 'text-green-600'
+                }
+              >
                 {currentLtv.toFixed(1)}%
-              </span> / {selectedMarket.maxLtv}%
+              </span>{' '}
+              / {apiMaxLtv || selectedMarket.maxLtv}
             </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
@@ -278,17 +307,19 @@ export default function BorrowForm({
                 </div>
               </Tooltip>
             </div>
-            <span className="text-green-600 font-semibold text-[15px]">
-              ~{selectedNetwork.interestRate}%
-            </span>
+            <span className="text-green-600 font-semibold text-[15px]">~{selectedNetwork.interestRate}</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Daily</span>
-            <span className="text-green-600 font-semibold text-[15px]">0</span>
+            <span className="text-green-600 font-semibold text-[15px]">
+              {isPositionLoading ? '...' : interestCalculations.daily}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Monthly</span>
-            <span className="text-green-600 font-semibold text-[15px]">0</span>
+            <span className="text-green-600 font-semibold text-[15px]">
+              {isPositionLoading ? '...' : interestCalculations.monthly}
+            </span>
           </div>
         </div>
       </div>
@@ -312,8 +343,8 @@ export default function BorrowForm({
                     className="overflow-hidden mt-1"
                   >
                     <p>
-                      Borrowing involves risk. Your collateral may be liquidated if the value drops below the required threshold.
-                      Past performance is not indicative of future results.
+                      Borrowing involves risk. Your collateral may be liquidated if the value drops below the required
+                      threshold. Past performance is not indicative of future results.
                     </p>
                   </motion.div>
                 )}
@@ -338,9 +369,19 @@ export default function BorrowForm({
       {hasAllowance ? (
         <button
           onClick={handleBorrow}
-          disabled={!hasCollateralAmount || !hasBorrowAmount || isInsufficientBalance || isCollateralAmountExceedingBalance || isBorrowing}
+          disabled={
+            !hasCollateralAmount ||
+            !hasBorrowAmount ||
+            isInsufficientBalance ||
+            isCollateralAmountExceedingBalance ||
+            isBorrowing
+          }
           className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition ${
-            hasCollateralAmount && hasBorrowAmount && !isInsufficientBalance && !isCollateralAmountExceedingBalance && !isBorrowing
+            hasCollateralAmount &&
+            hasBorrowAmount &&
+            !isInsufficientBalance &&
+            !isCollateralAmountExceedingBalance &&
+            !isBorrowing
               ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80'
               : 'bg-[#a8cfe5] cursor-not-allowed'
           }`}

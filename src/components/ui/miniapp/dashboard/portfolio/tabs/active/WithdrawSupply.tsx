@@ -62,11 +62,7 @@ export default function WithdrawSupply({ onTransactionComplete }: WithdrawSupply
           <div className="flex items-center gap-1">
             <span className="text-gray-400 font-thin text-sm">IDR</span>
             <button className="p-1 hover:bg-gray-200 rounded transition">
-              <img
-                src="/assets/icons/arrow_swap.png"
-                alt="Swap Arrow"
-                className="w-4 h-4 object-contain"
-              />
+              <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
             </button>
           </div>
         </div>

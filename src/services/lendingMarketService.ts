@@ -18,9 +18,9 @@ type ApiMarketsResponse = {
 
 export const fetchLendingMarkets = async (chain?: string): Promise<ApiLendingMarket[]> => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const baseUrl = process.env.NEXT_PUBLIC_URL || '';
     const url = new URL('/api/markets', baseUrl);
-    
+
     if (chain) {
       url.searchParams.set('chain', chain);
     }
@@ -46,19 +46,23 @@ export const getMarketApyByTokenAndNetwork = (
   tokenSymbol: string,
   networkId: string
 ): string => {
-  let market = markets.find(m => 
-    m.tokenSymbol.toLowerCase() === tokenSymbol.toLowerCase()
-  );
-  
+  let market = markets.find(m => m.tokenSymbol.toLowerCase() === tokenSymbol.toLowerCase());
+
   if (!market) {
-    market = markets.find(m => 
-      m.tokenSymbol.toLowerCase().includes(tokenSymbol.toLowerCase()) ||
-      tokenSymbol.toLowerCase().includes(m.tokenSymbol.toLowerCase())
+    market = markets.find(
+      m =>
+        m.tokenSymbol.toLowerCase().includes(tokenSymbol.toLowerCase()) ||
+        tokenSymbol.toLowerCase().includes(m.tokenSymbol.toLowerCase())
     );
   }
-  
+
   if (!market) return '0.00%';
-  
+
   const network = market.networks.find(n => n.networkId === networkId);
-  return network?.apy || market.defaultApy || '0.00%';
+
+  if (network) {
+    return network.apy || '0.00%';
+  }
+
+  return '0.00%';
 };

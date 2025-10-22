@@ -41,9 +41,9 @@ export function useApproveToken({
 
       const decimals = selectedNetwork.decimals ?? 6;
       const value = parseUnitsString(amt, decimals);
-      
+
       setIsApproving(true);
-      
+
       const hash = await writeContract(config, {
         abi: Erc20Abi as any,
         address: selectedNetwork.address as `0x${string}`,
@@ -55,8 +55,8 @@ export function useApproveToken({
       await waitForTransactionReceipt(config, { hash });
 
       if (selectedMarketId) {
-        await queryClient.invalidateQueries({ 
-          queryKey: ['allowances', userAddress, spenderAddress, selectedMarketId] 
+        await queryClient.invalidateQueries({
+          queryKey: ['allowances', userAddress, spenderAddress, selectedMarketId],
         });
       }
 

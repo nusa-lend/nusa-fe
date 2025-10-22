@@ -4,18 +4,20 @@ import BorrowSheet from './BorrowSheet';
 import { useState, useEffect } from 'react';
 import BorrowMarketList from './BorrowMarketList';
 import { formatBorrowingMarkets, formatBorrowingTokens } from '@/utils/borrowingUtils';
-import { SUPPORTED_BORROWING_POOLS } from '@/constants/borrowConstants';
+import { SUPPORTED_COLLATERAL } from '@/constants/borrowConstants';
 import type { BorrowingMarket, SupportedBorrowingPoolsMap } from '@/types/borrowing';
 import type { BorrowingTokenOption } from '@/utils/borrowingUtils';
+import { useAccount } from 'wagmi';
 
 export default function BorrowContainer() {
+  const { address } = useAccount();
   const [markets, setMarkets] = useState<BorrowingMarket[]>([]);
   const [borrowingTokens, setBorrowingTokens] = useState<BorrowingTokenOption[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMarket, setSelectedMarket] = useState<BorrowingMarket | null>(null);
   const [error, setError] = useState<any>(null);
-  
+
   const handleMarketSelect = (market: BorrowingMarket) => {
     setSelectedMarket(market);
     setIsModalOpen(true);
@@ -36,9 +38,9 @@ export default function BorrowContainer() {
     (async () => {
       try {
         setIsLoading(true);
-        const pools = SUPPORTED_BORROWING_POOLS as unknown as SupportedBorrowingPoolsMap;
-        const result = await formatBorrowingMarkets(pools);
-        const tokens = await formatBorrowingTokens();
+        const collateralPools = SUPPORTED_COLLATERAL as unknown as SupportedBorrowingPoolsMap;
+        const result = await formatBorrowingMarkets(collateralPools, address);
+        const tokens = await formatBorrowingTokens(undefined, address);
         if (!isCancelled) {
           setMarkets(result);
           setBorrowingTokens(tokens);
@@ -53,7 +55,7 @@ export default function BorrowContainer() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [address]);
 
   return (
     <>

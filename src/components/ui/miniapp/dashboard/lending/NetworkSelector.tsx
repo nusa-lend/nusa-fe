@@ -46,7 +46,12 @@ export default function NetworkSelector({ market, onNetworkSelect }: NetworkSele
           >
             <div className="flex flex-col">
               <div className="flex items-center space-x-3">
-                <TokenNetworkPair tokenLogo={market.tokenLogo} networkLogo={network.networkLogo} size={30} overlap={25} />
+                <TokenNetworkPair
+                  tokenLogo={market.tokenLogo}
+                  networkLogo={network.networkLogo}
+                  size={30}
+                  overlap={25}
+                />
                 <div className="text-left">
                   <div className="font-medium text-gray-900">
                     <div className="text-gray-900">{market.tokenSymbol}</div>

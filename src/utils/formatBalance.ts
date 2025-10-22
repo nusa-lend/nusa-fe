@@ -1,14 +1,14 @@
 export function formatBalance(balance: string | undefined | null): string {
   if (!balance || balance === '0') return '0';
-  
+
   const num = parseFloat(balance);
   if (Number.isNaN(num) || num === 0) return '0';
-  
+
   try {
     return num.toLocaleString('id-ID', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
-      useGrouping: true
+      useGrouping: true,
     });
   } catch (error) {
     const parts = num.toString().split('.');

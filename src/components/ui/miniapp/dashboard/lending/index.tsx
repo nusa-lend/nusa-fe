@@ -13,7 +13,7 @@ export default function LendingContainer() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMarket, setSelectedMarket] = useState<LendingMarket | null>(null);
   const [error, setError] = useState<any>(null);
-  
+
   const handleMarketSelect = (market: LendingMarket) => {
     setSelectedMarket(market);
     setIsModalOpen(true);

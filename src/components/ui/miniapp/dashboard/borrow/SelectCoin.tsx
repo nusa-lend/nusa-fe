@@ -17,16 +17,14 @@ interface SelectCoinProps {
 }
 
 export default function SelectCoin({ market, onSelect, balance, borrowingTokens, selectedMarketId }: SelectCoinProps) {
-
   const handleStablecoinSelect = (stablecoin: any) => {
     const stablecoinPool = SUPPORTED_BORROWING_POOLS[stablecoin.id as keyof typeof SUPPORTED_BORROWING_POOLS];
     if (!stablecoinPool) {
-      console.error('Stablecoin pool not found:', stablecoin.id);
       return;
     }
-    
+
     const selectedNetwork = stablecoinPool.networks[0];
-    
+
     const networkOption: BorrowingNetworkOption = {
       id: selectedNetwork.id,
       name: stablecoin.name,
@@ -94,30 +92,30 @@ export default function SelectCoin({ market, onSelect, balance, borrowingTokens,
           {borrowingTokens
             .filter(token => !selectedMarketId || token.id !== selectedMarketId)
             .map(localStablecoin => (
-            <button
-              key={localStablecoin.id}
-              onClick={() => handleStablecoinSelect(localStablecoin)}
-              className="w-full p-4 bg-[#F8FAFC] rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
-            >
-              <div className="flex items-center space-x-3">
-                <TokenWithFlag
-                  tokenLogo={localStablecoin.icon}
-                  flag={localStablecoin.flag}
-                  size={36}
-                  flagSize={14}
-                  tokenAlt={`${localStablecoin.name} logo`}
-                  flagAlt="Flag"
-                />
-                <div className="text-left">
-                  <div className="font-semibold text-gray-900">{localStablecoin.name}</div>
-                  <div className="text-sm text-gray-400">LLTV: {localStablecoin.lltv}</div>
+              <button
+                key={localStablecoin.id}
+                onClick={() => handleStablecoinSelect(localStablecoin)}
+                className="w-full p-4 bg-[#F8FAFC] rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
+              >
+                <div className="flex items-center space-x-3">
+                  <TokenWithFlag
+                    tokenLogo={localStablecoin.icon}
+                    flag={localStablecoin.flag}
+                    size={36}
+                    flagSize={14}
+                    tokenAlt={`${localStablecoin.name} logo`}
+                    flagAlt="Flag"
+                  />
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-900">{localStablecoin.name}</div>
+                    <div className="text-sm text-gray-400">LLTV: {localStablecoin.lltv}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-semibold text-green-600">{localStablecoin.apr}</div>
-              </div>
-            </button>
-          ))}
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-green-600">{localStablecoin.apr}</div>
+                </div>
+              </button>
+            ))}
         </div>
       </div>
     </div>

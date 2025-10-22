@@ -28,7 +28,13 @@ interface BorrowSheetProps {
   borrowingTokens: BorrowingTokenOption[];
 }
 
-export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selectedMarket, borrowingTokens }: BorrowSheetProps) {
+export default function BorrowSheet({
+  isOpen,
+  onClose,
+  onBorrowComplete,
+  selectedMarket,
+  borrowingTokens,
+}: BorrowSheetProps) {
   const [currentStep, setCurrentStep] = useState<'select' | 'form' | 'result'>('select');
   const [selectedNetwork, setSelectedNetwork] = useState<BorrowingNetworkOption | null>(null);
   const [borrowedAmount, setBorrowedAmount] = useState<string>('');
@@ -47,9 +53,11 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
   const queryClient = useQueryClient();
   const { data: balances } = useTokenBalances({ userAddress: address, market: selectedMarket });
 
-  const aggregatedBalance = balances ? Object.values(balances).reduce((total, balance) => {
-    return total + parseFloat(balance || '0');
-  }, 0) : 0;
+  const aggregatedBalance = balances
+    ? Object.values(balances).reduce((total, balance) => {
+        return total + parseFloat(balance || '0');
+      }, 0)
+    : 0;
 
   const spenderAddress = (() => {
     if (!selectedNetwork?.chainId) return undefined;
@@ -64,16 +72,18 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
     market: selectedMarket,
   });
 
-  const collateralNetworkOption = selectedMarket ? {
-    id: selectedMarket.networks[0].id,
-    name: selectedMarket.token.symbol,
-    networkLogo: selectedMarket.token.logo,
-    interestRate: '0%',
-    maxBorrowAmount: 100000,
-    chainId: selectedMarket.networks[0].chainId,
-    address: selectedMarket.networks[0].address,
-    decimals: selectedMarket.networks[0].decimals,
-  } : null;
+  const collateralNetworkOption = selectedMarket
+    ? {
+        id: selectedMarket.networks[0].id,
+        name: selectedMarket.token.symbol,
+        networkLogo: selectedMarket.token.logo,
+        interestRate: '0%',
+        maxBorrowAmount: 100000,
+        chainId: selectedMarket.networks[0].chainId,
+        address: selectedMarket.networks[0].address,
+        decimals: selectedMarket.networks[0].decimals,
+      }
+    : null;
 
   const { approveToken, isApproving, resetApproving } = useApproveToken({
     userAddress: address,
@@ -93,33 +103,33 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
   const handleBorrow = async (collateralAmount: string, borrowAmount: string) => {
     try {
       if (!address || !selectedMarket || !selectedNetwork) return;
-      
+
       const collateralAmt = (collateralAmount || '').replace(/,/g, '');
       const collateralNum = parseFloat(collateralAmt);
       if (!collateralAmt || Number.isNaN(collateralNum) || collateralNum <= 0) return;
-      
+
       const borrowAmt = (borrowAmount || '').replace(/,/g, '');
       const borrowNum = parseFloat(borrowAmt);
       if (!borrowAmt || Number.isNaN(borrowNum) || borrowNum <= 0) return;
-      
+
       const collateralDecimals = selectedMarket.networks[0].decimals ?? 18;
       const borrowDecimals = selectedNetwork.decimals ?? 6;
       const collateralValue = parseUnitsString(collateralAmt, collateralDecimals);
       const borrowValue = parseUnitsString(borrowAmt, borrowDecimals);
-      
+
       const proxy = (() => {
         if (selectedNetwork.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
         if (selectedNetwork.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
         return undefined;
       })();
-      
+
       if (!proxy) return;
-      
+
       setIsBorrowing(true);
-      
+
       const collateralTokenAddress = selectedMarket.networks.find(net => net.id === selectedNetwork.id)?.address;
       if (!collateralTokenAddress) return;
-      
+
       const supplyHash = await writeContract(config, {
         abi: BorrowingPoolAbi as any,
         address: proxy,
@@ -128,7 +138,7 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
         args: [address, collateralTokenAddress as `0x${string}`, collateralValue],
       });
       await waitForTransactionReceipt(config, { hash: supplyHash });
-      
+
       let borrowHash: `0x${string}`;
       try {
         borrowHash = await writeContract(config, {
@@ -141,7 +151,7 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
         await waitForTransactionReceipt(config, { hash: borrowHash });
       } catch (borrowError) {
         console.error('Borrow failed after supply success, attempting to withdraw collateral:', borrowError);
-        
+
         try {
           const withdrawHash = await writeContract(config, {
             abi: BorrowingPoolAbi as any,
@@ -154,12 +164,14 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
           console.log('Successfully withdrew collateral after borrow failure');
         } catch (withdrawError) {
           console.error('Failed to withdraw collateral after borrow failure:', withdrawError);
-          throw new Error('Borrow failed and unable to withdraw collateral. Your collateral has been supplied but you did not receive the borrowed tokens. Please contact support.');
+          throw new Error(
+            'Borrow failed and unable to withdraw collateral. Your collateral has been supplied but you did not receive the borrowed tokens. Please contact support.'
+          );
         }
-        
+
         throw borrowError;
       }
-      
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['tokenBalances', address, selectedMarket.id] }),
         queryClient.invalidateQueries({ queryKey: ['allowances', address, proxy, selectedMarket.id] }),
@@ -262,7 +274,14 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
   }, [isAnimating, currentStep, selectedNetwork]);
 
   useGSAP(() => {
-    if (isAnimating && currentStep === 'form' && borrowedAmount && transactionInfo && formRef.current && resultRef.current) {
+    if (
+      isAnimating &&
+      currentStep === 'form' &&
+      borrowedAmount &&
+      transactionInfo &&
+      formRef.current &&
+      resultRef.current
+    ) {
       const tl = gsap.timeline({
         defaults: { duration: 0.3, ease: 'power2.inOut' },
         onComplete: () => {
@@ -321,7 +340,15 @@ export default function BorrowSheet({ isOpen, onClose, onBorrowComplete, selecte
             visibility: currentStep === 'select' ? 'visible' : 'hidden',
           }}
         >
-          {selectedMarket && <SelectCoin market={selectedMarket} onSelect={handleNetworkSelect} balance={aggregatedBalance.toString()} borrowingTokens={borrowingTokens} selectedMarketId={selectedMarket.id} />}
+          {selectedMarket && (
+            <SelectCoin
+              market={selectedMarket}
+              onSelect={handleNetworkSelect}
+              balance={aggregatedBalance.toString()}
+              borrowingTokens={borrowingTokens}
+              selectedMarketId={selectedMarket.id}
+            />
+          )}
         </div>
 
         <div

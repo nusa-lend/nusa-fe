@@ -40,7 +40,7 @@ const rayToPercentString = (value: string) => {
     return '0.00%';
   }
 
-  const hundredthPercents = ray * 10000n / RAY;
+  const hundredthPercents = (ray * 10000n) / RAY;
   const integerPart = hundredthPercents / 100n;
   const fractionalPart = Number(hundredthPercents % 100n);
 
@@ -91,21 +91,33 @@ export async function GET(request: Request) {
   try {
     ponderResponse = await fetch(ponderUrl.toString(), { cache: 'no-store' });
   } catch (error) {
-    return NextResponse.json(
-      { error: `Failed to reach indexer: ${(error as Error).message}` },
-      { status: 502 },
-    );
+    return new NextResponse(JSON.stringify({ error: `Failed to reach indexer: ${(error as Error).message}` }), {
+      status: 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
   if (!ponderResponse.ok) {
-    return NextResponse.json(
-      { error: `Indexer responded with status ${ponderResponse.status}` },
-      { status: 502 },
-    );
+    return new NextResponse(JSON.stringify({ error: `Indexer responded with status ${ponderResponse.status}` }), {
+      status: 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
   const payload = (await ponderResponse.json()) as PonderResponse;
   const data = mapMarkets(payload.data ?? []);
 
-  return NextResponse.json({ data });
+  return new NextResponse(JSON.stringify({ data }), {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json',
+    },
+  });
 }

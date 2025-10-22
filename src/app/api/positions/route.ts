@@ -17,7 +17,7 @@ const toUsd = toRatioOrUsd;
 const rayToPercentString = (value: string) => {
   try {
     const ray = BigInt(value);
-    const hundredthPercents = ray * 10000n / RAY;
+    const hundredthPercents = (ray * 10000n) / RAY;
     const integerPart = hundredthPercents / 100n;
     const fractionalPart = Number(hundredthPercents % 100n);
     return `${integerPart.toString()}.${fractionalPart.toString().padStart(2, '0')}%`;
@@ -92,7 +92,7 @@ type PonderRisk = {
 const mapEntries = (entries?: PonderPositionEntry[]) => {
   if (!entries?.length) return [];
 
-  return entries.map((entry) => ({
+  return entries.map(entry => ({
     type: entry.type,
     tokenId: entry.tokenId,
     marketId: entry.marketId,
@@ -127,15 +127,13 @@ const mapEntries = (entries?: PonderPositionEntry[]) => {
           collateralFactorPercent: bpsToPercent(entry.token.collateralFactorBps),
           liquidationThresholdBps: entry.token.liquidationThresholdBps ?? null,
           liquidationThresholdPercent: bpsToPercent(entry.token.liquidationThresholdBps ?? null),
-      }
+        }
       : null,
     loan: entry.loan
       ? {
           ...entry.loan,
           durationSeconds: entry.loan.durationSeconds ?? null,
-          estimatedInterestUsd: entry.loan.estimatedInterestUsdRay
-            ? toUsd(entry.loan.estimatedInterestUsdRay)
-            : null,
+          estimatedInterestUsd: entry.loan.estimatedInterestUsdRay ? toUsd(entry.loan.estimatedInterestUsdRay) : null,
         }
       : null,
   }));
@@ -164,7 +162,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const account = searchParams.get('account');
   if (!account) {
-    return NextResponse.json({ error: 'Missing account' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Missing account' },
+      {
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   }
   const chain = searchParams.get('chain');
 
@@ -178,14 +185,26 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: `Failed to reach indexer: ${(error as Error).message}` },
-      { status: 502 },
+      {
+        status: 502,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 
   if (!response.ok) {
     return NextResponse.json(
       { error: `Indexer responded with status ${response.status}` },
-      { status: 502 },
+      {
+        status: 502,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 
@@ -203,7 +222,7 @@ export async function GET(request: Request) {
   };
 
   const data =
-    payload.data?.map((position) => ({
+    payload.data?.map(position => ({
       id: position.id,
       chainId: position.chainId,
       collateralUsd: toUsd(position.collateralUsdRay),
@@ -214,5 +233,14 @@ export async function GET(request: Request) {
       risk: mapRisk(position.risk),
     })) ?? [];
 
-  return NextResponse.json({ data });
+  return NextResponse.json(
+    { data },
+    {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 }

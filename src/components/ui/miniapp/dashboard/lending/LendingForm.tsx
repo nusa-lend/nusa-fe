@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
 import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
 import Tooltip from '@/components/ui/miniapp/Tooltip';
 import { hasSufficientAllowance } from '@/hooks/useAllowances';
+import { useUserPositionForToken } from '@/hooks/useUserPositions';
 import { Wallet } from 'lucide-react';
 
 interface LendingFormProps {
@@ -36,6 +37,13 @@ export default function LendingForm({
   const [amount, setAmount] = useState('');
   const [isDisclaimerExpanded, setIsDisclaimerExpanded] = useState(true);
 
+  const { isLoading: isPositionLoading, formattedAmount: userPositionAmount } = useUserPositionForToken(
+    selectedNetwork?.address || '',
+    selectedNetwork?.chainId || 0,
+    selectedNetwork?.id,
+    selectedNetwork?.decimals || 6
+  );
+
   const selectedBalanceStr = selectedNetwork ? (balances && (balances as any)[selectedNetwork.id]) || '0' : '0';
   const isInsufficientBalance = parseFloat(selectedBalanceStr || '0') === 0;
   const hasAllowance = selectedNetwork ? hasSufficientAllowance(allowances, selectedNetwork.id, amount || '0') : false;
@@ -43,6 +51,50 @@ export default function LendingForm({
   const inputAmount = parseFloat(amount.replace(/,/g, '') || '0');
   const userBalance = parseFloat(selectedBalanceStr || '0');
   const isAmountExceedingBalance = hasAmount && inputAmount > userBalance;
+
+  const yieldCalculations = useMemo(() => {
+    if (!selectedNetwork || isPositionLoading) {
+      return {
+        monthlyYield: '0',
+        yearlyYield: '0',
+        positionAmount: '0',
+        additionalMonthlyYield: '0',
+        additionalYearlyYield: '0',
+      };
+    }
+
+    const positionAmount = parseFloat(userPositionAmount || '0');
+    const inputAmount = parseFloat(amount.replace(/,/g, '') || '0');
+    const apyString = selectedNetwork.apy || selectedMarket?.defaultApy || '0%';
+    const apyValue = parseFloat(apyString.replace('%', ''));
+
+    if (isNaN(apyValue)) {
+      return {
+        monthlyYield: '0',
+        yearlyYield: '0',
+        positionAmount: positionAmount.toFixed(2),
+        additionalMonthlyYield: '0',
+        additionalYearlyYield: '0',
+      };
+    }
+
+    const currentMonthlyYield = (positionAmount * apyValue) / 100 / 12;
+    const currentYearlyYield = (positionAmount * apyValue) / 100;
+
+    const additionalMonthlyYield = (inputAmount * apyValue) / 100 / 12;
+    const additionalYearlyYield = (inputAmount * apyValue) / 100;
+
+    const totalMonthlyYield = currentMonthlyYield + additionalMonthlyYield;
+    const totalYearlyYield = currentYearlyYield + additionalYearlyYield;
+
+    return {
+      monthlyYield: totalMonthlyYield.toFixed(2),
+      yearlyYield: totalYearlyYield.toFixed(2),
+      positionAmount: positionAmount.toFixed(2),
+      additionalMonthlyYield: additionalMonthlyYield.toFixed(2),
+      additionalYearlyYield: additionalYearlyYield.toFixed(2),
+    };
+  }, [userPositionAmount, selectedNetwork, selectedMarket, isPositionLoading, amount]);
 
   const handleSupply = async () => {
     await onSupply(amount);
@@ -98,11 +150,11 @@ export default function LendingForm({
         </div>
       </div>
 
-      <div className={`rounded-xl border p-3 ${
-        isAmountExceedingBalance 
-          ? 'border-[#bc5564] bg-[#f8fafc]' 
-          : 'border-gray-200 bg-[#f8fafc]'
-      }`}>
+      <div
+        className={`rounded-xl border p-3 ${
+          isAmountExceedingBalance ? 'border-[#bc5564] bg-[#f8fafc]' : 'border-gray-200 bg-[#f8fafc]'
+        }`}
+      >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
@@ -125,11 +177,7 @@ export default function LendingForm({
           <div className="flex items-center gap-1">
             <span className="text-gray-400 font-thin text-sm">IDR</span>
             <button className="p-1 hover:bg-gray-200 rounded transition">
-              <img
-                src="/assets/icons/arrow_swap.png"
-                alt="Swap Arrow"
-                className="w-4 h-4 object-contain"
-              />
+              <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
             </button>
           </div>
         </div>
@@ -143,11 +191,9 @@ export default function LendingForm({
           </button>
         </div>
       </div>
-      
+
       {isAmountExceedingBalance && (
-        <div className="text-[#bc5564] text-sm">
-          Insufficient balance, deposit to continue
-        </div>
+        <div className="text-[#bc5564] text-sm">Insufficient balance, deposit to continue</div>
       )}
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -157,7 +203,9 @@ export default function LendingForm({
         <div className="space-y-3">
           <div className="flex justify-between text-sm text-gray-500">
             <span>My Position</span>
-            <span className="text-gray-900 font-semibold text-[15px]">0</span>
+            <span className="text-gray-900 font-semibold text-[15px]">
+              {isPositionLoading ? '...' : yieldCalculations.positionAmount}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <div className="flex items-center gap-1">
@@ -179,11 +227,19 @@ export default function LendingForm({
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Monthly</span>
-            <span className="text-green-600 font-semibold text-[15px]">0</span>
+            <div className="text-right">
+              <div className="text-green-600 font-semibold text-[15px]">
+                {isPositionLoading ? '...' : yieldCalculations.monthlyYield}
+              </div>
+            </div>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Yearly</span>
-            <span className="text-green-600 font-semibold text-[15px]">0</span>
+            <div className="text-right">
+              <div className="text-green-600 font-semibold text-[15px]">
+                {isPositionLoading ? '...' : yieldCalculations.yearlyYield}
+              </div>
+            </div>
           </div>
         </div>
       </div>

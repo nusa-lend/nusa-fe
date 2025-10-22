@@ -69,13 +69,9 @@ export default function BorrowMore({ onTransactionComplete }: BorrowMoreProps) {
             <div className="flex items-center gap-1">
               <span className="text-gray-400 font-thin text-sm">USD</span>
               <button className="p-1 hover:bg-gray-200 rounded transition">
-                <img
-                  src="/assets/icons/arrow_swap.png"
-                  alt="Swap Arrow"
-                  className="w-4 h-4 object-contain"
-                />
+                <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
               </button>
-          </div>
+            </div>
           </div>
 
           <div className="mt-5 flex items-center gap-1">
@@ -86,41 +82,31 @@ export default function BorrowMore({ onTransactionComplete }: BorrowMoreProps) {
             <button onClick={handleMaxClick} className="text-sm text-gray-900">
               MAX
             </button>
-        </div>  
+          </div>
         </div>
         <div className="w-full rounded-xl border border-gray-200 bg-[#f8fafc] p-3">
           <div className="text-sm text-gray-600 mb-3">Borrow IDRX</div>
 
           <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-              <img
-                src="/assets/stablecoins/idrx.png"
-                alt="IDRX"
-                width={24}
-                height={24}
-                className="object-contain"
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                <img src="/assets/stablecoins/idrx.png" alt="IDRX" width={24} height={24} className="object-contain" />
+              </div>
+              <input
+                type="text"
+                value={borrowAmount}
+                onChange={e => setBorrowAmount(e.target.value)}
+                placeholder="Amount"
+                className="bg-transparent font-semibold placeholder-gray-400 focus:outline-none flex-1 text-gray-900"
               />
             </div>
-            <input
-              type="text"
-              value={borrowAmount}
-              onChange={e => setBorrowAmount(e.target.value)}
-              placeholder="Amount"
-              className="bg-transparent font-semibold placeholder-gray-400 focus:outline-none flex-1 text-gray-900"
-            />
+            <div className="flex items-center gap-1">
+              <span className="text-gray-400 font-thin text-sm">USD</span>
+              <button className="p-1 hover:bg-gray-200 rounded transition">
+                <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-gray-400 font-thin text-sm">USD</span>
-            <button className="p-1 hover:bg-gray-200 rounded transition">
-              <img
-                src="/assets/icons/arrow_swap.png"
-                alt="Swap Arrow"
-                className="w-4 h-4 object-contain"
-              />
-            </button>
-          </div>
-        </div>
         </div>
       </div>
 

@@ -57,7 +57,7 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
     spenderAddress,
     market: selectedMarket,
   });
-  
+
   const { approveToken, isApproving, resetApproving } = useApproveToken({
     userAddress: address,
     spenderAddress,
@@ -198,7 +198,14 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
   }, [isAnimating, currentStep, selectedNetwork]);
 
   useGSAP(() => {
-    if (isAnimating && currentStep === 'form' && lentAmount && transactionInfo && formRef.current && resultRef.current) {
+    if (
+      isAnimating &&
+      currentStep === 'form' &&
+      lentAmount &&
+      transactionInfo &&
+      formRef.current &&
+      resultRef.current
+    ) {
       const tl = gsap.timeline({
         defaults: { duration: 0.3, ease: 'power2.inOut' },
         onComplete: () => {
@@ -219,8 +226,6 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
       );
     }
   }, [isAnimating, currentStep, lentAmount, transactionInfo]);
-
-
 
   useGSAP(() => {
     if (isOpen && selectRef.current && formRef.current && resultRef.current) {

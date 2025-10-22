@@ -6,10 +6,13 @@ import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector';
 import { rainbowWallet, walletConnectWallet, coinbaseWallet } from '@rainbow-me/rainbowkit/wallets';
 
-const base = Object.assign({
-  logoUrl: '/assets/network/base.png',
-  publicRpcUrl: "https://base-mainnet.g.alchemy.com/v2/ykdyr03ZsbnYbsmPUib1gRhHrtDENnrA"
-}, _base);
+const base = Object.assign(
+  {
+    logoUrl: '/assets/network/base.png',
+    publicRpcUrl: 'https://base-mainnet.g.alchemy.com/v2/ykdyr03ZsbnYbsmPUib1gRhHrtDENnrA',
+  },
+  _base
+);
 
 const connectors = connectorsForWallets(
   [

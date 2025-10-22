@@ -30,7 +30,7 @@ export default function BorrowMarketList({ onMarketSelect, markets, isLoading, e
     return (
       <div className="w-full px-4">
         <span className="text-md font-semibold">Borrow with your Collateral</span>
-        <div className="mt-4 p-4 rounded-3xl border border-white/25 ">
+        <div className="p-4 rounded-3xl border border-white/25 ">
           <div className="space-y-2">
             {[...Array(3)].map((_, index) => (
               <div key={index} className="animate-pulse">
@@ -116,7 +116,7 @@ export default function BorrowMarketList({ onMarketSelect, markets, isLoading, e
                 <ItemCard
                   imageSrc={market.token.logo}
                   title={market.token.symbol}
-                  subtitle={`${(marketBalances?.[market.id] || '0')}`}
+                  subtitle={`${marketBalances?.[market.id] || '0'}`}
                   apy={market.networks[0]?.interestRate || '0%'}
                   apyColor="#279E73"
                   imageSize={36}

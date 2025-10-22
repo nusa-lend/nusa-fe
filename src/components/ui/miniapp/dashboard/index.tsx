@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const { disconnect } = useDisconnect();
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'lending' | 'borrow' | 'portfolio'>('lending');
-  
+
   const handleLogout = async () => {
     try {
       disconnect();

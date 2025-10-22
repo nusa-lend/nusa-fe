@@ -17,12 +17,12 @@ export function useAggregatedBalances(markets: LendingMarket[] | BorrowingMarket
       const results: Record<string, string> = {};
 
       await Promise.all(
-        markets.map(async (market) => {
+        markets.map(async market => {
           try {
             let totalBalance = 0;
-            
+
             await Promise.all(
-              market.networks.map(async (network) => {
+              market.networks.map(async network => {
                 try {
                   const balance = await getBalance(config, {
                     address,
@@ -31,8 +31,7 @@ export function useAggregatedBalances(markets: LendingMarket[] | BorrowingMarket
                     unit: 'ether',
                   });
                   totalBalance += parseFloat(balance.formatted);
-                } catch {
-                }
+                } catch {}
               })
             );
 

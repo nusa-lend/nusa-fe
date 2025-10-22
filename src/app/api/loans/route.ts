@@ -142,17 +142,11 @@ export async function GET(request: Request) {
       cache: 'no-store',
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: `Failed to reach indexer: ${(error as Error).message}` },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: `Failed to reach indexer: ${(error as Error).message}` }, { status: 502 });
   }
 
   if (!response.ok) {
-    return NextResponse.json(
-      { error: `Indexer responded with status ${response.status}` },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: `Indexer responded with status ${response.status}` }, { status: 502 });
   }
 
   const payload = (await response.json()) as {
@@ -187,14 +181,18 @@ export async function GET(request: Request) {
   };
 
   if (payload.errors?.length) {
-    const message = payload.errors.map((err) => err?.message).filter(Boolean).join('; ') || 'Unknown GraphQL error';
+    const message =
+      payload.errors
+        .map(err => err?.message)
+        .filter(Boolean)
+        .join('; ') || 'Unknown GraphQL error';
     return NextResponse.json({ error: `Indexer GraphQL error: ${message}` }, { status: 502 });
   }
 
   const items = payload.data?.positionLoanss?.items ?? [];
 
   const data =
-    items.map((loan) => {
+    items.map(loan => {
       const durationSeconds = computeDurationSeconds(loan.startTimestamp, loan.endTimestamp);
       const interestUsd = computeInterestUsd(loan);
       return {

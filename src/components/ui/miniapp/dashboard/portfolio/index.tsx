@@ -35,7 +35,7 @@ export default function PortfolioContainer() {
   const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [isHistoryItem, setIsHistoryItem] = useState(false);
-  
+
   const handleItemClick = (item: PortfolioItem, isFromHistory = false) => {
     setSelectedItem(item);
     setIsBottomSheetOpen(true);
