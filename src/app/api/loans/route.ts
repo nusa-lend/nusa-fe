@@ -1,9 +1,28 @@
 import { NextResponse } from 'next/server';
+import { NETWORKS } from '@/constants/networkConstants';
 
 const RAY = 10n ** 27n;
 const SECONDS_IN_YEAR = 31_536_000n;
 
 const rayToNumber = (ray: bigint) => Number(ray) / Number(RAY);
+
+const toLowerHex = (value: string) => {
+  try {
+    return value.startsWith('0x') ? value.toLowerCase() : value;
+  } catch {
+    return value;
+  }
+};
+
+const normalizeChainId = (value?: string | null) => {
+  if (!value) return undefined;
+  if (/^\d+$/.test(value)) return value;
+  const network = NETWORKS.find(net => net.id === value);
+  if (network?.chainId !== undefined) {
+    return String(network.chainId);
+  }
+  return value;
+};
 
 const formatPercent = (ray: string) => {
   try {
@@ -23,9 +42,14 @@ const toUsd = (valueRay: string) => {
 };
 
 const computeDurationSeconds = (start: string, end?: string | null) => {
-  const startSec = Number(start);
-  const endSec = end ? Number(end) : startSec;
-  return Math.max(endSec - startSec, 0);
+  try {
+    const startSec = BigInt(start);
+    const endSec = end ? BigInt(end) : startSec;
+    const diff = endSec > startSec ? endSec - startSec : 0n;
+    return Number(diff);
+  } catch {
+    return 0;
+  }
 };
 
 const computeInterestUsd = (loan: {
@@ -37,7 +61,9 @@ const computeInterestUsd = (loan: {
   try {
     const principal = BigInt(loan.borrowUsdRay);
     const apr = BigInt(loan.borrowAprRay);
-    const duration = BigInt(Math.max(Number(loan.endTimestamp ?? loan.startTimestamp) - Number(loan.startTimestamp), 0));
+    const start = BigInt(loan.startTimestamp);
+    const end = loan.endTimestamp ? BigInt(loan.endTimestamp) : start;
+    const duration = end > start ? end - start : 0n;
     const interestRay = (principal * apr * duration) / (RAY * SECONDS_IN_YEAR);
     return rayToNumber(interestRay);
   } catch {
@@ -54,13 +80,67 @@ export async function GET(request: Request) {
   }
   const chain = searchParams.get('chain');
 
-  const ponderUrl = new URL('/position_loans', ponderBaseUrl);
-  ponderUrl.searchParams.set('account', account);
-  if (chain) ponderUrl.searchParams.set('chain', chain);
+  const graphUrl = new URL('/graphql', ponderBaseUrl);
+  const query = `
+    query PositionLoans($where: positionLoansFilter, $limit: Int) {
+      positionLoanss(
+        where: $where
+        orderBy: "startTimestamp"
+        orderDirection: "desc"
+        limit: $limit
+      ) {
+        items {
+          id
+          positionId
+          chainId
+          account
+          borrowTokenId
+          borrowAmount
+          borrowUsdRay
+          borrowAprRay
+          borrowApyRay
+          collateralUsdRay
+          debtUsdRay
+          startTimestamp
+          endTimestamp
+          startBlock
+          endBlock
+          startTxHash
+          endTxHash
+          status
+          repaidAmount
+          repaidUsdRay
+          updatedAt
+        }
+      }
+    }
+  `;
+
+  const where: Record<string, string> = {
+    account: toLowerHex(account),
+  };
+
+  const normalizedChain = normalizeChainId(chain);
+  if (normalizedChain) {
+    where.chainId = normalizedChain;
+  }
+
+  const body = JSON.stringify({
+    query,
+    variables: {
+      where,
+      limit: 100,
+    },
+  });
 
   let response: Response;
   try {
-    response = await fetch(ponderUrl.toString(), { cache: 'no-store' });
+    response = await fetch(graphUrl.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      cache: 'no-store',
+    });
   } catch (error) {
     return NextResponse.json(
       { error: `Failed to reach indexer: ${(error as Error).message}` },
@@ -76,29 +156,45 @@ export async function GET(request: Request) {
   }
 
   const payload = (await response.json()) as {
-    data: Array<{
-      id: string;
-      positionId: string;
-      chainId: string;
-      borrowTokenId: string;
-      borrowAmount: string;
-      borrowUsdRay: string;
-      borrowAprRay: string;
-      borrowApyRay: string;
-      collateralUsdRay: string;
-      debtUsdRay: string;
-      startTimestamp: string;
-      endTimestamp?: string | null;
-      status: string;
-      startBlock: string;
-      endBlock?: string | null;
-      startTxHash: string;
-      endTxHash?: string | null;
-    }>;
+    data?: {
+      positionLoanss?: {
+        items: Array<{
+          id: string;
+          positionId: string;
+          chainId: string;
+          account: string;
+          borrowTokenId: string;
+          borrowAmount: string;
+          borrowUsdRay: string;
+          borrowAprRay: string;
+          borrowApyRay: string;
+          collateralUsdRay: string;
+          debtUsdRay: string;
+          startTimestamp: string;
+          endTimestamp?: string | null;
+          startBlock: string;
+          endBlock?: string | null;
+          startTxHash: string;
+          endTxHash?: string | null;
+          status: string;
+          repaidAmount: string;
+          repaidUsdRay: string;
+          updatedAt: string;
+        }>;
+      };
+    };
+    errors?: Array<{ message?: string }>;
   };
 
+  if (payload.errors?.length) {
+    const message = payload.errors.map((err) => err?.message).filter(Boolean).join('; ') || 'Unknown GraphQL error';
+    return NextResponse.json({ error: `Indexer GraphQL error: ${message}` }, { status: 502 });
+  }
+
+  const items = payload.data?.positionLoanss?.items ?? [];
+
   const data =
-    payload.data?.map((loan) => {
+    items.map((loan) => {
       const durationSeconds = computeDurationSeconds(loan.startTimestamp, loan.endTimestamp);
       const interestUsd = computeInterestUsd(loan);
       return {
