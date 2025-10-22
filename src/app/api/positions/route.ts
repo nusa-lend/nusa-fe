@@ -14,7 +14,8 @@ const toRatioOrUsd = (valueRay: string) => {
 
 const toUsd = toRatioOrUsd;
 
-type PonderPositionAsset = {
+type PonderPositionEntry = {
+  type: 'supply_collateral' | 'supply_liquidity' | 'borrow';
   tokenId: string;
   amount: string;
   usdValueRay: string;
@@ -23,17 +24,18 @@ type PonderPositionAsset = {
   chainDst?: string | null;
 };
 
-const mapAssets = (assets?: PonderPositionAsset[]) => {
-  if (!assets?.length) return [];
+const mapEntries = (entries?: PonderPositionEntry[]) => {
+  if (!entries?.length) return [];
 
-  return assets.map((asset) => ({
-    tokenId: asset.tokenId,
-    amount: asset.amount,
-    usdValue: toUsd(asset.usdValueRay),
-    usdValueRay: asset.usdValueRay,
-    updatedAtTimestamp: asset.updatedAtTimestamp ? Number(asset.updatedAtTimestamp) : null,
-    updatedAtBlock: asset.updatedAtBlock ? Number(asset.updatedAtBlock) : null,
-    chainDst: asset.chainDst ?? null,
+  return entries.map((entry) => ({
+    type: entry.type,
+    tokenId: entry.tokenId,
+    amount: entry.amount,
+    usdValue: toUsd(entry.usdValueRay),
+    usdValueRay: entry.usdValueRay,
+    updatedAtTimestamp: entry.updatedAtTimestamp ? Number(entry.updatedAtTimestamp) : null,
+    updatedAtBlock: entry.updatedAtBlock ? Number(entry.updatedAtBlock) : null,
+    chainDst: entry.chainDst ?? null,
   }));
 };
 
@@ -75,8 +77,7 @@ export async function GET(request: Request) {
       debtUsdRay: string;
       healthFactorRay: string;
       updatedAtTimestamp: string;
-      collaterals?: PonderPositionAsset[];
-      debts?: PonderPositionAsset[];
+      entries?: PonderPositionEntry[];
     }>;
   };
 
@@ -88,8 +89,7 @@ export async function GET(request: Request) {
       debtUsd: toUsd(position.debtUsdRay),
       healthFactor: toRatioOrUsd(position.healthFactorRay),
       updatedAtTimestamp: Number(position.updatedAtTimestamp),
-      collaterals: mapAssets(position.collaterals),
-      debts: mapAssets(position.debts),
+      entries: mapEntries(position.entries),
     })) ?? [];
 
   return NextResponse.json({ data });
