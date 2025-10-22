@@ -20,7 +20,7 @@ export default function TabItem({
   apyColor = '#279E73',
 }: TabItemProps) {
   return (
-    <div className="rounded-3xl border border-white/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0)_100%)] backdrop-blur-[25.3px] p-3">
+    <div className="rounded-2xl border border-white/25 bg-[#f8fafc] p-3">
       <div className="flex items-center justify-between">
         <div className="flex space-x-3">
           <div className="flex items-center">

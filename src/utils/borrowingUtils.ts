@@ -99,6 +99,7 @@ export const formatBorrowingMarkets = async (pools: SupportedBorrowingPoolsMap):
         symbol: poolData.name,
         name: poolData.name,
         logo: poolData.logo,
+        logoCountry: poolData.logoCountry,
         category: token?.category || 'stablecoin',
       },
       maxLtv: 80,

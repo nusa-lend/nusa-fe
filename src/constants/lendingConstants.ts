@@ -3,7 +3,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'cadc',
     name: 'CADC',
     logo: '/assets/stablecoins/cadc.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-ca.png',
     networks: [
       {
         id: 'base',
@@ -29,7 +29,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'cngn',
     name: 'CNGN',
     logo: '/assets/stablecoins/cngn.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-ng.png',
     networks: [
       {
         id: 'base',
@@ -55,7 +55,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'krwt',
     name: 'KRWT',
     logo: '/assets/stablecoins/krwt.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-kr.png',
     networks: [
       {
         id: 'base',
@@ -81,7 +81,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'tryb',
     name: 'TRYB',
     logo: '/assets/stablecoins/tryb.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-tr.png',
     networks: [
       {
         id: 'base',
@@ -107,7 +107,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'mxne',
     name: 'MXNE',
     logo: '/assets/stablecoins/mxne.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-mx.png',
     networks: [
       {
         id: 'base',
@@ -133,7 +133,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'xsgd',
     name: 'XSGD',
     logo: '/assets/stablecoins/xsgd.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-sg.png',
     networks: [
       {
         id: 'base',
@@ -159,7 +159,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'zarp',
     name: 'ZARP',
     logo: '/assets/stablecoins/zarp.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-za.png',
     networks: [
       {
         id: 'base',
@@ -185,7 +185,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'idrx',
     name: 'IDRX',
     logo: '/assets/stablecoins/idrx.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-id.png',
     networks: [
       {
         id: 'base',
@@ -211,7 +211,7 @@ export const SUPPORTED_LENDING_POOLS = {
     id: 'eurc',
     name: 'EURC',
     logo: '/assets/stablecoins/eurc.png',
-    logoCountry: '',
+    logoCountry: '/assets/flags/flag-eu.png',
     networks: [
       {
         id: 'base',

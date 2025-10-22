@@ -40,6 +40,9 @@ export default function LendingForm({
   const isInsufficientBalance = parseFloat(selectedBalanceStr || '0') === 0;
   const hasAllowance = selectedNetwork ? hasSufficientAllowance(allowances, selectedNetwork.id, amount || '0') : false;
   const hasAmount = amount && parseFloat(amount.replace(/,/g, '')) > 0;
+  const inputAmount = parseFloat(amount.replace(/,/g, '') || '0');
+  const userBalance = parseFloat(selectedBalanceStr || '0');
+  const isAmountExceedingBalance = hasAmount && inputAmount > userBalance;
 
   const handleSupply = async () => {
     await onSupply(amount);
@@ -95,7 +98,11 @@ export default function LendingForm({
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-[#f8fafc] p-3">
+      <div className={`rounded-xl border p-3 ${
+        isAmountExceedingBalance 
+          ? 'border-[#bc5564] bg-[#f8fafc]' 
+          : 'border-gray-200 bg-[#f8fafc]'
+      }`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
@@ -115,30 +122,33 @@ export default function LendingForm({
               className="bg-transparent text-gray-900 font-semibold placeholder-gray-400 focus:outline-none flex-1"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-900 font-semibold">{selectedMarket.tokenSymbol}</span>
-            {/* <button className="p-1 hover:bg-gray-200 rounded transition">
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                />
-              </svg>
-            </button> */}
+          <div className="flex items-center gap-1">
+            <span className="text-gray-400 font-thin text-sm">IDR</span>
+            <button className="p-1 hover:bg-gray-200 rounded transition">
+              <img
+                src="/assets/icons/arrow_swap.png"
+                alt="Swap Arrow"
+                className="w-4 h-4 object-contain"
+              />
+            </button>
           </div>
         </div>
-        <div className="mt-5 flex items-center justify-between">
+        <div className="mt-5 flex items-center gap-1">
           <span className="text-sm text-gray-500 flex items-center gap-1">
             <Wallet className="w-4 h-4" />
             {formatBalance(selectedBalanceStr)}
           </span>
-          <button onClick={handleMaxClick} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          <button onClick={handleMaxClick} className="text-sm text-gray-900">
             MAX
           </button>
         </div>
       </div>
+      
+      {isAmountExceedingBalance && (
+        <div className="text-[#bc5564] text-sm">
+          Insufficient balance, deposit to continue
+        </div>
+      )}
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3">
@@ -169,11 +179,11 @@ export default function LendingForm({
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Monthly</span>
-            <span className="text-gray-900 font-semibold text-[15px]">0</span>
+            <span className="text-green-600 font-semibold text-[15px]">0</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Yearly</span>
-            <span className="text-gray-900 font-semibold text-[15px]">0</span>
+            <span className="text-green-600 font-semibold text-[15px]">0</span>
           </div>
         </div>
       </div>
@@ -223,9 +233,9 @@ export default function LendingForm({
       {hasAllowance ? (
         <button
           onClick={handleSupply}
-          disabled={!hasAmount || isInsufficientBalance || isSupplying}
+          disabled={!hasAmount || isInsufficientBalance || isAmountExceedingBalance || isSupplying}
           className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition ${
-            hasAmount && !isInsufficientBalance && !isSupplying
+            hasAmount && !isInsufficientBalance && !isAmountExceedingBalance && !isSupplying
               ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80'
               : 'bg-[#a8cfe5] cursor-not-allowed'
           }`}
@@ -235,9 +245,9 @@ export default function LendingForm({
       ) : (
         <button
           onClick={handleApprove}
-          disabled={!hasAmount || isApproving || !spenderAddress}
+          disabled={!hasAmount || isApproving || isAmountExceedingBalance || !spenderAddress}
           className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition ${
-            hasAmount && !isApproving && !!spenderAddress
+            hasAmount && !isApproving && !isAmountExceedingBalance && !!spenderAddress
               ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80'
               : 'bg-[#a8cfe5] cursor-not-allowed'
           }`}

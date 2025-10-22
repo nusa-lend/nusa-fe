@@ -48,13 +48,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-hidden relative">
-      <div
-        className="absolute inset-0 bg-no-repeat bg-[position:center_-75px] bg-[length:100%_auto] z-0"
-        style={{
-          backgroundImage: `url('/assets/backgrounds/bg_dashboard.png')`,
-        }}
-      />
-
       <div className="relative z-10">
         <Header onProfileClick={() => setIsProfileSheetOpen(true)} />
       </div>

@@ -33,7 +33,7 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSupplying, setIsSupplying] = useState(false);
   const [transactionInfo, setTransactionInfo] = useState<{ hash?: `0x${string}`; success: boolean } | undefined>();
-  const sheetHeight = currentStep === 'result' ? '70vh' : '100vh';
+  const sheetHeight = currentStep === 'result' ? '65vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);

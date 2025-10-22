@@ -56,6 +56,7 @@ export const formatLendingMarkets = async (pools: SupportedLendingPoolsMap): Pro
       tokenSymbol: token?.symbol || pool.id.toUpperCase(),
       tokenName: token?.name || pool.name,
       tokenLogo: token?.logo || pool.logo,
+      logoCountry: pool.logoCountry,
       defaultApy,
       networks,
     });

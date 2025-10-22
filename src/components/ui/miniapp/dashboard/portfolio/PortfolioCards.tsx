@@ -14,12 +14,12 @@ export default function PortfolioCards({ data }: PortfolioCardsProps) {
       {data.map((item, index) => (
         <div
           key={index}
-          className="rounded-3xl border border-white/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0)_100%)] backdrop-blur-[25.3px] p-3"
+          className="rounded-2xl border border-white/25 bg-[#f8fafc] p-3"
         >
-          <div className="text-xs text-gray-600 font-medium mb-1">{item.title}</div>
-          <div className="text-lg font-bold text-[#279E73] mb-1">{item.value}</div>
+          <div className="text-sm text-gray-600 font-medium mb-1">{item.title}</div>
+          <div className="text-xl font-bold text-[#175f45] mb-2">{item.value}</div>
           {item.sub && (
-            <div className="text-xs text-[#767676] font-medium">
+            <div className="text-sm text-[#767676] font-medium">
               <span className={`${item.title === 'Lending' ? 'text-green-600' : 'text-red-600'}`}>{item.sub}</span> Avg
               APY
             </div>

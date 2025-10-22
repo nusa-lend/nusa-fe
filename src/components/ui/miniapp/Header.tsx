@@ -14,9 +14,9 @@ export default function Header({ onProfileClick }: HeaderProps) {
   const profileImageAlt = hasUser && user?.displayName ? user.displayName : 'Profile';
 
   return (
-    <div className="w-full px-4 py-4 flex items-center justify-between bg-transparent">
+    <div className="w-full px-4 py-4 flex items-center justify-between bg-transparent mb-2">
       <div className="flex items-center">
-        <Image src="/assets/logos/logo-dark.png" alt="Nusa Logo" width={80} height={27} className="h-6 w-auto" />
+        <Image src="/assets/logos/logo-dark.png" alt="Nusa Logo" width={85} height={30} className="h-6 w-auto" />
       </div>
 
       <div className="flex items-center">
@@ -24,7 +24,7 @@ export default function Header({ onProfileClick }: HeaderProps) {
           onClick={onProfileClick}
           className="focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full transition-all duration-200 hover:scale-105"
         >
-          <Image src={profileImageSrc} alt={profileImageAlt} width={33} height={33} className="rounded-full" />
+          <Image src={profileImageSrc} alt={profileImageAlt} width={36} height={36} className="rounded-full" />
         </button>
       </div>
     </div>

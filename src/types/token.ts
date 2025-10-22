@@ -5,6 +5,7 @@ export interface Token {
   symbol: string;
   name: string;
   logo: string;
+  logoCountry?: string;
   category: TokenCategory;
   description?: string;
 }

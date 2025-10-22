@@ -15,6 +15,7 @@ export type LendingMarket = {
   tokenSymbol: string;
   tokenName: string;
   tokenLogo: string;
+  logoCountry?: string;
   defaultApy: string;
   networks: LendingNetworkOption[];
   userBalance?: string;

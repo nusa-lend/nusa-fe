@@ -22,11 +22,11 @@ export default function ItemCard({
   apyColor = '#279E73',
   imageSize = 48,
   flagSrc,
-  flagSize = 20,
+  flagSize = 16,
   isLoading = false,
 }: ItemCardProps) {
   return (
-    <div className="mt-2 bg-[#f8fafc] rounded-xl p-4">
+    <div className="mt-2 bg-[#f8fafc] rounded-xl p-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="relative">

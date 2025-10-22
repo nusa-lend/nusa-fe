@@ -30,7 +30,7 @@ export default function LendingMarketList({ onMarketSelect, markets, isLoading, 
     return (
       <div className="w-full px-4">
         <span className="text-md font-semibold">Lend Local Stable Coin</span>
-        <div className="mt-4 p-4 rounded-3xl border border-white/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0)_100%)] backdrop-blur-[25.3px]">
+        <div className="p-4 rounded-3xl border border-white/25 ">
           <div className="space-y-2">
             {[...Array(3)].map((_, index) => (
               <div key={index} className="animate-pulse">
@@ -47,7 +47,7 @@ export default function LendingMarketList({ onMarketSelect, markets, isLoading, 
     return (
       <div className="w-full px-4">
         <span className="text-md font-semibold">Lend Local Stable Coin</span>
-        <div className="mt-4 p-4 rounded-3xl border border-white/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0)_100%)] backdrop-blur-[25.3px]">
+        <div className="p-4 rounded-3xl border border-white/25 ">
           <div className="text-center text-red-500 py-8">Failed to load lending markets</div>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function LendingMarketList({ onMarketSelect, markets, isLoading, 
   return (
     <div className="w-full px-4">
       <span className="text-md font-semibold">Lend Local Stable Coin</span>
-      <div className="mt-4 p-4 rounded-3xl border border-white/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0)_100%)] backdrop-blur-[25.3px]">
+      <div className="px-2 py-3 rounded-3xl border border-white/25 ">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5" fill="none" stroke="#b2b2b2" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@ export default function LendingMarketList({ onMarketSelect, markets, isLoading, 
             placeholder="Search coin"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-[#F8FAFC] rounded-3xl text-sm border-0 focus:outline-none focus:ring-2 focus:ring-white/20 text-gray-700 placeholder-gray-500 placeholder:text-sm"
+            className="w-full pl-10 pr-4 py-3 bg-[#f5f5f5] rounded-3xl text-sm border-0 focus:outline-none focus:ring-2 focus:ring-white/20 text-gray-700 placeholder-gray-500 placeholder:text-sm"
           />
         </div>
 
@@ -113,6 +113,7 @@ export default function LendingMarketList({ onMarketSelect, markets, isLoading, 
                   subtitle={`${(marketBalances?.[market.id] || '0')}`}
                   apy={market.defaultApy}
                   imageSize={36}
+                  flagSrc={market.logoCountry}
                   isLoading={balancesLoading}
                 />
               </div>
