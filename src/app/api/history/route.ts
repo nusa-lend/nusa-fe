@@ -282,6 +282,7 @@ export async function GET(request: Request) {
       const durationSeconds = computeDurationSeconds(loan.startTimestamp, loan.endTimestamp);
       const interestUsd = computeInterestUsd(loan);
       const usdValue = toUsd(loan.borrowUsdRay);
+      const action = loan.status === 'closed' ? 'repay' : 'borrow';
       return {
         id: loan.id,
         positionId: loan.positionId,
@@ -303,8 +304,8 @@ export async function GET(request: Request) {
         durationSeconds,
         estimatedInterestUsd: interestUsd,
         historyType: 'borrow' as const,
-        entryType: null as string | null,
-        action: null as string | null,
+        entryType: 'loan' as const,
+        action,
         usdValue,
         usdValueRay: loan.borrowUsdRay,
       };
@@ -314,6 +315,7 @@ export async function GET(request: Request) {
     supplyItems.map((event) => {
       const timestamp = Number(event.blockTimestamp);
       const usdValue = toUsd(event.usdValueRay);
+      const normalizedAction = event.action.toLowerCase() === 'withdraw' ? 'withdraw' : 'supply';
       return {
         id: event.id,
         positionId: event.positionId,
@@ -336,7 +338,7 @@ export async function GET(request: Request) {
         estimatedInterestUsd: 0,
         historyType: 'supply' as const,
         entryType: event.entryType,
-        action: event.action,
+        action: normalizedAction,
         usdValue,
         usdValueRay: event.usdValueRay,
       };
