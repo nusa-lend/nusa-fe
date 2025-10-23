@@ -24,6 +24,13 @@ const normalizeChainId = (value?: string | null) => {
   return value;
 };
 
+const parseLimit = (value?: string | null) => {
+  if (!value) return 100;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 100;
+  return Math.min(parsed, 500);
+};
+
 const formatPercent = (ray: string) => {
   try {
     const percent = rayToNumber(BigInt(ray)) * 100;
@@ -88,9 +95,13 @@ export async function GET(request: Request) {
 
   const graphUrl = new URL('/graphql', ponderBaseUrl);
   const query = `
-    query PositionLoans($where: positionLoansFilter, $limit: Int) {
+    query PositionHistory(
+      $loanWhere: positionLoansFilter,
+      $supplyWhere: positionSupplyEventsFilter,
+      $limit: Int
+    ) {
       positionLoanss(
-        where: $where
+        where: $loanWhere
         orderBy: "startTimestamp"
         orderDirection: "desc"
         limit: $limit
@@ -119,23 +130,54 @@ export async function GET(request: Request) {
           updatedAt
         }
       }
+      positionSupplyEventss(
+        where: $supplyWhere
+        orderBy: "blockTimestamp"
+        orderDirection: "desc"
+        limit: $limit
+      ) {
+        items {
+          id
+          positionId
+          chainId
+          account
+          marketId
+          tokenId
+          entryType
+          action
+          amount
+          usdValueRay
+          blockNumber
+          blockTimestamp
+          txHash
+          logIndex
+          createdAt
+        }
+      }
     }
   `;
 
-  const where: Record<string, string> = {
+  const loanWhere: Record<string, string> = {
+    account: toLowerHex(account),
+  };
+  const supplyWhere: Record<string, string> = {
     account: toLowerHex(account),
   };
 
   const normalizedChain = normalizeChainId(chain);
   if (normalizedChain) {
-    where.chainId = normalizedChain;
+    loanWhere.chainId = normalizedChain;
+    supplyWhere.chainId = normalizedChain;
   }
+
+  const limit = parseLimit(searchParams.get('limit'));
 
   const body = JSON.stringify({
     query,
     variables: {
-      where,
-      limit: 100,
+      loanWhere,
+      supplyWhere,
+      limit,
     },
   });
 
@@ -194,6 +236,25 @@ export async function GET(request: Request) {
           updatedAt: string;
         }>;
       };
+      positionSupplyEventss?: {
+        items: Array<{
+          id: string;
+          positionId: string;
+          chainId: string;
+          account: string;
+          marketId: string;
+          tokenId: string;
+          entryType: string;
+          action: string;
+          amount: string;
+          usdValueRay: string;
+          blockNumber: string;
+          blockTimestamp: string;
+          txHash: string;
+          logIndex: string | number;
+          createdAt: string;
+        }>;
+      };
     };
     errors?: Array<{ message?: string }>;
   };
@@ -213,19 +274,21 @@ export async function GET(request: Request) {
     });
   }
 
-  const items = payload.data?.positionLoanss?.items ?? [];
+  const loanItems = payload.data?.positionLoanss?.items ?? [];
+  const supplyItems = payload.data?.positionSupplyEventss?.items ?? [];
 
-  const data =
-    items.map(loan => {
+  const loans =
+    loanItems.map((loan) => {
       const durationSeconds = computeDurationSeconds(loan.startTimestamp, loan.endTimestamp);
       const interestUsd = computeInterestUsd(loan);
+      const usdValue = toUsd(loan.borrowUsdRay);
       return {
         id: loan.id,
         positionId: loan.positionId,
         chainId: loan.chainId,
         borrowTokenId: loan.borrowTokenId,
         borrowAmount: loan.borrowAmount,
-        borrowUsd: toUsd(loan.borrowUsdRay),
+        borrowUsd: usdValue,
         borrowAprPercent: formatPercent(loan.borrowAprRay),
         borrowApyPercent: formatPercent(loan.borrowApyRay),
         collateralUsd: toUsd(loan.collateralUsdRay),
@@ -239,14 +302,49 @@ export async function GET(request: Request) {
         status: loan.status,
         durationSeconds,
         estimatedInterestUsd: interestUsd,
+        historyType: 'borrow' as const,
+        entryType: null as string | null,
+        action: null as string | null,
+        usdValue,
+        usdValueRay: loan.borrowUsdRay,
       };
     }) ?? [];
 
-  return new NextResponse(JSON.stringify({ data }), {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Content-Type': 'application/json',
-    },
-  });
+  const supplies =
+    supplyItems.map((event) => {
+      const timestamp = Number(event.blockTimestamp);
+      const usdValue = toUsd(event.usdValueRay);
+      return {
+        id: event.id,
+        positionId: event.positionId,
+        chainId: event.chainId,
+        borrowTokenId: event.tokenId,
+        borrowAmount: event.amount,
+        borrowUsd: usdValue,
+        borrowAprPercent: '0.00',
+        borrowApyPercent: '0.00',
+        collateralUsd: null as number | null,
+        debtUsd: null as number | null,
+        startTimestamp: timestamp,
+        endTimestamp: null as number | null,
+        startBlock: Number(event.blockNumber),
+        endBlock: null as number | null,
+        startTxHash: event.txHash,
+        endTxHash: null as string | null,
+        status: event.action,
+        durationSeconds: 0,
+        estimatedInterestUsd: 0,
+        historyType: 'supply' as const,
+        entryType: event.entryType,
+        action: event.action,
+        usdValue,
+        usdValueRay: event.usdValueRay,
+      };
+    }) ?? [];
+
+  const combined = [...loans, ...supplies].sort(
+    (a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0),
+  );
+
+  return NextResponse.json({ data: combined });
 }
