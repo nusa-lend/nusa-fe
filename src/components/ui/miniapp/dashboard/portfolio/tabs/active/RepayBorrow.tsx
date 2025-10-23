@@ -13,7 +13,7 @@ import { useUserPositionForToken } from '@/hooks/useUserPositions';
 import { useAllowances } from '@/hooks/useAllowances';
 import { useApproveToken } from '@/hooks/useApproveToken';
 import { ActivePosition } from '@/utils/positionMapping';
-import { ALL_TOKENS } from '@/constants/tokenConstants';
+import { getTokenBySymbol } from '@/utils/positionMapping';
 import { NETWORKS } from '@/constants/networkConstants';
 import Tooltip from '@/components/ui/miniapp/Tooltip';
 import { formatBalance } from '@/utils/formatBalance';
@@ -32,7 +32,7 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
 
   const tokenInfo = useMemo(() => {
     const [chainId, tokenAddress] = position.entry.tokenId.split(':');
-    const token = ALL_TOKENS.find(t => t.symbol === position.entry.token?.symbol);
+    const token = getTokenBySymbol(position.entry.token?.symbol || '');
     const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
     
     return {

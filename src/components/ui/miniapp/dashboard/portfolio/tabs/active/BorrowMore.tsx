@@ -10,8 +10,10 @@ import { parseUnitsString } from '@/utils/lendingUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUserPositionForToken } from '@/hooks/useUserPositions';
 import { ActivePosition } from '@/utils/positionMapping';
+import { getTokenBySymbol } from '@/utils/positionMapping';
 import { ALL_TOKENS } from '@/constants/tokenConstants';
 import { NETWORKS } from '@/constants/networkConstants';
+import { SUPPORTED_COLLATERAL } from '@/constants/borrowConstants';
 import Tooltip from '@/components/ui/miniapp/Tooltip';
 import { formatBalance } from '@/utils/formatBalance';
 import { Wallet } from 'lucide-react';
@@ -33,13 +35,13 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
     );
     
     const collateralEntry = collateralEntries.find((e: any) => {
-      const token = ALL_TOKENS.find(t => t.logo === position.token1);
-      return token && e.token.symbol === token.symbol;
+      const token = getTokenBySymbol(e.token.symbol);
+      return token && token.logo === position.token1;
     });
         
     if (collateralEntry) {
       const [chainId, tokenAddress] = collateralEntry.tokenId.split(':');
-      const token = ALL_TOKENS.find(t => t.logo === position.token1);
+      const token = getTokenBySymbol(collateralEntry.token?.symbol || '');
       const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
       
       const result = {
@@ -55,7 +57,17 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
       return result;
     }
     
-    const token = ALL_TOKENS.find(t => t.logo === position.token1);
+    // Fallback: try to find token by logo in all token sources
+    const allTokens = [...ALL_TOKENS, ...Object.values(SUPPORTED_COLLATERAL).map(t => ({
+      logo: t.logo,
+      symbol: t.name,
+      name: t.name,
+      id: t.id,
+      category: 'rwa' as const,
+      description: t.name
+    }))];
+    
+    const token = allTokens.find(t => t.logo === position.token1);
     const fallback = {
       symbol: token?.symbol || 'Unknown',
       logo: position.token1,

@@ -1,6 +1,7 @@
 import { PonderPosition, PonderPositionEntry } from '@/services/positionService';
 import { ALL_TOKENS } from '@/constants/tokenConstants';
 import { NETWORKS } from '@/constants/networkConstants';
+import { SUPPORTED_COLLATERAL } from '@/constants/borrowConstants';
 
 export interface ActivePosition {
   id: string;
@@ -17,8 +18,30 @@ export interface ActivePosition {
   position: PonderPosition;
 }
 
+export const getTokenBySymbol = (symbol: string) => {
+  let token = ALL_TOKENS.find(t => t.symbol.toLowerCase() === symbol.toLowerCase());
+  
+  if (!token) {
+    const collateralToken = Object.values(SUPPORTED_COLLATERAL).find(t => 
+      t.name.toLowerCase() === symbol.toLowerCase()
+    );
+    if (collateralToken) {
+      token = {
+        logo: collateralToken.logo,
+        symbol: collateralToken.name,
+        name: collateralToken.name,
+        id: collateralToken.id,
+        category: 'rwa' as const,
+        description: collateralToken.name
+      };
+    }
+  }
+  
+  return token;
+};
+
 const getTokenLogo = (symbol: string): string => {
-  const token = ALL_TOKENS.find(t => t.symbol.toLowerCase() === symbol.toLowerCase());
+  const token = getTokenBySymbol(symbol);
   return token?.logo || '/assets/placeholder/placeholder_selectcoin.png';
 };
 

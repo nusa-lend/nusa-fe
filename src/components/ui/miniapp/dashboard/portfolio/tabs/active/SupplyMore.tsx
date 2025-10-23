@@ -14,7 +14,7 @@ import { CONTRACTS } from '@/constants/contractsConstants';
 import LendingPoolAbi from '@/abis/LendingPool.json';
 import { parseUnitsString } from '@/utils/lendingUtils';
 import { ActivePosition } from '@/utils/positionMapping';
-import { ALL_TOKENS } from '@/constants/tokenConstants';
+import { getTokenBySymbol } from '@/utils/positionMapping';
 import { NETWORKS } from '@/constants/networkConstants';
 
 interface SupplyMoreProps {
@@ -30,7 +30,7 @@ export default function SupplyMore({ position, onTransactionComplete }: SupplyMo
 
   const tokenInfo = useMemo(() => {
     const [chainId, tokenAddress] = position.entry.tokenId.split(':');
-    const token = ALL_TOKENS.find(t => t.symbol === position.entry.token?.symbol);
+    const token = getTokenBySymbol(position.entry.token?.symbol || '');
     const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
     
     return {
