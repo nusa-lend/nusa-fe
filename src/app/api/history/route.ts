@@ -280,6 +280,73 @@ export async function GET(request: Request) {
   const loanItems = payload.data?.positionLoanss?.items ?? [];
   const supplyItems = payload.data?.positionSupplyEventss?.items ?? [];
 
+  const marketRates = new Map<
+    string,
+    {
+      supplyRatePercent: string;
+      borrowRatePercent: string;
+    }
+  >();
+
+  const marketIds = Array.from(new Set(supplyItems.map(event => event.marketId))).filter(
+    id => typeof id === 'string' && id.length > 0,
+  );
+
+  if (marketIds.length > 0) {
+    const marketsQuery = `
+      query Markets($ids: [String!], $limit: Int) {
+        marketss(where: { id_in: $ids }, limit: $limit) {
+          items {
+            id
+            supplyRateRay
+            borrowRateRay
+          }
+        }
+      }
+    `;
+
+    const marketsBody = JSON.stringify({
+      query: marketsQuery,
+      variables: {
+        ids: marketIds,
+        limit: marketIds.length,
+      },
+    });
+
+    try {
+      const marketsResponse = await fetch(graphUrl.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: marketsBody,
+        cache: 'no-store',
+      });
+
+      if (marketsResponse.ok) {
+        const marketsPayload = (await marketsResponse.json()) as {
+          data?: {
+            marketss?: {
+              items: Array<{
+                id: string;
+                supplyRateRay: string;
+                borrowRateRay: string;
+              }>;
+            };
+          };
+        };
+
+        const items = marketsPayload.data?.marketss?.items ?? [];
+        for (const market of items) {
+          marketRates.set(market.id, {
+            supplyRatePercent: formatPercent(market.supplyRateRay),
+            borrowRatePercent: formatPercent(market.borrowRateRay),
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch market rates for history payload', error);
+    }
+  }
+
   const loans =
     loanItems.map((loan) => {
       const durationSeconds = computeDurationSeconds(loan.startTimestamp, loan.endTimestamp);
@@ -318,7 +385,17 @@ export async function GET(request: Request) {
     supplyItems.map((event) => {
       const timestamp = Number(event.blockTimestamp);
       const usdValue = toUsd(event.usdValueRay);
-      const normalizedAction = event.action.toLowerCase() === 'withdraw' ? 'withdraw' : 'supply';
+      const entryType = typeof event.entryType === 'string' ? event.entryType.toLowerCase() : '';
+      const rawAction = typeof event.action === 'string' ? event.action.toLowerCase() : '';
+      const normalizedAction = rawAction === 'withdraw' ? 'withdraw' : 'supply';
+      const market = marketRates.get(event.marketId);
+      const isLiquidity = entryType === 'liquidity';
+      const aprPercent = market
+        ? isLiquidity
+          ? market.supplyRatePercent
+          : market.borrowRatePercent
+        : '0.00';
+      const apyPercent = aprPercent;
       return {
         id: event.id,
         positionId: event.positionId,
@@ -326,8 +403,8 @@ export async function GET(request: Request) {
         borrowTokenId: event.tokenId,
         borrowAmount: event.amount,
         borrowUsd: usdValue,
-        borrowAprPercent: '0.00',
-        borrowApyPercent: '0.00',
+        borrowAprPercent: aprPercent,
+        borrowApyPercent: apyPercent,
         collateralUsd: null as number | null,
         debtUsd: null as number | null,
         startTimestamp: timestamp,
