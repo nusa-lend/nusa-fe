@@ -39,11 +39,7 @@ export default function BorrowForm({
   const [borrowAmount, setBorrowAmount] = useState('');
   const [isDisclaimerExpanded, setIsDisclaimerExpanded] = useState(true);
 
-  const {
-    maxLtv: apiMaxLtv,
-    liquidationLtv: apiLiquidationLtv,
-    isLoading: isPositionLoading,
-  } = useUserBorrowingPosition();
+  const { healthFactor: accountHealthFactor, isLoading: isPositionLoading } = useUserBorrowingPosition();
 
   const selectedBalanceStr = balances
     ? Object.values(balances as Record<string, string>)
@@ -64,13 +60,20 @@ export default function BorrowForm({
   const userBalance = parseFloat(selectedBalanceStr || '0');
   const isCollateralAmountExceedingBalance = hasCollateralAmount && inputCollateralAmount > userBalance;
   const collateralValue = parseFloat(collateralAmount.replace(/,/g, '') || '0');
-  const maxBorrowAmount = (collateralValue * (selectedMarket?.maxLtv || 80)) / 100;
+  const maxLtv = selectedMarket?.maxLtv ?? 80;
+  const liquidationLtv = selectedMarket?.liquidationThreshold ?? maxLtv;
+  const maxBorrowAmount = (collateralValue * maxLtv) / 100;
   const currentLtv =
     collateralValue > 0 ? (parseFloat(borrowAmount.replace(/,/g, '') || '0') / collateralValue) * 100 : 0;
-  const apiLiquidationValue = parseFloat(apiLiquidationLtv.replace('%', ''));
-  const liquidationLtv = !isNaN(apiLiquidationValue) ? apiLiquidationValue : selectedMarket?.maxLtv || 80;
 
   const marginCallLtv = liquidationLtv * 0.8;
+  const healthFactorColor =
+    accountHealthFactor < 1
+      ? 'text-red-600'
+      : accountHealthFactor < 1.5
+        ? 'text-yellow-600'
+        : 'text-green-600';
+  const healthFactorDisplay = accountHealthFactor.toFixed(2);
 
   const interestCalculations = useMemo(() => {
     if (!selectedNetwork?.interestRate) {
@@ -279,7 +282,7 @@ export default function BorrowForm({
               >
                 {currentLtv.toFixed(1)}%
               </span>{' '}
-              / {apiMaxLtv || selectedMarket.maxLtv}
+              / {`${maxLtv}%`}
             </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
@@ -289,6 +292,12 @@ export default function BorrowForm({
           <div className="flex justify-between text-sm text-gray-500">
             <span>Liquidation LTV</span>
             <span className="text-gray-900 font-semibold text-[15px]">{liquidationLtv.toFixed(1)}%</span>
+          </div>
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>Health Factor</span>
+            <span className={`text-[15px] font-semibold ${healthFactorColor}`}>
+              {isPositionLoading ? '...' : healthFactorDisplay}
+            </span>
           </div>
         </div>
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3 mt-4">Borrow Rate</h3>

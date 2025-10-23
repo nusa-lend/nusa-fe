@@ -42,8 +42,6 @@ export const useUserBorrowingPosition = (chain?: string) => {
     isLoading,
     error,
     currentLtv: riskData?.ltvPercent || '0%',
-    maxLtv: riskData?.maxLtvPercent || '80%',
-    liquidationLtv: riskData?.maxLiquidationPercent || '80%',
     healthFactor: riskData?.healthFactor || 1,
     collateralUsd: riskData?.collateralUsd || 0,
     debtUsd: riskData?.debtUsd || 0,

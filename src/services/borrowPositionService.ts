@@ -7,7 +7,6 @@ type BorrowingMarketData = {
   decimals: number;
   borrowRatePercent: string;
   supplyRatePercent: string;
-  collateralFactorPercent: string;
   liquidationThresholdPercent: string | null;
   utilizationPercent: string;
 };
@@ -19,7 +18,6 @@ type BorrowingPositionData = {
   decimals: number;
   borrowRatePercent: string;
   supplyRatePercent: string;
-  collateralFactorPercent: string;
   liquidationThresholdPercent: string | null;
   utilizationPercent: string;
   amount: string;
@@ -59,7 +57,6 @@ export const fetchBorrowingMarketsFromPositions = async (
               decimals: entry.token.decimals,
               borrowRatePercent: entry.market.borrowRatePercent,
               supplyRatePercent: entry.market.supplyRatePercent,
-              collateralFactorPercent: entry.token.collateralFactorPercent,
               liquidationThresholdPercent: entry.token.liquidationThresholdPercent,
               utilizationPercent: entry.market.utilizationPercent,
             });
@@ -94,7 +91,6 @@ export const fetchBorrowingPositionsFromPositions = async (
             decimals: entry.token.decimals,
             borrowRatePercent: entry.market.borrowRatePercent,
             supplyRatePercent: entry.market.supplyRatePercent,
-            collateralFactorPercent: entry.token.collateralFactorPercent,
             liquidationThresholdPercent: entry.token.liquidationThresholdPercent,
             utilizationPercent: entry.market.utilizationPercent,
             amount: entry.amount,

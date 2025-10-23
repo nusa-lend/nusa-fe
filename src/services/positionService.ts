@@ -15,8 +15,6 @@ type PonderToken = {
   symbol: string;
   name: string;
   decimals: number;
-  collateralFactorBps: number;
-  collateralFactorPercent: string;
   liquidationThresholdBps: number | null;
   liquidationThresholdPercent: string | null;
 };
@@ -59,10 +57,6 @@ type PonderRisk = {
   ltv: number;
   ltvRay: string;
   ltvPercent: string;
-  maxLtvBps: number;
-  maxLtvPercent: string;
-  maxLiquidationBps: number;
-  maxLiquidationPercent: string;
   collateralUsd: number;
   debtUsd: number;
   healthFactor: number;

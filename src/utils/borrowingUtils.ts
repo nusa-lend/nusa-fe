@@ -115,7 +115,7 @@ export async function formatBorrowingTokens(
 
       if (positionMarket) {
         apr = positionMarket.borrowRatePercent;
-        const lltvValue = positionMarket.collateralFactorPercent || '80%';
+        const lltvValue = positionMarket.liquidationThresholdPercent || '80%';
         lltv = lltvValue.replace('.00%', '%');
       } else {
         let fallbackApy: number;
