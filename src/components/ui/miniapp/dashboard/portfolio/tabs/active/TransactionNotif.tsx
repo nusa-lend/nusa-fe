@@ -92,9 +92,9 @@ export default function TransactionNotif({
       };
     } else if (type === 'repay-borrow') {
       return {
-        title: `${collateralToken?.symbol || 'Unknown'} / ${borrowToken?.symbol || 'Unknown'}`,
+        title: `${borrowToken?.symbol || 'Unknown'} / ${collateralToken?.symbol || 'Unknown'}`,
         tokenLogo: borrowToken?.logo || '/assets/placeholder/placeholder_selectcoin.png',
-        networkLogo: borrowNetwork?.logo || '/assets/placeholder/placeholder_selectchain.png',
+        networkLogo: collateralToken?.logo || '/assets/placeholder/placeholder_selectchain.png',
         networkName: borrowNetwork?.name || 'Unknown',
         amount: borrowToken?.amount || amount || '0',
         rate: borrowNetwork?.apr || '0%',

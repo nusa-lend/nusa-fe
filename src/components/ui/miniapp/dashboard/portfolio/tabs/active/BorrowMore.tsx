@@ -30,6 +30,23 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
   const queryClient = useQueryClient();
 
   const collateralTokenInfo = useMemo(() => {
+    if (position.type === 'borrow') {
+      const [chainId, tokenAddress] = position.entry.tokenId.split(':');
+      const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
+      
+      const result = {
+        symbol: position.entry.token?.symbol || 'Unknown',
+        logo: position.token2,
+        address: tokenAddress,
+        chainId: parseInt(chainId),
+        decimals: position.entry.token?.decimals || 6,
+        network: network?.name || 'Unknown',
+        networkLogo: network?.logo || '/assets/placeholder/placeholder_selectchain.png',
+      };
+      
+      return result;
+    }
+
     const collateralEntries = position.position.entries.filter((e: any) => 
       (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
     );
@@ -57,7 +74,6 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
       return result;
     }
     
-    // Fallback: try to find token by logo in all token sources
     const allTokens = [...ALL_TOKENS, ...Object.values(SUPPORTED_COLLATERAL).map(t => ({
       logo: t.logo,
       symbol: t.name,
@@ -79,9 +95,38 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
     };
     
     return fallback;
-  }, [position.token1, position.position]);
+  }, [position.token1, position.token2, position.type, position.entry, position.position]);
 
   const borrowedTokenInfo = useMemo(() => {
+    if (position.type === 'borrow') {
+      const collateralEntries = position.position.entries.filter((e: any) => 
+        (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
+      );
+      
+      const collateralEntry = collateralEntries.find((e: any) => {
+        const token = getTokenBySymbol(e.token.symbol);
+        return token && token.logo === position.token1;
+      });
+          
+      if (collateralEntry) {
+        const [chainId, tokenAddress] = collateralEntry.tokenId.split(':');
+        const token = getTokenBySymbol(collateralEntry.token?.symbol || '');
+        const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
+        
+        const result = {
+          symbol: token?.symbol || 'Unknown',
+          logo: position.token1,
+          address: tokenAddress,
+          chainId: parseInt(chainId),
+          decimals: collateralEntry.token?.decimals || 6,
+          network: network?.name || 'Unknown',
+          networkLogo: network?.logo || '/assets/placeholder/placeholder_selectchain.png',
+        };
+        
+        return result;
+      }
+    }
+
     const [chainId, tokenAddress] = position.entry.tokenId.split(':');
     const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
     
@@ -96,7 +141,7 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
     };
     
     return result;
-  }, [position.entry, position.token2]);
+  }, [position.entry, position.token1, position.token2, position.type, position.position]);
 
   const { formattedAmount: currentPositionAmount } = useUserPositionForToken(
     collateralTokenInfo.address,

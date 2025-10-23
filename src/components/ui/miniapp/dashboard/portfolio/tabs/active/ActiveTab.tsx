@@ -70,8 +70,8 @@ export default function ActiveTab({ onPositionClick, filter = 'All' }: ActiveTab
       {activePositions.map((position) => (
         <div key={position.id} onClick={() => handleCardClick(position)} className="cursor-pointer">
           <TabItem
-            token1={position.token1}
-            token2={position.token2}
+            token1={position.type === 'borrow' ? position.token2 : position.token1}
+            token2={position.type === 'borrow' ? position.token1 : position.token2}
             imageSize={position.imageSize}
             title={position.title}
             subtitle={position.subtitle}
