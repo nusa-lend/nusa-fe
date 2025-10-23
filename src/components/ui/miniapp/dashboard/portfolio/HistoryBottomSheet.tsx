@@ -7,18 +7,7 @@ import BottomSheet from '@/components/ui/miniapp/BottomSheet';
 import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
 import LendingDetail from './tabs/history/LendingDetail';
 import BorrowDetail from './tabs/history/BorrowDetail';
-
-interface HistoryTransaction {
-  id: string;
-  token1: string;
-  token2: string;
-  imageSize: number;
-  title: string;
-  subtitle: string;
-  apy: string;
-  apyColor: string;
-  type: 'lend' | 'borrow';
-}
+import { HistoryTransaction } from '@/hooks/useUserLoans';
 
 interface HistoryBottomSheetProps {
   isOpen: boolean;
@@ -44,7 +33,7 @@ export default function HistoryBottomSheet({ isOpen, onClose, transaction }: His
       isOpen={isOpen}
       onClose={handleClose}
       title=""
-      height="70vh"
+      height="75vh"
       showHandle={false}
       showCloseButton={true}
       contentRef={contentRef}
@@ -52,12 +41,12 @@ export default function HistoryBottomSheet({ isOpen, onClose, transaction }: His
       <div className="w-full h-full mt-2">
         <div className="flex items-center justify-between">
           <h2 className="text-md font-semibold text-gray-900">
-            {transaction.type === 'lend' ? `IDRX on Base` : `bNVDA / IDRX`}
+            {transaction.title}
           </h2>
           <TokenNetworkPair tokenLogo={transaction.token1} networkLogo={transaction.token2} size={25} overlap={25} />
         </div>
 
-        <div className="mt-6">{transaction.type === 'lend' ? <LendingDetail /> : <BorrowDetail />}</div>
+        <div className="mt-6">{transaction.type === 'lend' ? <LendingDetail /> : <BorrowDetail loanData={transaction.loanData} />}</div>
       </div>
     </BottomSheet>
   );

@@ -1,50 +1,44 @@
 import TabItem from '../TabItem';
-
-interface HistoryTransaction {
-  id: string;
-  token1: string;
-  token2: string;
-  imageSize: number;
-  title: string;
-  subtitle: string;
-  apy: string;
-  apyColor: string;
-  type: 'lend' | 'borrow';
-}
+import { useUserLoans, HistoryTransaction } from '@/hooks/useUserLoans';
 
 interface HistoryTabProps {
   onTransactionClick?: (transaction: HistoryTransaction) => void;
 }
 
 export default function HistoryTab({ onTransactionClick }: HistoryTabProps) {
-  const historyData: HistoryTransaction[] = [
-    {
-      id: '1',
-      token1: '/assets/rwa/bNVDA.png',
-      token2: '/assets/stablecoins/idrx.png',
-      imageSize: 48,
-      title: 'USDE/USDC',
-      subtitle: 'Borrow $1200.00',
-      apy: '+12.5%',
-      apyColor: '#279E73',
-      type: 'borrow',
-    },
-    {
-      id: '2',
-      token1: '/assets/rwa/bCOIN.png',
-      token2: '/assets/stablecoins/idrx.png',
-      imageSize: 48,
-      title: 'EURC/USDC',
-      subtitle: 'Base',
-      apy: '-8.2%',
-      apyColor: '#bc5564',
-      type: 'lend',
-    },
-  ];
+  const { historyData, isLoading, error } = useUserLoans();
 
   const handleTransactionClick = (transaction: HistoryTransaction) => {
     onTransactionClick?.(transaction);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse">
+            <div className="h-16 bg-gray-200 rounded-lg"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-600 text-sm">Error loading history: {error}</p>
+      </div>
+    );
+  }
+
+  if (historyData.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">No loan history found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">

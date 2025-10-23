@@ -76,7 +76,13 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const account = searchParams.get('account');
   if (!account) {
-    return NextResponse.json({ error: 'Missing account' }, { status: 400 });
+    return new NextResponse(JSON.stringify({ error: 'Missing account' }), {
+      status: 400,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
   }
   const chain = searchParams.get('chain');
 
@@ -142,11 +148,23 @@ export async function GET(request: Request) {
       cache: 'no-store',
     });
   } catch (error) {
-    return NextResponse.json({ error: `Failed to reach indexer: ${(error as Error).message}` }, { status: 502 });
+    return new NextResponse(JSON.stringify({ error: `Failed to reach indexer: ${(error as Error).message}` }), {
+      status: 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
   if (!response.ok) {
-    return NextResponse.json({ error: `Indexer responded with status ${response.status}` }, { status: 502 });
+    return new NextResponse(JSON.stringify({ error: `Indexer responded with status ${response.status}` }), {
+      status: 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
   const payload = (await response.json()) as {
@@ -186,7 +204,13 @@ export async function GET(request: Request) {
         .map(err => err?.message)
         .filter(Boolean)
         .join('; ') || 'Unknown GraphQL error';
-    return NextResponse.json({ error: `Indexer GraphQL error: ${message}` }, { status: 502 });
+    return new NextResponse(JSON.stringify({ error: `Indexer GraphQL error: ${message}` }), {
+      status: 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
   const items = payload.data?.positionLoanss?.items ?? [];
@@ -218,5 +242,11 @@ export async function GET(request: Request) {
       };
     }) ?? [];
 
-  return NextResponse.json({ data });
+  return new NextResponse(JSON.stringify({ data }), {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json',
+    },
+  });
 }

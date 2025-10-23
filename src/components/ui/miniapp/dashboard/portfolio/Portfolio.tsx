@@ -5,6 +5,7 @@ import PortfolioCards from './PortfolioCards';
 import TabNavigation from './tabs/TabNavigation';
 import ActiveTab from './tabs/active/ActiveTab';
 import HistoryTab from './tabs/history/HistoryTab';
+import { useUserPortfolio } from '@/hooks/useUserPortfolio';
 
 interface PortfolioProps {
   onPositionClick?: (position: any, isFromHistory?: boolean) => void;
@@ -13,13 +14,7 @@ interface PortfolioProps {
 export default function Portfolio({ onPositionClick }: PortfolioProps) {
   const [activeTab, setActiveTab] = useState('Active');
   const [activeFilter, setActiveFilter] = useState('All');
-
-  const portfolioData = [
-    { title: 'Lending', value: '$0.00', sub: '0%' },
-    { title: 'Borrow', value: '$0.00', sub: '0%' },
-    { title: 'Yield Earned', value: '$0.00' },
-    { title: 'Active Position', value: '0' },
-  ];
+  const { portfolioData, isLoading, error } = useUserPortfolio();
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -33,7 +28,23 @@ export default function Portfolio({ onPositionClick }: PortfolioProps) {
     <div className="w-full px-4">
       <span className="text-md font-semibold">My Portfolio</span>
 
-      <PortfolioCards data={portfolioData} />
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-2xl border border-white/25 bg-[#f8fafc] p-3 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-6 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 text-sm">Error loading portfolio: {error}</p>
+        </div>
+      ) : (
+        <PortfolioCards data={portfolioData} />
+      )}
 
       <TabNavigation
         tabs={['Active', 'History']}

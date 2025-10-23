@@ -38,7 +38,7 @@ type PonderLoan = {
   estimatedInterestUsd: number;
 };
 
-type PonderPositionEntry = {
+export type PonderPositionEntry = {
   type: 'supply_collateral' | 'supply_liquidity' | 'borrow';
   tokenId: string;
   marketId: string;
@@ -69,7 +69,7 @@ type PonderRisk = {
   healthFactorRay: string;
 };
 
-type PonderPosition = {
+export type PonderPosition = {
   id: string;
   chainId: string;
   collateralUsd: number;
