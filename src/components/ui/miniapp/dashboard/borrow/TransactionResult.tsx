@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Copy, Check } from 'lucide-react';
 import TokenNetworkPair from '../../TokenNetworkPair';
 import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 
@@ -19,9 +21,12 @@ export default function TransactionResult({
   transaction,
   onComplete,
 }: TransactionResultProps) {
+  const [copied, setCopied] = useState(false);
+
   const transactionData = {
     date: new Date().toLocaleString(),
     txHash: transaction?.hash ? `${transaction.hash.slice(0, 6)}...${transaction.hash.slice(-4)}` : '-',
+    fullTxHash: transaction?.hash || '',
     amount: amount || '-',
     apr: selectedNetwork?.interestRate || '-',
     success: transaction?.success ?? true,
@@ -29,6 +34,18 @@ export default function TransactionResult({
 
   const handleComplete = () => {
     onComplete();
+  };
+
+  const handleCopyHash = async () => {
+    if (transactionData.fullTxHash) {
+      try {
+        await navigator.clipboard.writeText(transactionData.fullTxHash);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy transaction hash:', err);
+      }
+    }
   };
 
   if (!selectedNetwork || !selectedMarket) return <></>;
@@ -80,7 +97,22 @@ export default function TransactionResult({
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Tx Hash</span>
-          <span className="text-sm font-semibold text-gray-900">{transactionData.txHash}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-900">{transactionData.txHash}</span>
+            {transactionData.fullTxHash && (
+              <button
+                onClick={handleCopyHash}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                title="Copy transaction hash"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-green-600" />
+                ) : (
+                  <Copy className="w-4 h-4 text-gray-500 hover:text-gray-700" />
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-between items-center">

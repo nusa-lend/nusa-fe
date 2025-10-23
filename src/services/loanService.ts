@@ -326,13 +326,11 @@ export const getTransactionSubtitle = (loan: LoanData): string => {
   }
   
   if (loan.action === 'withdraw') {
-    const entryType = loan.entryType === 'liquidity' ? 'Liquidity' : 'Collateral';
-    return `${entryType} Withdraw ${formattedValue}`;
+    return `Withdraw ${formattedValue}`;
   }
   
   if (loan.action === 'supply') {
-    const entryType = loan.entryType === 'liquidity' ? 'Liquidity' : 'Collateral';
-    return `${entryType} Supply ${formattedValue}`;
+    return `Supply ${formattedValue}`;
   }
   
   return `Supply ${formattedValue}`;

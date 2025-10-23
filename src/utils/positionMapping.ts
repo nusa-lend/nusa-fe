@@ -14,6 +14,7 @@ export interface ActivePosition {
   type: 'lend' | 'borrow';
   usdValue: number;
   entry: PonderPositionEntry;
+  position: PonderPosition;
 }
 
 const getTokenLogo = (symbol: string): string => {
@@ -52,68 +53,75 @@ export const mapPositionEntriesToActivePositions = (positions: PonderPosition[],
   const activePositions: ActivePosition[] = [];
 
   positions.forEach(position => {
-    position.entries.forEach(entry => {
+    const collateralEntries = position.entries.filter(e => 
+      (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
+    );
+
+    const borrowEntries = position.entries.filter(e => 
+      e.type === 'borrow' && e.token && e.usdValue > 0
+    );
+
+    collateralEntries.forEach(entry => {
       if (!entry.token) return;
-
-      const isBorrow = entry.type === 'borrow';
-      const isSupply = entry.type === 'supply_collateral' || entry.type === 'supply_liquidity';
       
-      if (!isBorrow && !isSupply) return;
-
-      const rate = isBorrow 
-        ? entry.market?.borrowRatePercent || '0.00%'
-        : entry.market?.supplyRatePercent || '0.00%';
-
+      const tokenLogo = getTokenLogo(entry.token.symbol);
+      const networkLogo = getNetworkLogo(position.chainId);
+      const networkName = getNetworkName(position.chainId);
+      
+      const rate = entry.market?.supplyRatePercent || '0.00%';
       const apyColor = getApyColor(rate);
       const formattedValue = formatUsdValue(entry.usdValue);
 
-      let token1: string;
-      let token2: string;
-      let title: string;
-
-      if (isSupply) {
-        const tokenLogo = getTokenLogo(entry.token.symbol);
-        const networkLogo = getNetworkLogo(position.chainId);
-        const networkName = getNetworkName(position.chainId);
-        
-        token1 = tokenLogo;
-        token2 = networkLogo;
-        title = `${entry.token.symbol} on ${networkName}`;
-      } else {
-        const collateralEntry = position.entries.find(e => 
-          e.type === 'supply_collateral' && e.token
-        );
-        
-        if (collateralEntry?.token) {
-          const collateralLogo = getTokenLogo(collateralEntry.token.symbol);
-          const borrowedLogo = getTokenLogo(entry.token.symbol);
-          
-          token1 = collateralLogo;
-          token2 = borrowedLogo;
-          title = `${collateralEntry.token.symbol} / ${entry.token.symbol}`;
-        } else {
-          const tokenLogo = getTokenLogo(entry.token.symbol);
-          token1 = tokenLogo;
-          token2 = tokenLogo;
-          title = `${entry.token.symbol}`;
-        }
-      }
-
       const activePosition: ActivePosition = {
         id: `${position.id}-${entry.tokenId}-${entry.type}`,
-        token1,
-        token2,
+        token1: tokenLogo,
+        token2: networkLogo,
         imageSize: 48,
-        title,
-        subtitle: `${isBorrow ? 'Borrow' : 'Supply'} ${formattedValue}`,
+        title: `${entry.token.symbol} on ${networkName}`,
+        subtitle: `Supply ${formattedValue}`,
         apy: rate,
         apyColor,
-        type: isBorrow ? 'borrow' : 'lend',
+        type: 'lend',
         usdValue: entry.usdValue,
         entry,
+        position,
       };
 
       activePositions.push(activePosition);
+    });
+
+    borrowEntries.forEach(entry => {
+      if (!entry.token) return;
+      
+      const primaryCollateral = collateralEntries.reduce((max, current) => 
+        current.usdValue > max.usdValue ? current : max
+      );
+
+      if (primaryCollateral && primaryCollateral.token) {
+        const collateralLogo = getTokenLogo(primaryCollateral.token.symbol);
+        const borrowedLogo = getTokenLogo(entry.token.symbol);
+        
+        const rate = entry.market?.borrowRatePercent || '0.00%';
+        const apyColor = getApyColor(rate);
+        const formattedValue = formatUsdValue(entry.usdValue);
+
+        const activePosition: ActivePosition = {
+          id: `${position.id}-${entry.tokenId}-${entry.type}`,
+          token1: collateralLogo,
+          token2: borrowedLogo,
+          imageSize: 48,
+          title: `${primaryCollateral.token.symbol} / ${entry.token.symbol}`,
+          subtitle: `Borrow ${formattedValue}`,
+          apy: rate,
+          apyColor,
+          type: 'borrow',
+          usdValue: entry.usdValue,
+          entry,
+          position,
+        };
+
+        activePositions.push(activePosition);
+      }
     });
   });
 

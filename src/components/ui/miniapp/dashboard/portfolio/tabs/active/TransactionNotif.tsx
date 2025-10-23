@@ -2,13 +2,11 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Copy, Check } from 'lucide-react';
 import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
-import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
-import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 
 interface TransactionNotifProps {
   type: 'borrow-more' | 'supply-more' | 'repay-borrow' | 'withdraw-supply';
-  // For borrow more
   collateralToken?: {
     symbol: string;
     logo: string;
@@ -24,7 +22,6 @@ interface TransactionNotifProps {
     logo: string;
     apr: string;
   };
-  // For supply more
   supplyToken?: {
     symbol: string;
     logo: string;
@@ -35,8 +32,8 @@ interface TransactionNotifProps {
     logo: string;
     apy: string;
   };
-  // Common props
   amount?: string;
+  transaction?: { hash?: `0x${string}`; success: boolean };
   onDone: () => void;
 }
 
@@ -48,14 +45,18 @@ export default function TransactionNotif({
   supplyToken,
   supplyNetwork,
   amount,
+  transaction,
   onDone,
 }: TransactionNotifProps) {
   const [isVisible, setIsVisible] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const transactionData = {
-    date: '2025-01-13 15:00',
-    txHash: '09a6...df6i',
-    amount: amount || '10,000,000',
+    date: new Date().toLocaleString(),
+    txHash: transaction?.hash ? `${transaction.hash.slice(0, 6)}...${transaction.hash.slice(-4)}` : '-',
+    fullTxHash: transaction?.hash || '',
+    amount: amount || '0',
+    success: transaction?.success ?? false,
   };
 
   const handleDone = () => {
@@ -63,13 +64,24 @@ export default function TransactionNotif({
     onDone();
   };
 
-  // Get the appropriate data based on type
+  const handleCopyHash = async () => {
+    if (transactionData.fullTxHash) {
+      try {
+        await navigator.clipboard.writeText(transactionData.fullTxHash);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy transaction hash:', err);
+      }
+    }
+  };
+
   const getTransactionData = () => {
     if (type === 'borrow-more') {
       return {
-        title: `Borrow ${borrowToken?.symbol || 'Unknown'}`,
-        tokenLogo: borrowToken?.logo || '/assets/placeholder/placeholder_selectcoin.png',
-        networkLogo: borrowNetwork?.logo || '/assets/placeholder/placeholder_selectchain.png',
+        title: `${collateralToken?.symbol || 'Unknown'} / ${borrowToken?.symbol || 'Unknown'}`,
+        tokenLogo: collateralToken?.logo || '/assets/placeholder/placeholder_selectcoin.png',
+        networkLogo: borrowToken?.logo || '/assets/placeholder/placeholder_selectchain.png',
         networkName: borrowNetwork?.name || 'Unknown',
         amount: borrowToken?.amount || amount || '0',
         rate: borrowNetwork?.apr || '0%',
@@ -80,7 +92,7 @@ export default function TransactionNotif({
       };
     } else if (type === 'repay-borrow') {
       return {
-        title: `Repay ${borrowToken?.symbol || 'Unknown'}`,
+        title: `${collateralToken?.symbol || 'Unknown'} / ${borrowToken?.symbol || 'Unknown'}`,
         tokenLogo: borrowToken?.logo || '/assets/placeholder/placeholder_selectcoin.png',
         networkLogo: borrowNetwork?.logo || '/assets/placeholder/placeholder_selectchain.png',
         networkName: borrowNetwork?.name || 'Unknown',
@@ -93,7 +105,7 @@ export default function TransactionNotif({
       };
     } else if (type === 'withdraw-supply') {
       return {
-        title: `Withdraw ${supplyToken?.symbol || 'Unknown'}`,
+        title: `Withdraw ${supplyToken?.symbol || 'Unknown'} on ${supplyNetwork?.name || 'Unknown'}`,
         tokenLogo: supplyToken?.logo || '/assets/placeholder/placeholder_selectcoin.png',
         networkLogo: supplyNetwork?.logo || '/assets/placeholder/placeholder_selectchain.png',
         networkName: supplyNetwork?.name || 'Unknown',
@@ -106,7 +118,7 @@ export default function TransactionNotif({
       };
     } else {
       return {
-        title: `Supply ${supplyToken?.symbol || 'Unknown'}`,
+        title: `${supplyToken?.symbol || 'Unknown'} on ${supplyNetwork?.name || 'Unknown'}`,
         tokenLogo: supplyToken?.logo || '/assets/placeholder/placeholder_selectcoin.png',
         networkLogo: supplyNetwork?.logo || '/assets/placeholder/placeholder_selectchain.png',
         networkName: supplyNetwork?.name || 'Unknown',
@@ -131,16 +143,22 @@ export default function TransactionNotif({
       className="w-full max-w-md mx-auto space-y-6 pb-4"
     >
       <div className="flex flex-col items-center space-y-4">
-        <div className="w-16 h-16 rounded-full border-4 border-teal-200 flex items-center justify-center bg-white">
-          <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
+        <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center bg-white ${transactionData.success ? 'border-teal-200' : 'border-red-200'}`}>
+          {transactionData.success ? (
+            <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
         </div>
 
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <h2 className="text-md font-semibold text-gray-900">
-              {transactionInfo.title} on {transactionInfo.networkName}
+              {transactionInfo.title}
             </h2>
             <TokenNetworkPair
               tokenLogo={transactionInfo.tokenLogo}
@@ -149,7 +167,9 @@ export default function TransactionNotif({
               overlap={25}
             />
           </div>
-          <p className="text-gray-700 font-medium text-sm">Successful!</p>
+          <p className={`font-medium text-sm ${transactionData.success ? 'text-gray-700' : 'text-red-600'}`}>
+            {transactionData.success ? 'Successful!' : 'Failed'}
+          </p>
         </div>
       </div>
 
@@ -161,7 +181,22 @@ export default function TransactionNotif({
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Tx Hash</span>
-          <span className="text-sm font-semibold text-gray-900">{transactionData.txHash}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-900">{transactionData.txHash}</span>
+            {transactionData.fullTxHash && (
+              <button
+                onClick={handleCopyHash}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                title="Copy transaction hash"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-green-600" />
+                ) : (
+                  <Copy className="w-4 h-4 text-gray-500 hover:text-gray-700" />
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-between items-center">

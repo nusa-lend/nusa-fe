@@ -20,7 +20,13 @@ export default function BorrowMarketList({ onMarketSelect, markets, isLoading, e
     onMarketSelect(market);
   };
 
-  const filteredMarkets = markets.filter(
+  const sortedMarkets = [...markets].sort((a, b) => {
+    const balanceA = parseFloat(marketBalances?.[a.id] || '0');
+    const balanceB = parseFloat(marketBalances?.[b.id] || '0');
+    return balanceB - balanceA;
+  });
+
+  const filteredMarkets = sortedMarkets.filter(
     market =>
       market.token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
       market.token.name.toLowerCase().includes(searchTerm.toLowerCase())

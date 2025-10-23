@@ -21,14 +21,6 @@ interface ActiveBottomSheetProps {
 }
 
 export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveBottomSheetProps) {
-  const [activeTab, setActiveTab] = useState<string>('');
-  const [currentStep, setCurrentStep] = useState<'form' | 'notification'>('form');
-  const [transactionData, setTransactionData] = useState<any>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null) as React.MutableRefObject<HTMLDivElement>;
-  const formRef = useRef<HTMLDivElement>(null);
-  const notificationRef = useRef<HTMLDivElement>(null);
-
   const getTabsAndDefault = () => {
     if (position.type === 'lend') {
       return {
@@ -44,6 +36,14 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
   };
 
   const { tabs, defaultTab } = getTabsAndDefault();
+  
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
+  const [currentStep, setCurrentStep] = useState<'form' | 'notification'>('form');
+  const [transactionData, setTransactionData] = useState<any>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null) as React.MutableRefObject<HTMLDivElement>;
+  const formRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -71,15 +71,27 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
   const renderTabContent = () => {
     if (position.type === 'lend') {
       return activeTab === 'Supply' ? (
-        <SupplyMore onTransactionComplete={handleTransactionComplete} />
+        <SupplyMore 
+          position={position}
+          onTransactionComplete={handleTransactionComplete} 
+        />
       ) : (
-        <WithdrawSupply onTransactionComplete={handleTransactionComplete} />
+        <WithdrawSupply 
+          position={position}
+          onTransactionComplete={handleTransactionComplete} 
+        />
       );
     } else {
       return activeTab === 'Borrow' ? (
-        <BorrowMore onTransactionComplete={handleTransactionComplete} />
+        <BorrowMore 
+          position={position}
+          onTransactionComplete={handleTransactionComplete} 
+        />
       ) : (
-        <RepayBorrow onTransactionComplete={handleTransactionComplete} />
+        <RepayBorrow 
+          position={position}
+          onTransactionComplete={handleTransactionComplete} 
+        />
       );
     }
   };
@@ -180,6 +192,7 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
               supplyToken={transactionData.supplyToken}
               supplyNetwork={transactionData.supplyNetwork}
               amount={transactionData.amount}
+              transaction={transactionData.transaction}
               onDone={handleNotificationDone}
             />
           )}

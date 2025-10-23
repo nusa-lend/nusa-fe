@@ -1,4 +1,4 @@
-import { fetchUserPositions } from './positionService';
+import { fetchUserPositions, PonderPosition } from './positionService';
 
 type BorrowingMarketData = {
   tokenId: string;
@@ -39,13 +39,14 @@ type BorrowingPositionData = {
 
 export const fetchBorrowingMarketsFromPositions = async (
   account: string,
-  chain?: string
+  chain?: string,
+  positions?: PonderPosition[] // Allow passing existing positions to avoid redundant API calls
 ): Promise<BorrowingMarketData[]> => {
   try {
-    const positions = await fetchUserPositions(account, chain);
+    const positionsData = positions || await fetchUserPositions(account, chain);
     const markets = new Map<string, BorrowingMarketData>();
 
-    positions.forEach(position => {
+    positionsData.forEach(position => {
       position.entries.forEach(entry => {
         if (entry.type === 'supply_collateral' && entry.market && entry.token) {
           const key = `${entry.tokenId}`;
@@ -76,13 +77,14 @@ export const fetchBorrowingMarketsFromPositions = async (
 
 export const fetchBorrowingPositionsFromPositions = async (
   account: string,
-  chain?: string
+  chain?: string,
+  positions?: PonderPosition[] // Allow passing existing positions to avoid redundant API calls
 ): Promise<BorrowingPositionData[]> => {
   try {
-    const positions = await fetchUserPositions(account, chain);
+    const positionsData = positions || await fetchUserPositions(account, chain);
     const borrowingPositions: BorrowingPositionData[] = [];
 
-    positions.forEach(position => {
+    positionsData.forEach(position => {
       position.entries.forEach(entry => {
         if (entry.type === 'borrow' && entry.market && entry.token) {
           borrowingPositions.push({

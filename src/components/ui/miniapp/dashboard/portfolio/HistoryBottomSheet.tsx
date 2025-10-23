@@ -28,12 +28,16 @@ export default function HistoryBottomSheet({ isOpen, onClose, transaction }: His
     }
   }, [isOpen]);
 
+  const getHeight = () => {
+    return transaction.type === 'borrow' ? '75vh' : '60vh';
+  };
+
   return (
     <BottomSheet
       isOpen={isOpen}
       onClose={handleClose}
       title=""
-      height="75vh"
+      height={getHeight()}
       showHandle={false}
       showCloseButton={true}
       contentRef={contentRef}

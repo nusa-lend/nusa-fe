@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: ['https://localhost:3000', 'https://*.ngrok-free.app'],
 };
 
 export default nextConfig;
