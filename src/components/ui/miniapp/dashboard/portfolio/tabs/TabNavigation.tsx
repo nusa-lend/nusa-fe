@@ -26,7 +26,7 @@ export default function TabNavigation({
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [selectedFilter, setSelectedFilter] = useState(filterLabel || 'All');
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +39,13 @@ export default function TabNavigation({
     }
   }, [activeTab, tabs]);
 
-  const filterOptions = ['All', 'Borrow', 'Lending'];
+  useLayoutEffect(() => {
+    if (filterLabel && filterLabel !== selectedFilter) {
+      setSelectedFilter(filterLabel);
+    }
+  }, [filterLabel, selectedFilter]);
+
+  const filterOptions = ['All', 'Borrow', 'Supply', 'Repay', 'Withdraw'];
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
@@ -56,7 +62,6 @@ export default function TabNavigation({
     onFilterChange?.(filter);
   };
 
-  // Close dropdown when clicking outside
   useLayoutEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {

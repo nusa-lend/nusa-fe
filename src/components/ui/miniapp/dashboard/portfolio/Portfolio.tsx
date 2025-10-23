@@ -51,13 +51,16 @@ export default function Portfolio({ onPositionClick }: PortfolioProps) {
         defaultTab="Active"
         onTabChange={handleTabChange}
         showFilter={true}
-        filterLabel="All"
+        filterLabel={activeFilter}
         onFilterChange={handleFilterChange}
       />
 
       <div className="mt-4">
         {activeTab === 'Active' ? (
-          <ActiveTab onPositionClick={position => onPositionClick?.(position, false)} />
+          <ActiveTab 
+            onPositionClick={position => onPositionClick?.(position, false)} 
+            filter={activeFilter}
+          />
         ) : (
           <HistoryTab onTransactionClick={transaction => onPositionClick?.(transaction, true)} />
         )}

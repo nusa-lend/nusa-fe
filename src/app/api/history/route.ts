@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { NETWORKS } from '@/constants/networkConstants';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type': 'application/json',
+};
+
 const RAY = 10n ** 27n;
 const SECONDS_IN_YEAR = 31_536_000n;
 
@@ -78,6 +85,14 @@ const computeInterestUsd = (loan: {
   }
 };
 
+// Handle preflight CORS requests
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
+}
+
 export async function GET(request: Request) {
   const ponderBaseUrl = process.env.PONDER_API_URL ?? 'http://localhost:42069';
   const { searchParams } = new URL(request.url);
@@ -85,10 +100,7 @@ export async function GET(request: Request) {
   if (!account) {
     return new NextResponse(JSON.stringify({ error: 'Missing account' }), {
       status: 400,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-      },
+      headers: CORS_HEADERS,
     });
   }
   const chain = searchParams.get('chain');
@@ -192,20 +204,14 @@ export async function GET(request: Request) {
   } catch (error) {
     return new NextResponse(JSON.stringify({ error: `Failed to reach indexer: ${(error as Error).message}` }), {
       status: 502,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-      },
+      headers: CORS_HEADERS,
     });
   }
 
   if (!response.ok) {
     return new NextResponse(JSON.stringify({ error: `Indexer responded with status ${response.status}` }), {
       status: 502,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-      },
+      headers: CORS_HEADERS,
     });
   }
 
@@ -267,10 +273,7 @@ export async function GET(request: Request) {
         .join('; ') || 'Unknown GraphQL error';
     return new NextResponse(JSON.stringify({ error: `Indexer GraphQL error: ${message}` }), {
       status: 502,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-      },
+      headers: CORS_HEADERS,
     });
   }
 
@@ -348,5 +351,8 @@ export async function GET(request: Request) {
     (a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0),
   );
 
-  return NextResponse.json({ data: combined });
+  return new NextResponse(JSON.stringify({ data: combined }), {
+    status: 200,
+    headers: CORS_HEADERS,
+  });
 }

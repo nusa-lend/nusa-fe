@@ -32,6 +32,88 @@ export default function BorrowDetail({ loanData }: BorrowDetailProps) {
   const duration = loanData.durationSeconds > 0 ? formatDuration(loanData.durationSeconds) : 'Active';
   const startDate = formatTimestamp(loanData.startTimestamp);
   const endDate = loanData.endTimestamp ? formatTimestamp(loanData.endTimestamp) : 'Ongoing';
+  
+  const isSupplyTransaction = loanData.historyType === 'supply';
+  const isWithdrawTransaction = loanData.action === 'withdraw';
+  const isRepayTransaction = loanData.action === 'repay';
+  const isBorrowTransaction = loanData.action === 'borrow';
+  const usdValue = loanData.usdValue ?? loanData.borrowUsd;
+
+  if (isSupplyTransaction || isWithdrawTransaction) {
+    const entryTypeLabel = loanData.entryType === 'liquidity' ? 'Liquidity' : 'Collateral';
+    const actionLabel = loanData.action === 'withdraw' ? 'Withdraw' : 'Supply';
+    
+    return (
+      <div className="w-full pb-4 bg-white">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 mt-3 space-y-2">
+          <h3 className="text-[15px] font-semibold text-gray-900 mb-3">
+            {actionLabel} Details ({entryTypeLabel})
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Amount</span>
+              <span className="text-black font-semibold text-[15px]">{formatCurrency(Math.abs(usdValue))}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Type</span>
+              <span className="text-black font-semibold text-[15px">{entryTypeLabel}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Action</span>
+              <span className="text-black font-semibold text-[15px]">{actionLabel}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Date</span>
+              <span className="text-black font-semibold text-[15px]">{startDate}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Status</span>
+              <span className="text-green-600 font-semibold text-[15px]">COMPLETED</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {}}
+          className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition mt-3 ${'bg-[#56A2CC] hover:bg-[#56A2CC]/80'}`}
+        >
+          {actionLabel} More
+        </button>
+      </div>
+    );
+  }
+
+  if (isRepayTransaction) {
+    return (
+      <div className="w-full pb-4 bg-white">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 mt-3 space-y-2">
+          <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Repay Details</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Repaid Amount</span>
+              <span className="text-black font-semibold text-[15px]">{formatCurrency(Math.abs(usdValue))}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Date</span>
+              <span className="text-black font-semibold text-[15px]">{startDate}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Status</span>
+              <span className="text-green-600 font-semibold text-[15px]">COMPLETED</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {}}
+          className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition mt-3 ${'bg-[#56A2CC] hover:bg-[#56A2CC]/80'}`}
+        >
+          Repay More
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full pb-4 bg-white">
       <div className="rounded-xl border border-gray-200 bg-white p-4 mt-3 space-y-2">
@@ -48,7 +130,9 @@ export default function BorrowDetail({ loanData }: BorrowDetailProps) {
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Collateral</span>
-            <span className="text-black font-semibold text-[15px]">{collateralTokenSymbol} {formatCurrency(loanData.collateralUsd)}</span>
+            <span className="text-black font-semibold text-[15px]">
+              {collateralTokenSymbol} {formatCurrency(loanData.collateralUsd || 0)}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Borrowing</span>

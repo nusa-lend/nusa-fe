@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { fetchUserLoans, LoanData, formatCurrency, getCollateralTokenFromPosition, createBorrowTransaction } from '../services/loanService';
+import { 
+  fetchUserLoans, 
+  LoanData, 
+  formatCurrency, 
+  getCollateralTokenFromPosition, 
+  createBorrowTransaction,
+  createSupplyTransaction,
+  createWithdrawTransaction,
+  getTransactionType,
+  getTransactionTitle,
+  getTransactionSubtitle,
+  getTokenAssetPath,
+  getTokenSymbolFromId
+} from '../services/loanService';
 
 export interface HistoryTransaction {
   id: string;
@@ -33,29 +46,70 @@ export const useUserLoans = () => {
 
        try {
          const loans = await fetchUserLoans(address);
-         
-         const loansWithCollateral = await Promise.all(
-           loans.map(async (loan) => {
-             const collateralTokenSymbol = await getCollateralTokenFromPosition(loan.positionId);
-             return { ...loan, collateralTokenSymbol };
-           })
-         );
+         const collateralTokenSymbol = await getCollateralTokenFromPosition(address);
+         const loansWithCollateral = loans.map(loan => ({
+           ...loan, 
+           collateralTokenSymbol 
+         }));
          
          const transformedData: HistoryTransaction[] = loansWithCollateral.map(loan => {
-           const borrowTransaction = createBorrowTransaction(loan, loan.collateralTokenSymbol);
+           const tokenSymbol = getTokenSymbolFromId(loan.borrowTokenId);
+           const transactionType = getTransactionType(loan);
            
-           return {
-             id: loan.id,
-             token1: borrowTransaction.token1,
-             token2: borrowTransaction.token2,
-             imageSize: 48,
-             title: borrowTransaction.title,
-             subtitle: loan.status === 'open' ? `Borrow ${formatCurrency(loan.borrowUsd)}` : `Repaid ${formatCurrency(loan.borrowUsd)}`,
-             apy: `+${loan.borrowApyPercent}%`,
-             apyColor: '#279E73',
-             type: borrowTransaction.type,
-             loanData: loan,
-           };
+           if (transactionType === 'borrow') {
+             const borrowTransaction = createBorrowTransaction(loan, loan.collateralTokenSymbol);
+             return {
+               id: loan.id,
+               token1: borrowTransaction.token1,
+               token2: borrowTransaction.token2,
+               imageSize: 48,
+               title: borrowTransaction.title,
+               subtitle: loan.status === 'open' ? `Borrow ${formatCurrency(loan.borrowUsd)}` : `Repaid ${formatCurrency(loan.borrowUsd)}`,
+               apy: `+${loan.borrowApyPercent}%`,
+               apyColor: '#279E73',
+               type: borrowTransaction.type,
+               loanData: loan,
+             };
+           }
+           
+            let transactionData;
+            if (loan.action === 'supply') {
+              transactionData = createSupplyTransaction(loan);
+            } else if (loan.action === 'withdraw') {
+              transactionData = createWithdrawTransaction(loan);
+            } else {
+              const tokenAsset = getTokenAssetPath(tokenSymbol);
+              const title = getTransactionTitle(loan);
+              const subtitle = getTransactionSubtitle(loan);
+              
+              return {
+                id: loan.id,
+                token1: tokenAsset,
+                token2: tokenAsset,
+                imageSize: 48,
+                title,
+                subtitle,
+                apy: loan.borrowApyPercent ? `+${loan.borrowApyPercent}%` : '0.00%',
+                apyColor: '#279E73',
+                type: transactionType,
+                loanData: loan,
+              };
+            }
+            
+            const subtitle = getTransactionSubtitle(loan);
+            
+            return {
+              id: loan.id,
+              token1: transactionData.token1,
+              token2: transactionData.token2,
+              imageSize: 48,
+              title: transactionData.title,
+              subtitle,
+              apy: loan.borrowApyPercent ? `+${loan.borrowApyPercent}%` : '0.00%',
+              apyColor: '#279E73',
+              type: transactionType,
+              loanData: loan,
+            };
          });
 
          setHistoryData(transformedData);

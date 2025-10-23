@@ -4,18 +4,7 @@ import { useState } from 'react';
 import Portfolio from './Portfolio';
 import ActiveBottomSheet from './ActiveBottomSheet';
 import HistoryBottomSheet from './HistoryBottomSheet';
-
-interface ActivePosition {
-  id: string;
-  token1: string;
-  token2: string;
-  imageSize: number;
-  title: string;
-  subtitle: string;
-  apy: string;
-  apyColor: string;
-  type: 'lend' | 'borrow';
-}
+import { ActivePosition } from '@/utils/positionMapping';
 
 interface HistoryTransaction {
   id: string;

@@ -1,39 +1,84 @@
 'use client';
 
-export default function LendingDetail() {
+import { LoanData } from '@/services/loanService';
+import { formatCurrency, formatTimestamp, getTokenSymbolFromId } from '@/services/loanService';
+
+interface LendingDetailProps {
+  loanData?: LoanData;
+}
+
+export default function LendingDetail({ loanData }: LendingDetailProps) {
+  if (!loanData) {
+    return (
+      <div className="w-full pb-4 bg-white">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 mt-3 space-y-2">
+          <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Supply Details</h3>
+          <p className="text-gray-500 text-sm">No transaction data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const tokenSymbol = getTokenSymbolFromId(loanData.borrowTokenId);
+  const usdValue = loanData.usdValue ?? loanData.borrowUsd;
+  const isWithdrawTransaction = loanData.action === 'withdraw';
+  const isSupplyTransaction = loanData.action === 'supply';
+  const isRepayTransaction = loanData.action === 'repay';
+  const isBorrowTransaction = loanData.action === 'borrow';
+  const startDate = formatTimestamp(loanData.startTimestamp);
+
+  const getTitle = () => {
+    if (isRepayTransaction) return 'Repay Details';
+    if (isBorrowTransaction) return 'Borrow Details';
+    if (isWithdrawTransaction) {
+      const entryType = loanData.entryType === 'liquidity' ? 'Liquidity' : 'Collateral';
+      return `${entryType} Withdraw Details`;
+    }
+    if (isSupplyTransaction) {
+      const entryType = loanData.entryType === 'liquidity' ? 'Liquidity' : 'Collateral';
+      return `${entryType} Supply Details`;
+    }
+    return `Supply Details (${tokenSymbol})`;
+  };
+
+  const getButtonText = () => {
+    if (isRepayTransaction) return 'Repay More';
+    if (isBorrowTransaction) return 'Borrow More';
+    if (isWithdrawTransaction) return 'Withdraw More';
+    if (isSupplyTransaction) return 'Supply More';
+    return 'Supply More';
+  };
+
   return (
     <div className="w-full pb-4 bg-white">
       <div className="rounded-xl border border-gray-200 bg-white p-4 mt-3 space-y-2">
-        <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Yield Earned (IDRX)</h3>
+        <h3 className="text-[15px] font-semibold text-gray-900 mb-3">{getTitle()}</h3>
         <div className="space-y-3">
           <div className="flex justify-between text-sm text-gray-500">
-            <div className="flex items-center gap-1">
-              <span>APR</span>
-              <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
-                <span className="text-gray-400 text-xs font-bold">i</span>
-              </div>
+            <span>Amount</span>
+            <span className="text-black font-semibold text-[15px]">{formatCurrency(Math.abs(usdValue))}</span>
+          </div>
+          {loanData.entryType && (
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Type</span>
+              <span className="text-black font-semibold text-[15px]">
+                {loanData.entryType === 'liquidity' ? 'Liquidity' : 'Collateral'}
+              </span>
             </div>
-            <span className="text-red-600 font-semibold text-[15px]">~0.03%</span>
+          )}
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>Action</span>
+            <span className="text-black font-semibold text-[15px]">
+              {loanData.action ? loanData.action.charAt(0).toUpperCase() + loanData.action.slice(1) : 'Supply'}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span>Total Earned</span>
-            <span className="text-black font-semibold text-[15px]">375,500</span>
+            <span>Date</span>
+            <span className="text-black font-semibold text-[15px]">{startDate}</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span>My Position</span>
-            <span className="text-black font-semibold text-[15px]">16,500,000</span>
-          </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>Duration</span>
-            <span className="text-black font-semibold text-[15px]">3M:11D:8H</span>
-          </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>Start Date</span>
-            <span className="text-black font-semibold text-[15px]">15/09/2025</span>
-          </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>End Date</span>
-            <span className="text-black font-semibold text-[15px]">15/12/2025</span>
+            <span>Status</span>
+            <span className="text-green-600 font-semibold text-[15px]">COMPLETED</span>
           </div>
         </div>
       </div>
@@ -42,7 +87,7 @@ export default function LendingDetail() {
         onClick={() => {}}
         className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition mt-3 ${'bg-[#56A2CC] hover:bg-[#56A2CC]/80'}`}
       >
-        Supply More
+        {getButtonText()}
       </button>
     </div>
   );

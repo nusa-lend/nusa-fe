@@ -12,18 +12,7 @@ import TransactionNotif from './tabs/active/TransactionNotif';
 
 import BottomSheet from '@/components/ui/miniapp/BottomSheet';
 import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
-
-interface ActivePosition {
-  id: string;
-  token1: string;
-  token2: string;
-  imageSize: number;
-  title: string;
-  subtitle: string;
-  apy: string;
-  apyColor: string;
-  type: 'lend' | 'borrow';
-}
+import { ActivePosition } from '@/utils/positionMapping';
 
 interface ActiveBottomSheetProps {
   isOpen: boolean;
@@ -157,7 +146,7 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
           <div className="w-full h-full mt-2">
             <div className="flex items-center justify-between">
               <h2 className="text-md font-semibold text-gray-900">
-                {position.type === 'lend' ? `IDRX on Base` : `bNVDA / IDRX`}
+                {position.title}
               </h2>
               <TokenNetworkPair tokenLogo={position.token1} networkLogo={position.token2} size={25} overlap={25} />
             </div>

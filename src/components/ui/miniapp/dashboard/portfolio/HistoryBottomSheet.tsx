@@ -46,7 +46,7 @@ export default function HistoryBottomSheet({ isOpen, onClose, transaction }: His
           <TokenNetworkPair tokenLogo={transaction.token1} networkLogo={transaction.token2} size={25} overlap={25} />
         </div>
 
-        <div className="mt-6">{transaction.type === 'lend' ? <LendingDetail /> : <BorrowDetail loanData={transaction.loanData} />}</div>
+        <div className="mt-6">{transaction.type === 'lend' ? <LendingDetail loanData={transaction.loanData} /> : <BorrowDetail loanData={transaction.loanData} />}</div>
       </div>
     </BottomSheet>
   );
