@@ -8,7 +8,7 @@ export const APP_BUTTON_TEXT = 'Launch Nusa';
 export const APP_SPLASH_URL = `${APP_URL}/splash.png`;
 export const APP_SPLASH_BACKGROUND_COLOR = '#F8FAFC';
 export const APP_PRIMARY_CATEGORY = 'finance';
-export const APP_TAGS = ['defi', 'lending', 'borrowing', 'collateral', 'cross-chain', 'stablecoins'];
+export const APP_TAGS = ['lending', 'borrowing', 'collateral', 'cross-chain', 'stablecoins'];
 export const APP_WEBHOOK_URL = `${APP_URL}/webhook`;
 
 export const APP_SUBTITLE = 'Local Stablecoin Lending Hub';
