@@ -1,6 +1,6 @@
 export const APP_URL: string = process.env.NEXT_PUBLIC_URL!;
 
-export const APP_NAME = 'Nusa Lending';
+export const APP_NAME = 'Nusa';
 export const APP_DESCRIPTION = 'Nusa is a local stablecoin lending hub.';
 export const APP_ICON_URL = `${APP_URL}/icon.png`;
 export const APP_OG_IMAGE_URL = `${APP_URL}/og-image.png`;
