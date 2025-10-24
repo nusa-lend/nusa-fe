@@ -1,6 +1,5 @@
 export default function DashboardPage() {
-  const farcasterMiniappUrl =
-    "https://farcaster.xyz/~/developers/mini-apps/preview?url=https%3A%2F%2Fnusa-lend.netlify.app";
+  const farcasterMiniappUrl = 'https://farcaster.xyz/miniapps/CwB--wdey8nn/nusa';
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-white bg-[radial-gradient(ellipse_70%_70%_at_50%_10%,#f7fafc_80%,#f1f5f9_100%)] transition-colors">
@@ -20,7 +19,8 @@ export default function DashboardPage() {
             Local Stablecoin Lending Hub
           </h2>
           <p className="text-base sm:text-lg text-gray-600/90 mb-6 sm:mb-8 max-w-md sm:max-w-lg mx-auto font-[circular]">
-            An innovative decentralized lending protocol designed to earn or borrow local stablecoin against world assets with competitive rates directly on Farcaster.
+            An innovative decentralized lending protocol designed to earn or borrow local stablecoin against world
+            assets with competitive rates directly on Farcaster.
           </p>
         </div>
 

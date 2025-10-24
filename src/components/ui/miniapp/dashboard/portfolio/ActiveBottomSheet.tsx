@@ -11,7 +11,7 @@ import RepayBorrow from './tabs/active/RepayBorrow';
 import TransactionNotif from './tabs/active/TransactionNotif';
 
 import BottomSheet from '@/components/ui/miniapp/BottomSheet';
-import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+import TokenPair from '@/components/ui/miniapp/TokenPair';
 import { ActivePosition } from '@/utils/positionMapping';
 
 interface ActiveBottomSheetProps {
@@ -36,11 +36,10 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
   };
 
   const { tabs, defaultTab } = getTabsAndDefault();
-  
+
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [currentStep, setCurrentStep] = useState<'form' | 'notification'>('form');
   const [transactionData, setTransactionData] = useState<any>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null) as React.MutableRefObject<HTMLDivElement>;
   const formRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -51,7 +50,7 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
 
   const handleTransactionComplete = (data: any) => {
     setTransactionData(data);
-    setIsAnimating(true);
+    setCurrentStep('notification');
   };
 
   const handleNotificationDone = () => {
@@ -64,41 +63,79 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
     setCurrentStep('form');
     setActiveTab(defaultTab);
     setTransactionData(null);
-    setIsAnimating(false);
     onClose();
   };
 
   const renderTabContent = () => {
     if (position.type === 'lend') {
       return activeTab === 'Supply' ? (
-        <SupplyMore 
-          position={position}
-          onTransactionComplete={handleTransactionComplete} 
-        />
+        <SupplyMore position={position} onTransactionComplete={handleTransactionComplete} />
       ) : (
-        <WithdrawSupply 
-          position={position}
-          onTransactionComplete={handleTransactionComplete} 
-        />
+        <WithdrawSupply position={position} onTransactionComplete={handleTransactionComplete} />
       );
     } else {
       return activeTab === 'Borrow' ? (
-        <BorrowMore 
-          position={position}
-          onTransactionComplete={handleTransactionComplete} 
-        />
+        <BorrowMore position={position} onTransactionComplete={handleTransactionComplete} />
       ) : (
-        <RepayBorrow 
-          position={position}
-          onTransactionComplete={handleTransactionComplete} 
-        />
+        <RepayBorrow position={position} onTransactionComplete={handleTransactionComplete} />
       );
     }
   };
 
   useGSAP(() => {
+    if (!formRef.current || !notificationRef.current) return;
+
+    const panels = [formRef.current, notificationRef.current];
+    gsap.set(panels, { xPercent: 100, opacity: 0, visibility: 'hidden' });
+    gsap.set(formRef.current, { xPercent: 0, opacity: 1, visibility: 'visible' });
+  }, []);
+
+  useGSAP(() => {
+    const refs: Record<typeof currentStep, HTMLElement | null> = {
+      form: formRef.current,
+      notification: notificationRef.current,
+    };
+
+    const prevStepRef = (useGSAP as any)._prevStepRef ?? ((useGSAP as any)._prevStepRef = { current: currentStep });
+    const prevStep = prevStepRef.current;
+    prevStepRef.current = currentStep;
+
+    if (!prevStep || prevStep === currentStep) return;
+
+    const fromRef = refs[prevStep as keyof typeof refs];
+    const toRef = refs[currentStep as keyof typeof refs];
+    if (!fromRef || !toRef) return;
+
+    const direction = prevStep === 'form' && currentStep === 'notification' ? 'next' : 'back';
+
+    const xOut = direction === 'next' ? -100 : 100;
+    const xIn = direction === 'next' ? 100 : -100;
+
+    const tl = gsap.timeline({
+      defaults: { duration: 0.35, ease: 'power2.inOut' },
+      onStart: () => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      },
+      onComplete: () => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      },
+    });
+
+    tl.to(fromRef, { xPercent: xOut, opacity: 0, visibility: 'hidden' }, 0).fromTo(
+      toRef,
+      { xPercent: xIn, opacity: 0, visibility: 'hidden' },
+      { xPercent: 0, opacity: 1, visibility: 'visible' },
+      0
+    );
+  }, [currentStep]);
+
+  useGSAP(() => {
     if (isOpen && formRef.current && notificationRef.current) {
-      gsap.set(formRef.current, { xPercent: 0, opacity: 1 });
+      gsap.set(formRef.current, { xPercent: 0, opacity: 1, visibility: 'visible' });
       gsap.set(notificationRef.current, {
         xPercent: 100,
         opacity: 0,
@@ -107,32 +144,8 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
       setActiveTab(defaultTab);
       setCurrentStep('form');
       setTransactionData(null);
-      setIsAnimating(false);
     }
   }, [isOpen, defaultTab]);
-
-  useGSAP(() => {
-    if (isAnimating && currentStep === 'form' && transactionData && formRef.current && notificationRef.current) {
-      const tl = gsap.timeline({
-        defaults: { duration: 0.3, ease: 'power2.inOut' },
-        onComplete: () => {
-          setCurrentStep('notification');
-          setIsAnimating(false);
-
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
-          }
-        },
-      });
-
-      tl.to(formRef.current, { xPercent: -100, opacity: 0 }, 0).fromTo(
-        notificationRef.current,
-        { xPercent: 100, opacity: 0, visibility: 'hidden' },
-        { xPercent: 0, opacity: 1, visibility: 'visible' },
-        0
-      );
-    }
-  }, [isAnimating, currentStep, transactionData]);
 
   const sheetHeight = currentStep === 'notification' ? '70vh' : '100vh';
 
@@ -157,10 +170,8 @@ export default function ActiveBottomSheet({ isOpen, onClose, position }: ActiveB
         >
           <div className="w-full h-full mt-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-md font-semibold text-gray-900">
-                {position.title}
-              </h2>
-              <TokenNetworkPair tokenLogo={position.token1} networkLogo={position.token2} size={25} overlap={25} />
+              <h2 className="text-md font-semibold text-gray-900">{position.title}</h2>
+              <TokenPair tokenLogo={position.token1} networkLogo={position.token2} size={25} overlap={25} />
             </div>
 
             <TabNavigation

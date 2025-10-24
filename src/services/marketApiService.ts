@@ -25,7 +25,7 @@ export const fetchMarketsFromPonder = async (chain?: string): Promise<PonderMark
 
   const response = await fetch(ponderUrl.toString(), {
     cache: 'force-cache',
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
 
   if (!response.ok) {

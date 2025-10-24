@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Copy, Check } from 'lucide-react';
-import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+import TokenPair from '@/components/ui/miniapp/TokenPair';
 
 interface TransactionNotifProps {
   type: 'borrow-more' | 'supply-more' | 'repay-borrow' | 'withdraw-supply';
@@ -143,7 +143,9 @@ export default function TransactionNotif({
       className="w-full max-w-md mx-auto space-y-6 pb-4"
     >
       <div className="flex flex-col items-center space-y-4">
-        <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center bg-white ${transactionData.success ? 'border-teal-200' : 'border-red-200'}`}>
+        <div
+          className={`w-16 h-16 rounded-full border-4 flex items-center justify-center bg-white ${transactionData.success ? 'border-teal-200' : 'border-red-200'}`}
+        >
           {transactionData.success ? (
             <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -157,10 +159,8 @@ export default function TransactionNotif({
 
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <h2 className="text-md font-semibold text-gray-900">
-              {transactionInfo.title}
-            </h2>
-            <TokenNetworkPair
+            <h2 className="text-md font-semibold text-gray-900">{transactionInfo.title}</h2>
+            <TokenPair
               tokenLogo={transactionInfo.tokenLogo}
               networkLogo={transactionInfo.networkLogo}
               size={24}

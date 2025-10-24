@@ -35,20 +35,20 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
 
   const tokenInfo = useMemo(() => {
     if (position.type === 'borrow') {
-      const collateralEntries = position.position.entries.filter((e: any) => 
-        (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
+      const collateralEntries = position.position.entries.filter(
+        (e: any) => (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
       );
-      
+
       const collateralEntry = collateralEntries.find((e: any) => {
         const token = getTokenBySymbol(e.token.symbol);
         return token && token.logo === position.token1;
       });
-          
+
       if (collateralEntry) {
         const [chainId, tokenAddress] = collateralEntry.tokenId.split(':');
         const token = getTokenBySymbol(collateralEntry.token?.symbol || '');
         const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
-        
+
         const result = {
           symbol: token?.symbol || 'Unknown',
           symbol2: position.entry.token?.symbol || 'Unknown',
@@ -60,14 +60,14 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
           network: network?.name || 'Unknown',
           networkLogo: network?.logo || '/assets/placeholder/placeholder_selectchain.png',
         };
-        
+
         return result;
       }
     }
 
     const [chainId, tokenAddress] = position.entry.tokenId.split(':');
     const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
-    
+
     const result = {
       symbol: position.entry.token?.symbol || 'Unknown',
       symbol2: position.entry.token?.symbol || 'Unknown',
@@ -79,29 +79,34 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
       network: network?.name || 'Unknown',
       networkLogo: network?.logo || '/assets/placeholder/placeholder_selectchain.png',
     };
-    
+
     return result;
   }, [position.entry, position.token1, position.token2, position.type, position.position]);
 
   const apyString = position.entry.market?.supplyRatePercent || '0.00%';
 
-  const market = useMemo(() => ({
-    id: `market-${tokenInfo.symbol}-${tokenInfo.chainId}`,
-    tokenSymbol: tokenInfo.symbol,
-    tokenName: tokenInfo.symbol,
-    tokenLogo: tokenInfo.logo,
-    defaultApy: apyString,
-    networks: [{
-      id: `network-${tokenInfo.chainId}`,
-      name: tokenInfo.network,
-      networkLogo: tokenInfo.networkLogo,
-      apy: apyString,
-      chainId: tokenInfo.chainId,
-      address: tokenInfo.address,
-      decimals: tokenInfo.decimals,
-      isActive: true,
-    }]
-  }), [tokenInfo, apyString]);
+  const market = useMemo(
+    () => ({
+      id: `market-${tokenInfo.symbol}-${tokenInfo.chainId}`,
+      tokenSymbol: tokenInfo.symbol,
+      tokenName: tokenInfo.symbol,
+      tokenLogo: tokenInfo.logo,
+      defaultApy: apyString,
+      networks: [
+        {
+          id: `network-${tokenInfo.chainId}`,
+          name: tokenInfo.network,
+          networkLogo: tokenInfo.networkLogo,
+          apy: apyString,
+          chainId: tokenInfo.chainId,
+          address: tokenInfo.address,
+          decimals: tokenInfo.decimals,
+          isActive: true,
+        },
+      ],
+    }),
+    [tokenInfo, apyString]
+  );
 
   const spenderAddress = (() => {
     if (tokenInfo.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
@@ -136,7 +141,7 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
     enabled: Boolean(address && tokenInfo.address),
     queryFn: async () => {
       if (!address) return '0';
-      
+
       try {
         const balance = await getBalance(config, {
           address,
@@ -172,13 +177,13 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
       );
       return maxAmount;
     }
-    
+
     return currentBorrowedAmount || '0';
   }, [userBorrowShares, poolData, tokenInfo.decimals, currentBorrowedAmount]);
 
   const sharesToRepay = useMemo(() => {
     if (!repayAmount) return '0';
-    
+
     if (poolData && poolData.totalBorrowAssets !== '0' && poolData.totalBorrowShares !== '0') {
       const shares = calculateSharesFromAmount(
         repayAmount.replace(/,/g, ''),
@@ -186,11 +191,18 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
         poolData.totalBorrowAssets,
         poolData.totalBorrowShares
       );
-      return shares;
+
+      // Ensure we don't exceed the user's actual borrow shares
+      const userShares = userBorrowShares || '0';
+      const maxShares = BigInt(userShares);
+      const calculatedShares = BigInt(shares);
+
+      // Return the minimum of calculated shares and user's actual shares
+      return calculatedShares <= maxShares ? shares : userShares;
     }
-    
+
     return parseUnitsString(repayAmount.replace(/,/g, ''), tokenInfo.decimals);
-  }, [repayAmount, poolData, tokenInfo.decimals]);
+  }, [repayAmount, poolData, tokenInfo.decimals, userBorrowShares]);
 
   const isInsufficientBalance = parseFloat(userBalance || '0') === 0;
   const hasAmount = repayAmount && parseFloat(repayAmount.replace(/,/g, '')) > 0;
@@ -200,48 +212,54 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
   const isAmountExceedingBalance = hasAmount && inputAmount > balanceAmount;
   const isAmountExceedingMaxRepay = hasAmount && inputAmount > maxRepayAmountNum;
 
-  const hasAllowance = allowances && allowances[`network-${tokenInfo.chainId}`] 
-    ? parseFloat(allowances[`network-${tokenInfo.chainId}`].formatted || '0') >= parseFloat(repayAmount.replace(/,/g, '') || '0')
-    : false;
+  const hasAllowance =
+    allowances && allowances[`network-${tokenInfo.chainId}`]
+      ? parseFloat(allowances[`network-${tokenInfo.chainId}`].formatted || '0') >=
+        parseFloat(repayAmount.replace(/,/g, '') || '0')
+      : false;
 
   const handleRepay = async () => {
     try {
       if (!address || !repayAmount || parseFloat(repayAmount.replace(/,/g, '')) <= 0) return;
       if (!sharesToRepay || sharesToRepay === '0') return;
-      
+
       const amt = repayAmount.replace(/,/g, '');
       const num = parseFloat(amt);
       if (Number.isNaN(num) || num <= 0) return;
-      
+
       const proxy = (() => {
         if (tokenInfo.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
         if (tokenInfo.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
         return undefined;
       })();
-      
+
       if (!proxy) return;
-      
-      const hasAllowance = allowances && allowances[`network-${tokenInfo.chainId}`] 
-        ? parseFloat(allowances[`network-${tokenInfo.chainId}`].formatted || '0') >= parseFloat(amt)
-        : false;
-      
+
+      const hasAllowance =
+        allowances && allowances[`network-${tokenInfo.chainId}`]
+          ? parseFloat(allowances[`network-${tokenInfo.chainId}`].formatted || '0') >= parseFloat(amt)
+          : false;
+
       if (!hasAllowance) {
         await approveToken(amt);
         return;
       }
-      
+
       setIsRepaying(true);
-      
+
+      const userShares = userBorrowShares || '0';
+      const finalShares = BigInt(sharesToRepay) <= BigInt(userShares) ? sharesToRepay : userShares;
+
       const hash = await writeContract(config, {
         abi: LendingPoolAbi as any,
         address: proxy,
         chainId: tokenInfo.chainId as any,
         functionName: 'repay',
-        args: [address, tokenInfo.address as `0x${string}`, BigInt(sharesToRepay)],
+        args: [address, tokenInfo.address as `0x${string}`, BigInt(finalShares)],
       });
-      
+
       await waitForTransactionReceipt(config, { hash });
-      
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userPositions', address] }),
         queryClient.invalidateQueries({ queryKey: ['userPositions'] }),
@@ -251,7 +269,9 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
         queryClient.invalidateQueries({ queryKey: ['aggregatedBalances'] }),
         queryClient.invalidateQueries({ queryKey: ['userPositionForToken', tokenInfo.address, tokenInfo.chainId] }),
         queryClient.invalidateQueries({ queryKey: ['userPositionForToken'] }),
-        queryClient.invalidateQueries({ queryKey: ['userBorrowShares', address, tokenInfo.address, tokenInfo.chainId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['userBorrowShares', address, tokenInfo.address, tokenInfo.chainId],
+        }),
         queryClient.invalidateQueries({ queryKey: ['borrowPoolData', tokenInfo.address, tokenInfo.chainId] }),
       ]);
 
@@ -273,7 +293,7 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
           apr: apyString,
         },
         amount: repayAmount,
-        transaction: { hash, success: true }
+        transaction: { hash, success: true },
       };
 
       onTransactionComplete?.(transactionData);
@@ -296,7 +316,7 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
           apr: apyString,
         },
         amount: repayAmount,
-        transaction: { success: false }
+        transaction: { success: false },
       };
       onTransactionComplete?.(transactionData);
     } finally {
@@ -306,7 +326,11 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
 
   const handleMaxClick = () => {
     const maxRepay = Math.min(balanceAmount, maxRepayAmountNum);
-    setRepayAmount(maxRepay.toString());
+
+    const decimals = Math.min(6, tokenInfo.decimals);
+    const roundedAmount = parseFloat(maxRepay.toFixed(decimals));
+
+    setRepayAmount(roundedAmount.toString());
   };
 
   return (
@@ -329,10 +353,10 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
               />
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-gray-400 font-thin text-sm">USD</span>
-              <button className="p-1 hover:bg-gray-200 rounded transition">
+              <span className="text-gray-400 font-thin text-sm">{tokenInfo.symbol}</span>
+              {/* <button className="p-1 hover:bg-gray-200 rounded transition">
                 <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -345,12 +369,11 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
               MAX
             </button>
           </div>
-
         </div>
       </div>
-          <div className="mt-2 text-xs text-gray-500">
-            Max Repayable: {formatBalance(maxRepayAmount || '0')} {tokenInfo.symbol}
-          </div>
+      <div className="mt-2 text-xs text-gray-500">
+        Max Repayable: {formatBalance(maxRepayAmount || '0')} {tokenInfo.symbol}
+      </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 mt-3 space-y-2">
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Risk Level</h3>
@@ -399,11 +422,15 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Borrowed</span>
-            <span className="text-black font-semibold text-[15px]">{formatBalance(currentBorrowedAmount || '0')} {tokenInfo.symbol}</span>
+            <span className="text-black font-semibold text-[15px]">
+              {formatBalance(currentBorrowedAmount || '0')} {tokenInfo.symbol}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Repaying</span>
-            <span className="text-black font-semibold text-[15px]">{formatBalance(repayAmount || '0')} {tokenInfo.symbol}</span>
+            <span className="text-black font-semibold text-[15px]">
+              {formatBalance(repayAmount || '0')} {tokenInfo.symbol}
+            </span>
           </div>
         </div>
       </div>
@@ -411,44 +438,68 @@ export default function RepayBorrow({ position, onTransactionComplete }: RepayBo
       {hasAllowance ? (
         <button
           onClick={handleRepay}
-          disabled={!hasAmount || isInsufficientBalance || isAmountExceedingBalance || isAmountExceedingMaxRepay || isRepaying || false}
+          disabled={
+            !hasAmount ||
+            isInsufficientBalance ||
+            isAmountExceedingBalance ||
+            isAmountExceedingMaxRepay ||
+            isRepaying ||
+            false
+          }
           className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition mt-3 ${
-            hasAmount && !isInsufficientBalance && !isAmountExceedingBalance && !isAmountExceedingMaxRepay && !isRepaying ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80' : 'bg-[#a8cfe5] cursor-not-allowed'
+            hasAmount &&
+            !isInsufficientBalance &&
+            !isAmountExceedingBalance &&
+            !isAmountExceedingMaxRepay &&
+            !isRepaying
+              ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80'
+              : 'bg-[#a8cfe5] cursor-not-allowed'
           }`}
         >
           {isRepaying
             ? 'Repaying...'
             : isAmountExceedingMaxRepay
-            ? 'Amount exceeds max repayable'
-            : isAmountExceedingBalance 
-            ? 'Amount exceeds balance' 
-            : isInsufficientBalance 
-            ? 'No balance to repay' 
-            : hasAmount 
-            ? `Repay ${tokenInfo.symbol}` 
-            : 'Enter an amount'
-          }
+              ? 'Amount exceeds max repayable'
+              : isAmountExceedingBalance
+                ? 'Amount exceeds balance'
+                : isInsufficientBalance
+                  ? 'No balance to repay'
+                  : hasAmount
+                    ? `Repay ${tokenInfo.symbol}`
+                    : 'Enter an amount'}
         </button>
       ) : (
         <button
           onClick={handleRepay}
-          disabled={!hasAmount || isApprovingToken || isInsufficientBalance || isAmountExceedingBalance || isAmountExceedingMaxRepay || false}
+          disabled={
+            !hasAmount ||
+            isApprovingToken ||
+            isInsufficientBalance ||
+            isAmountExceedingBalance ||
+            isAmountExceedingMaxRepay ||
+            false
+          }
           className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition mt-3 ${
-            hasAmount && !isApprovingToken && !isInsufficientBalance && !isAmountExceedingBalance && !isAmountExceedingMaxRepay ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80' : 'bg-[#a8cfe5] cursor-not-allowed'
+            hasAmount &&
+            !isApprovingToken &&
+            !isInsufficientBalance &&
+            !isAmountExceedingBalance &&
+            !isAmountExceedingMaxRepay
+              ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80'
+              : 'bg-[#a8cfe5] cursor-not-allowed'
           }`}
         >
           {isApprovingToken
             ? 'Approving...'
             : isAmountExceedingMaxRepay
-            ? 'Amount exceeds max repayable'
-            : isAmountExceedingBalance 
-            ? 'Amount exceeds balance' 
-            : isInsufficientBalance 
-            ? 'No balance to repay' 
-            : hasAmount 
-            ? `Approve ${tokenInfo.symbol}` 
-            : 'Enter an amount'
-          }
+              ? 'Amount exceeds max repayable'
+              : isAmountExceedingBalance
+                ? 'Amount exceeds balance'
+                : isInsufficientBalance
+                  ? 'No balance to repay'
+                  : hasAmount
+                    ? `Approve ${tokenInfo.symbol}`
+                    : 'Enter an amount'}
         </button>
       )}
     </div>

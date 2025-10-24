@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import BottomSheet from '@/components/ui/miniapp/BottomSheet';
-import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+import TokenPair from '@/components/ui/miniapp/TokenPair';
 import LendingDetail from './tabs/history/LendingDetail';
 import BorrowDetail from './tabs/history/BorrowDetail';
 import { HistoryTransaction } from '@/hooks/useUserLoans';
@@ -23,13 +23,19 @@ export default function HistoryBottomSheet({ isOpen, onClose, transaction }: His
   };
 
   useGSAP(() => {
+    if (contentRef.current) {
+      gsap.set(contentRef.current, { opacity: 1, y: 0 });
+    }
+  }, []);
+
+  useGSAP(() => {
     if (isOpen && contentRef.current) {
       gsap.set(contentRef.current, { opacity: 1, y: 0 });
     }
   }, [isOpen]);
 
   const getHeight = () => {
-    return transaction.type === 'borrow' ? '75vh' : '60vh';
+    return transaction.type === 'borrow' ? '80vh' : '65vh';
   };
 
   return (
@@ -44,13 +50,17 @@ export default function HistoryBottomSheet({ isOpen, onClose, transaction }: His
     >
       <div className="w-full h-full mt-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-md font-semibold text-gray-900">
-            {transaction.title}
-          </h2>
-          <TokenNetworkPair tokenLogo={transaction.token1} networkLogo={transaction.token2} size={25} overlap={25} />
+          <h2 className="text-md font-semibold text-gray-900">{transaction.title}</h2>
+          <TokenPair tokenLogo={transaction.token1} networkLogo={transaction.token2} size={25} overlap={25} />
         </div>
 
-        <div className="mt-6">{transaction.type === 'lend' ? <LendingDetail loanData={transaction.loanData} /> : <BorrowDetail loanData={transaction.loanData} />}</div>
+        <div className="mt-6">
+          {transaction.type === 'lend' ? (
+            <LendingDetail loanData={transaction.loanData} />
+          ) : (
+            <BorrowDetail loanData={transaction.loanData} />
+          )}
+        </div>
       </div>
     </BottomSheet>
   );

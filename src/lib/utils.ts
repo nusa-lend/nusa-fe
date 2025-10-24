@@ -45,7 +45,7 @@ export function getMiniAppEmbedMetadata(ogImageUrl?: string) {
 export function getFarcasterEmbedMetaTags(ogImageUrl?: string) {
   const embedData = getMiniAppEmbedMetadata(ogImageUrl);
   const embedJson = JSON.stringify(embedData);
-  
+
   return {
     'fc:miniapp': embedJson,
     'fc:frame': embedJson, // For backward compatibility

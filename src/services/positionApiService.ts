@@ -1,25 +1,22 @@
-export const fetchPositionsFromPonder = async (
-  account: string,
-  chain?: string
-) => {
+export const fetchPositionsFromPonder = async (account: string, chain?: string) => {
   const ponderBaseUrl = process.env.PONDER_API_URL ?? 'http://localhost:42069';
   const ponderUrl = new URL('/positions', ponderBaseUrl);
-  
+
   ponderUrl.searchParams.set('account', account);
   if (chain) {
     ponderUrl.searchParams.set('chain', chain);
   }
 
-  const response = await fetch(ponderUrl.toString(), { 
+  const response = await fetch(ponderUrl.toString(), {
     cache: 'force-cache',
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch positions: ${response.status}`);
   }
 
-  const payload = await response.json() as {
+  const payload = (await response.json()) as {
     data: Array<{
       id: string;
       chainId: string;

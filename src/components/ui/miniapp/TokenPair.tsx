@@ -1,9 +1,9 @@
 import React from 'react';
 import Image from 'next/image';
 
-interface TokenNetworkPairProps {
+interface TokenPairProps {
   tokenLogo: string;
-  networkLogo: string;
+  networkLogo?: string;
   size?: number;
   overlap?: number;
   className?: string;
@@ -12,7 +12,7 @@ interface TokenNetworkPairProps {
   useOutline?: boolean;
 }
 
-const TokenNetworkPair: React.FC<TokenNetworkPairProps> = ({
+const TokenPair: React.FC<TokenPairProps> = ({
   tokenLogo,
   networkLogo,
   size = 48,
@@ -30,7 +30,15 @@ const TokenNetworkPair: React.FC<TokenNetworkPairProps> = ({
   };
 
   const tokenAlt = `${getTokenName(tokenLogo)} token`;
-  const networkAlt = `${getTokenName(networkLogo)} network`;
+  const networkAlt = networkLogo ? `${getTokenName(networkLogo)} network` : '';
+
+  if (!networkLogo) {
+    return (
+      <span className={`inline-flex items-center ${className}`}>
+        <Image src={tokenLogo} alt={tokenAlt} width={size} height={size} className={`rounded-full ${tokenClassName}`} />
+      </span>
+    );
+  }
 
   return (
     <div className={`relative inline-flex items-center ${className}`}>
@@ -61,4 +69,4 @@ const TokenNetworkPair: React.FC<TokenNetworkPairProps> = ({
   );
 };
 
-export default TokenNetworkPair;
+export default TokenPair;

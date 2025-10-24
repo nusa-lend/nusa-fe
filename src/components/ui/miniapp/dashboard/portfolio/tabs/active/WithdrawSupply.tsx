@@ -29,7 +29,7 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
     const [chainId, tokenAddress] = position.entry.tokenId.split(':');
     const token = getTokenBySymbol(position.entry.token?.symbol || '');
     const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
-    
+
     return {
       symbol: position.entry.token?.symbol || 'Unknown',
       logo: token?.logo || '/assets/placeholder/placeholder_selectcoin.png',
@@ -53,24 +53,24 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
   const handleWithdraw = async () => {
     try {
       if (!address || !amount || parseFloat(amount.replace(/,/g, '')) <= 0) return;
-      
+
       const amt = amount.replace(/,/g, '');
       const num = parseFloat(amt);
       if (Number.isNaN(num) || num <= 0) return;
-      
+
       const decimals = tokenInfo.decimals;
       const value = parseUnitsString(amt, decimals);
-      
+
       const proxy = (() => {
         if (tokenInfo.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
         if (tokenInfo.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
         return undefined;
       })();
-      
+
       if (!proxy) return;
-      
+
       setIsWithdrawing(true);
-      
+
       const hash = await writeContract(config, {
         abi: LendingPoolAbi as any,
         address: proxy,
@@ -78,9 +78,9 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
         functionName: 'withdrawLiquidity',
         args: [address, tokenInfo.address as `0x${string}`, value],
       });
-      
+
       await waitForTransactionReceipt(config, { hash });
-      
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userPositions', address] }),
         queryClient.invalidateQueries({ queryKey: ['userPositions'] }),
@@ -164,13 +164,7 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-              <img 
-                src={tokenInfo.logo} 
-                alt={tokenInfo.symbol} 
-                width={24} 
-                height={24} 
-                className="object-contain" 
-              />
+              <img src={tokenInfo.logo} alt={tokenInfo.symbol} width={24} height={24} className="object-contain" />
             </div>
             <input
               type="text"
@@ -182,9 +176,9 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
           </div>
           <div className="flex items-center gap-1">
             <span className="text-gray-400 font-thin text-sm">{tokenInfo.symbol}</span>
-            <button className="p-1 hover:bg-gray-200 rounded transition">
+            {/* <button className="p-1 hover:bg-gray-200 rounded transition">
               <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
-            </button>
+            </button> */}
           </div>
         </div>
         <div className="mt-5 flex items-center gap-1">
@@ -196,17 +190,11 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
             MAX
           </button>
         </div>
-        {isAmountExceedingPosition && (
-          <div className="mt-2 text-sm text-red-600">
-            Amount exceeds position
-          </div>
-        )}
+        {isAmountExceedingPosition && <div className="mt-2 text-sm text-red-600">Amount exceeds position</div>}
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <h3 className="text-[15px] font-semibold text-gray-900 mb-3">
-          Position Information ({tokenInfo.symbol})
-        </h3>
+        <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Position Information ({tokenInfo.symbol})</h3>
         <div className="space-y-3">
           <div className="flex justify-between text-sm text-gray-500">
             <div className="flex items-center gap-1">
@@ -215,9 +203,7 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
                 <span className="text-gray-400 text-xs font-bold">i</span>
               </div>
             </div>
-            <span className="text-green-600 font-semibold text-[15px]">
-              ~{apyString}
-            </span>
+            <span className="text-green-600 font-semibold text-[15px]">~{apyString}</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Current Position</span>
@@ -227,9 +213,7 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Withdraw Amount</span>
-            <span className="text-gray-900 font-semibold text-[15px]">
-              {formatBalance(amount || '0')}
-            </span>
+            <span className="text-gray-900 font-semibold text-[15px]">{formatBalance(amount || '0')}</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Remaining Position</span>
@@ -245,20 +229,19 @@ export default function WithdrawSupply({ position, onTransactionComplete }: With
         disabled={!hasAmount || isInsufficientBalance || isAmountExceedingPosition || isWithdrawing}
         className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition ${
           hasAmount && !isInsufficientBalance && !isAmountExceedingPosition && !isWithdrawing
-            ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80' 
+            ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80'
             : 'bg-[#a8cfe5] cursor-not-allowed'
         }`}
       >
-        {isWithdrawing 
-          ? 'Withdrawing...' 
-          : isInsufficientBalance 
-          ? 'No position to withdraw' 
-          : isAmountExceedingPosition 
-          ? 'Amount exceeds position'
-          : hasAmount 
-          ? `Withdraw ${tokenInfo.symbol}` 
-          : 'Enter an amount'
-        }
+        {isWithdrawing
+          ? 'Withdrawing...'
+          : isInsufficientBalance
+            ? 'No position to withdraw'
+            : isAmountExceedingPosition
+              ? 'Amount exceeds position'
+              : hasAmount
+                ? `Withdraw ${tokenInfo.symbol}`
+                : 'Enter an amount'}
       </button>
     </div>
   );

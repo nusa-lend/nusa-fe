@@ -1,4 +1,4 @@
-import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+import TokenPair from '@/components/ui/miniapp/TokenPair';
 
 interface TabItemProps {
   token1: string;
@@ -26,7 +26,7 @@ export default function TabItem({
           <div className="flex items-center">
             <div className="relative flex items-center h-full">
               <div className="overflow-hidden flex items-center" style={{ width: imageSize, height: imageSize }}>
-                <TokenNetworkPair tokenLogo={token1} networkLogo={token2} size={imageSize} useOutline={false} />
+                <TokenPair tokenLogo={token1} networkLogo={token2} size={imageSize} useOutline={false} />
               </div>
             </div>
           </div>

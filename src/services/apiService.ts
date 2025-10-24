@@ -83,10 +83,10 @@ export const buildHistoryQuery = () => `
 
 export const fetchMarketRates = async (marketIds: string[]) => {
   if (marketIds.length === 0) return new Map();
-  
+
   const ponderBaseUrl = process.env.PONDER_API_URL ?? 'http://localhost:42069';
   const graphUrl = new URL('/graphql', ponderBaseUrl);
-  
+
   const marketsQuery = `
     query Markets($ids: [String!], $limit: Int) {
       marketss(where: { id_in: $ids }, limit: $limit) {
@@ -120,7 +120,7 @@ export const fetchMarketRates = async (marketIds: string[]) => {
       return new Map();
     }
 
-    const marketsPayload = await marketsResponse.json() as {
+    const marketsPayload = (await marketsResponse.json()) as {
       data?: {
         marketss?: {
           items: Array<{
@@ -147,14 +147,10 @@ export const fetchMarketRates = async (marketIds: string[]) => {
   }
 };
 
-export const fetchHistoryData = async (
-  account: string,
-  chain?: string,
-  limit?: number
-) => {
+export const fetchHistoryData = async (account: string, chain?: string, limit?: number) => {
   const ponderBaseUrl = process.env.PONDER_API_URL ?? 'http://localhost:42069';
   const graphUrl = new URL('/graphql', ponderBaseUrl);
-  
+
   const loanWhere: Record<string, string> = {
     account: toLowerHex(account),
   };
@@ -196,7 +192,7 @@ export const fetchHistoryData = async (
     throw new Error(`Indexer responded with status ${response.status}`);
   }
 
-  const payload = await response.json() as {
+  const payload = (await response.json()) as {
     data?: {
       positionLoanss?: {
         items: any[];
@@ -209,10 +205,11 @@ export const fetchHistoryData = async (
   };
 
   if (payload.errors?.length) {
-    const message = payload.errors
-      .map(err => err?.message)
-      .filter(Boolean)
-      .join('; ') || 'Unknown GraphQL error';
+    const message =
+      payload.errors
+        .map(err => err?.message)
+        .filter(Boolean)
+        .join('; ') || 'Unknown GraphQL error';
     throw new Error(`Indexer GraphQL error: ${message}`);
   }
 
@@ -221,7 +218,7 @@ export const fetchHistoryData = async (
 
   // Fetch market rates for supply events
   const marketIds = Array.from(new Set(supplyItems.map(event => event.marketId))).filter(
-    id => typeof id === 'string' && id.length > 0,
+    id => typeof id === 'string' && id.length > 0
   );
   const marketRates = await fetchMarketRates(marketIds);
 

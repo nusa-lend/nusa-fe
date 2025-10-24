@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import BottomSheet from '@/components/ui/miniapp/BottomSheet';
 import NetworkSelector from './NetworkSelector';
@@ -30,7 +30,6 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
   const [currentStep, setCurrentStep] = useState<'select' | 'form' | 'result'>('select');
   const [selectedNetwork, setSelectedNetwork] = useState<LendingNetworkOption | null>(null);
   const [lentAmount, setLentAmount] = useState<string>('');
-  const [isAnimating, setIsAnimating] = useState(false);
   const [isSupplying, setIsSupplying] = useState(false);
   const [transactionInfo, setTransactionInfo] = useState<{ hash?: `0x${string}`; success: boolean } | undefined>();
   const sheetHeight = currentStep === 'result' ? '65vh' : '100vh';
@@ -111,9 +110,8 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
   };
 
   const handleNetworkSelect = (network: LendingNetworkOption) => {
-    if (isAnimating) return;
-    setIsAnimating(true);
     setSelectedNetwork(network);
+    setCurrentStep('form');
   };
 
   const handleResultComplete = () => {
@@ -137,8 +135,6 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
   };
 
   const handleBack = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
     setCurrentStep('select');
     setSelectedNetwork(null);
     resetApproving();
@@ -147,90 +143,77 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
   const handleLendingComplete = (amount: string, tx?: { hash?: `0x${string}`; success: boolean }) => {
     setLentAmount(amount);
     setTransactionInfo(tx);
-
-    if (isAnimating) return;
-    setIsAnimating(true);
+    setCurrentStep('result');
   };
 
-  useGSAP(() => {
-    if (selectedNetwork && isAnimating && currentStep === 'select' && selectRef.current && formRef.current) {
-      const tl = gsap.timeline({
-        defaults: { duration: 0.3, ease: 'power2.inOut' },
-        onComplete: () => {
-          setCurrentStep('form');
-          setIsAnimating(false);
-
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
-          }
-        },
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth',
       });
-
-      tl.to(selectRef.current, { xPercent: -100, opacity: 0 }, 0).fromTo(
-        formRef.current,
-        { xPercent: 100, opacity: 0 },
-        { xPercent: 0, opacity: 1 },
-        0
-      );
     }
-  }, [selectedNetwork, isAnimating, currentStep]);
+  }, [currentStep]);
 
   useGSAP(() => {
-    if (isAnimating && currentStep === 'select' && !selectedNetwork && formRef.current && selectRef.current) {
-      const tl = gsap.timeline({
-        defaults: { duration: 0.3, ease: 'power2.inOut' },
-        onComplete: () => {
-          setIsAnimating(false);
+    if (!selectRef.current || !formRef.current || !resultRef.current) return;
 
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
-          }
-        },
-      });
-
-      tl.to(formRef.current, { xPercent: 100, opacity: 0 }, 0).fromTo(
-        selectRef.current,
-        { xPercent: -100, opacity: 0 },
-        { xPercent: 0, opacity: 1 },
-        0
-      );
-    }
-  }, [isAnimating, currentStep, selectedNetwork]);
+    const panels = [selectRef.current, formRef.current, resultRef.current];
+    gsap.set(panels, { xPercent: 100, opacity: 0, visibility: 'hidden' });
+    gsap.set(selectRef.current, { xPercent: 0, opacity: 1, visibility: 'visible' });
+  }, []);
 
   useGSAP(() => {
-    if (
-      isAnimating &&
-      currentStep === 'form' &&
-      lentAmount &&
-      transactionInfo &&
-      formRef.current &&
-      resultRef.current
-    ) {
-      const tl = gsap.timeline({
-        defaults: { duration: 0.3, ease: 'power2.inOut' },
-        onComplete: () => {
-          setCurrentStep('result');
-          setIsAnimating(false);
+    const refs: Record<typeof currentStep, HTMLElement | null> = {
+      select: selectRef.current,
+      form: formRef.current,
+      result: resultRef.current,
+    };
 
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
-          }
-        },
-      });
+    const prevStepRef = (useGSAP as any)._prevStepRef ?? ((useGSAP as any)._prevStepRef = { current: currentStep });
+    const prevStep = prevStepRef.current;
+    prevStepRef.current = currentStep;
 
-      tl.to(formRef.current, { xPercent: -100, opacity: 0 }, 0).fromTo(
-        resultRef.current,
-        { xPercent: 100, opacity: 0, visibility: 'hidden' },
-        { xPercent: 0, opacity: 1, visibility: 'visible' },
-        0
-      );
-    }
-  }, [isAnimating, currentStep, lentAmount, transactionInfo]);
+    if (!prevStep || prevStep === currentStep) return;
+
+    const fromRef = refs[prevStep as keyof typeof refs];
+    const toRef = refs[currentStep as keyof typeof refs];
+    if (!fromRef || !toRef) return;
+
+    const direction =
+      (prevStep === 'select' && currentStep === 'form') || (prevStep === 'form' && currentStep === 'result')
+        ? 'next'
+        : 'back';
+
+    const xOut = direction === 'next' ? -100 : 100;
+    const xIn = direction === 'next' ? 100 : -100;
+
+    const tl = gsap.timeline({
+      defaults: { duration: 0.35, ease: 'power2.inOut' },
+      onStart: () => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      },
+      onComplete: () => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      },
+    });
+
+    tl.to(fromRef, { xPercent: xOut, opacity: 0, visibility: 'hidden' }, 0).fromTo(
+      toRef,
+      { xPercent: xIn, opacity: 0, visibility: 'hidden' },
+      { xPercent: 0, opacity: 1, visibility: 'visible' },
+      0
+    );
+  }, [currentStep]);
 
   useGSAP(() => {
     if (isOpen && selectRef.current && formRef.current && resultRef.current) {
-      gsap.set(selectRef.current, { xPercent: 0, opacity: 1 });
-      gsap.set(formRef.current, { xPercent: 100, opacity: 0 });
+      gsap.set(selectRef.current, { xPercent: 0, opacity: 1, visibility: 'visible' });
+      gsap.set(formRef.current, { xPercent: 100, opacity: 0, visibility: 'hidden' });
       gsap.set(resultRef.current, {
         xPercent: 100,
         opacity: 0,
@@ -240,8 +223,7 @@ export default function LendingSheet({ isOpen, onClose, onLendingComplete, selec
       setSelectedNetwork(null);
       setLentAmount('');
       setTransactionInfo(undefined);
-      setIsAnimating(false);
-      resetApproving(); // Reset approving state when opening modal
+      resetApproving();
     }
   }, [isOpen]);
 

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+import TokenPair from '@/components/ui/miniapp/TokenPair';
 import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
 import Tooltip from '@/components/ui/miniapp/Tooltip';
 import { hasSufficientAllowance } from '@/hooks/useAllowances';
@@ -141,7 +141,7 @@ export default function LendingForm({
           <h2 className="text-md font-semibold text-gray-900">
             Lend {selectedMarket.tokenSymbol} on {selectedNetwork.name}
           </h2>
-          <TokenNetworkPair
+          <TokenPair
             tokenLogo={selectedMarket.tokenLogo}
             networkLogo={selectedNetwork.networkLogo}
             size={30}

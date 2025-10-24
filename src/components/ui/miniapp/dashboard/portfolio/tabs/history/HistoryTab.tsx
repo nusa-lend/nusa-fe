@@ -3,9 +3,10 @@ import { useUserLoans, HistoryTransaction } from '@/hooks/useUserLoans';
 
 interface HistoryTabProps {
   onTransactionClick?: (transaction: HistoryTransaction) => void;
+  filter?: string;
 }
 
-export default function HistoryTab({ onTransactionClick }: HistoryTabProps) {
+export default function HistoryTab({ onTransactionClick, filter = 'All' }: HistoryTabProps) {
   const { historyData, isLoading, error } = useUserLoans();
 
   const handleTransactionClick = (transaction: HistoryTransaction) => {
@@ -15,7 +16,7 @@ export default function HistoryTab({ onTransactionClick }: HistoryTabProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="animate-pulse">
             <div className="h-16 bg-gray-200 rounded-lg"></div>
           </div>
@@ -40,9 +41,40 @@ export default function HistoryTab({ onTransactionClick }: HistoryTabProps) {
     );
   }
 
+  const filteredTransactions = historyData.filter(transaction => {
+    if (filter === 'All') {
+      return true;
+    }
+
+    const action = transaction.loanData?.action;
+
+    switch (filter) {
+      case 'Borrow':
+        return action === 'borrow';
+      case 'Supply':
+        return action === 'supply';
+      case 'Repay':
+        return action === 'repay';
+      case 'Withdraw':
+        return action === 'withdraw';
+      default:
+        return true;
+    }
+  });
+
+  if (filteredTransactions.length === 0) {
+    const filterMessage = filter === 'All' ? 'No loan history found' : `No ${filter.toLowerCase()} transactions found`;
+
+    return (
+      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+        <p className="text-gray-600 text-sm">{filterMessage}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
-      {historyData.map((transaction, index) => (
+      {filteredTransactions.map((transaction, index) => (
         <div key={transaction.id} onClick={() => handleTransactionClick(transaction)} className="cursor-pointer">
           <TabItem
             token1={transaction.token1}

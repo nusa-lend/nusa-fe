@@ -33,8 +33,10 @@ export default function PortfolioContainer() {
 
   const handleCloseBottomSheet = () => {
     setIsBottomSheetOpen(false);
-    setSelectedItem(null);
-    setIsHistoryItem(false);
+    setTimeout(() => {
+      setSelectedItem(null);
+      setIsHistoryItem(false);
+    }, 250);
   };
 
   return (

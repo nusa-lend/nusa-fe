@@ -30,11 +30,14 @@ export const calculatePortfolioSummary = (positions: PonderPosition[]): Portfoli
   let activePositions = 0;
 
   positions.forEach(position => {
-    if (position.entries.length > 0) {
-      activePositions++;
-    }
-
     position.entries.forEach((entry: PonderPositionEntry) => {
+      if (
+        entry.usdValue > 0 &&
+        (entry.type === 'supply_liquidity' || entry.type === 'supply_collateral' || entry.type === 'borrow')
+      ) {
+        activePositions++;
+      }
+
       if (entry.type === 'supply_liquidity') {
         totalLendingValue += entry.usdValue;
         if (entry.market?.supplyRatePercent) {

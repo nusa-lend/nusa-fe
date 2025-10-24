@@ -19,7 +19,7 @@ export async function OPTIONS() {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const account = searchParams.get('account');
-  
+
   if (!account) {
     return new NextResponse(JSON.stringify({ error: 'Missing account' }), {
       status: 400,
@@ -32,8 +32,8 @@ export async function GET(request: Request) {
 
   try {
     const { loanItems, supplyItems, marketRates } = await fetchHistoryData(
-      account, 
-      chain || undefined, 
+      account,
+      chain || undefined,
       limit ? Number(limit) : undefined
     );
 

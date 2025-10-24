@@ -17,7 +17,7 @@ export default function ActiveTab({ onPositionClick, filter = 'All' }: ActiveTab
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="rounded-2xl border border-white/25 bg-[#f8fafc] p-3 animate-pulse">
             <div className="flex items-center justify-between">
               <div className="flex space-x-3">
@@ -54,10 +54,8 @@ export default function ActiveTab({ onPositionClick, filter = 'All' }: ActiveTab
   const activePositions = mapPositionEntriesToActivePositions(positions, filter);
 
   if (activePositions.length === 0) {
-    const filterMessage = filter === 'All' 
-      ? 'No active positions found' 
-      : `No ${filter.toLowerCase()} positions found`;
-    
+    const filterMessage = filter === 'All' ? 'No active positions found' : `No ${filter.toLowerCase()} positions found`;
+
     return (
       <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
         <p className="text-gray-600 text-sm">{filterMessage}</p>
@@ -67,7 +65,7 @@ export default function ActiveTab({ onPositionClick, filter = 'All' }: ActiveTab
 
   return (
     <div className="space-y-2">
-      {activePositions.map((position) => (
+      {activePositions.map(position => (
         <div key={position.id} onClick={() => handleCardClick(position)} className="cursor-pointer">
           <TabItem
             token1={position.type === 'borrow' ? position.token2 : position.token1}

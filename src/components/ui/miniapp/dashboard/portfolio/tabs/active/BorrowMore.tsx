@@ -33,7 +33,7 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
     if (position.type === 'borrow') {
       const [chainId, tokenAddress] = position.entry.tokenId.split(':');
       const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
-      
+
       const result = {
         symbol: position.entry.token?.symbol || 'Unknown',
         logo: position.token2,
@@ -43,24 +43,24 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
         network: network?.name || 'Unknown',
         networkLogo: network?.logo || '/assets/placeholder/placeholder_selectchain.png',
       };
-      
+
       return result;
     }
 
-    const collateralEntries = position.position.entries.filter((e: any) => 
-      (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
+    const collateralEntries = position.position.entries.filter(
+      (e: any) => (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
     );
-    
+
     const collateralEntry = collateralEntries.find((e: any) => {
       const token = getTokenBySymbol(e.token.symbol);
       return token && token.logo === position.token1;
     });
-        
+
     if (collateralEntry) {
       const [chainId, tokenAddress] = collateralEntry.tokenId.split(':');
       const token = getTokenBySymbol(collateralEntry.token?.symbol || '');
       const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
-      
+
       const result = {
         symbol: token?.symbol || 'Unknown',
         logo: position.token1,
@@ -70,19 +70,22 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
         network: network?.name || 'Unknown',
         networkLogo: network?.logo || '/assets/placeholder/placeholder_selectchain.png',
       };
-      
+
       return result;
     }
-    
-    const allTokens = [...ALL_TOKENS, ...Object.values(SUPPORTED_COLLATERAL).map(t => ({
-      logo: t.logo,
-      symbol: t.name,
-      name: t.name,
-      id: t.id,
-      category: 'rwa' as const,
-      description: t.name
-    }))];
-    
+
+    const allTokens = [
+      ...ALL_TOKENS,
+      ...Object.values(SUPPORTED_COLLATERAL).map(t => ({
+        logo: t.logo,
+        symbol: t.name,
+        name: t.name,
+        id: t.id,
+        category: 'rwa' as const,
+        description: t.name,
+      })),
+    ];
+
     const token = allTokens.find(t => t.logo === position.token1);
     const fallback = {
       symbol: token?.symbol || 'Unknown',
@@ -93,26 +96,26 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
       network: 'Unknown',
       networkLogo: '/assets/placeholder/placeholder_selectchain.png',
     };
-    
+
     return fallback;
   }, [position.token1, position.token2, position.type, position.entry, position.position]);
 
   const borrowedTokenInfo = useMemo(() => {
     if (position.type === 'borrow') {
-      const collateralEntries = position.position.entries.filter((e: any) => 
-        (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
+      const collateralEntries = position.position.entries.filter(
+        (e: any) => (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
       );
-      
+
       const collateralEntry = collateralEntries.find((e: any) => {
         const token = getTokenBySymbol(e.token.symbol);
         return token && token.logo === position.token1;
       });
-          
+
       if (collateralEntry) {
         const [chainId, tokenAddress] = collateralEntry.tokenId.split(':');
         const token = getTokenBySymbol(collateralEntry.token?.symbol || '');
         const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
-        
+
         const result = {
           symbol: token?.symbol || 'Unknown',
           logo: position.token1,
@@ -122,14 +125,14 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
           network: network?.name || 'Unknown',
           networkLogo: network?.logo || '/assets/placeholder/placeholder_selectchain.png',
         };
-        
+
         return result;
       }
     }
 
     const [chainId, tokenAddress] = position.entry.tokenId.split(':');
     const network = NETWORKS.find(n => n.chainId?.toString() === chainId);
-    
+
     const result = {
       symbol: position.entry.token?.symbol || 'Unknown',
       logo: position.token2,
@@ -139,7 +142,7 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
       network: network?.name || 'Unknown',
       networkLogo: network?.logo || '/assets/placeholder/placeholder_selectchain.png',
     };
-    
+
     return result;
   }, [position.entry, position.token1, position.token2, position.type, position.position]);
 
@@ -164,24 +167,24 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
   const handleBorrow = async () => {
     try {
       if (!address || !borrowAmount || parseFloat(borrowAmount.replace(/,/g, '')) <= 0) return;
-      
+
       const amt = borrowAmount.replace(/,/g, '');
       const num = parseFloat(amt);
       if (Number.isNaN(num) || num <= 0) return;
-      
+
       const decimals = borrowedTokenInfo.decimals;
       const value = parseUnitsString(amt, decimals);
-      
+
       const proxy = (() => {
         if (borrowedTokenInfo.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
         if (borrowedTokenInfo.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
         return undefined;
       })();
-      
+
       if (!proxy) return;
-      
+
       setIsBorrowing(true);
-      
+
       const hash = await writeContract(config, {
         abi: LendingPoolAbi as any,
         address: proxy,
@@ -189,17 +192,21 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
         functionName: 'borrow',
         args: [address, borrowedTokenInfo.address as `0x${string}`, value, borrowedTokenInfo.chainId || 0],
       });
-      
+
       await waitForTransactionReceipt(config, { hash });
-      
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userPositions', address] }),
         queryClient.invalidateQueries({ queryKey: ['userPositions'] }),
-        queryClient.invalidateQueries({ queryKey: ['tokenBalance', address, borrowedTokenInfo.address, borrowedTokenInfo.chainId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['tokenBalance', address, borrowedTokenInfo.address, borrowedTokenInfo.chainId],
+        }),
         queryClient.invalidateQueries({ queryKey: ['tokenBalance', address] }),
         queryClient.invalidateQueries({ queryKey: ['aggregatedBalances', address] }),
         queryClient.invalidateQueries({ queryKey: ['aggregatedBalances'] }),
-        queryClient.invalidateQueries({ queryKey: ['userPositionForToken', borrowedTokenInfo.address, borrowedTokenInfo.chainId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['userPositionForToken', borrowedTokenInfo.address, borrowedTokenInfo.chainId],
+        }),
         queryClient.invalidateQueries({ queryKey: ['userPositionForToken'] }),
       ]);
 
@@ -221,7 +228,7 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
           apr: apyString,
         },
         amount: borrowAmount,
-        transaction: { hash, success: true }
+        transaction: { hash, success: true },
       };
 
       onTransactionComplete?.(transactionData);
@@ -245,7 +252,7 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
           apr: apyString,
         },
         amount: borrowAmount,
-        transaction: { success: false }
+        transaction: { success: false },
       };
       onTransactionComplete?.(transactionData);
     } finally {
@@ -268,7 +275,13 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                <img src={collateralTokenInfo.logo} alt={collateralTokenInfo.symbol} width={24} height={24} className="object-contain" />
+                <img
+                  src={collateralTokenInfo.logo}
+                  alt={collateralTokenInfo.symbol}
+                  width={24}
+                  height={24}
+                  className="object-contain"
+                />
               </div>
               <input
                 type="text"
@@ -278,10 +291,10 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
               />
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-gray-400 font-thin text-sm">USD</span>
-              <button className="p-1 hover:bg-gray-200 rounded transition">
+              <span className="text-gray-400 font-thin text-sm">{collateralTokenInfo.symbol}</span>
+              {/* <button className="p-1 hover:bg-gray-200 rounded transition">
                 <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -298,7 +311,13 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                <img src={borrowedTokenInfo.logo} alt={borrowedTokenInfo.symbol} width={24} height={24} className="object-contain" />
+                <img
+                  src={borrowedTokenInfo.logo}
+                  alt={borrowedTokenInfo.symbol}
+                  width={24}
+                  height={24}
+                  className="object-contain"
+                />
               </div>
               <input
                 type="text"
@@ -309,10 +328,10 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
               />
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-gray-400 font-thin text-sm">USD</span>
-              <button className="p-1 hover:bg-gray-200 rounded transition">
+              <span className="text-gray-400 font-thin text-sm">{borrowedTokenInfo.symbol}</span>
+              {/* <button className="p-1 hover:bg-gray-200 rounded transition">
                 <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -356,15 +375,12 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
               </Tooltip>
             </div>
             <span className="text-gray-900 font-semibold text-[15px]">
-              <span className={
-                currentLtv > 80
-                  ? 'text-red-600'
-                  : currentLtv > 64
-                    ? 'text-yellow-600'
-                    : 'text-green-600'
-              }>
+              <span
+                className={currentLtv > 80 ? 'text-red-600' : currentLtv > 64 ? 'text-yellow-600' : 'text-green-600'}
+              >
                 {currentLtv.toFixed(1)}%
-              </span> / 80%
+              </span>{' '}
+              / 80%
             </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
@@ -389,11 +405,15 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Collateral</span>
-            <span className="text-black font-semibold text-[15px]">{collateralTokenInfo.symbol} {formatBalance(currentPositionAmount || '0')}</span>
+            <span className="text-black font-semibold text-[15px]">
+              {collateralTokenInfo.symbol} {formatBalance(currentPositionAmount || '0')}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Borrowing</span>
-            <span className="text-black font-semibold text-[15px]">{borrowedTokenInfo.symbol} {formatBalance(borrowAmount || '0')}</span>
+            <span className="text-black font-semibold text-[15px]">
+              {borrowedTokenInfo.symbol} {formatBalance(borrowAmount || '0')}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Network</span>
@@ -401,7 +421,9 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span>Current Position</span>
-            <span className="text-black font-semibold text-[15px]">{formatBalance(currentPositionAmount || '0')} {collateralTokenInfo.symbol}</span>
+            <span className="text-black font-semibold text-[15px]">
+              {formatBalance(currentPositionAmount || '0')} {collateralTokenInfo.symbol}
+            </span>
           </div>
         </div>
       </div>
@@ -410,19 +432,20 @@ export default function BorrowMore({ position, onTransactionComplete }: BorrowMo
         onClick={handleBorrow}
         disabled={!hasAmount || isLtvExceedingLimit || isAmountExceedingMaxBorrow || isBorrowing || false}
         className={`w-full py-3.5 rounded-xl font-semibold text-[15px] text-white transition mt-3 ${
-          hasAmount && !isLtvExceedingLimit && !isAmountExceedingMaxBorrow && !isBorrowing ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80' : 'bg-[#a8cfe5] cursor-not-allowed'
+          hasAmount && !isLtvExceedingLimit && !isAmountExceedingMaxBorrow && !isBorrowing
+            ? 'bg-[#56A2CC] hover:bg-[#56A2CC]/80'
+            : 'bg-[#a8cfe5] cursor-not-allowed'
         }`}
       >
         {isBorrowing
           ? 'Borrowing...'
           : isAmountExceedingMaxBorrow
-          ? 'Amount exceeds max borrow'
-          : isLtvExceedingLimit
-          ? 'LTV exceeds limit'
-          : hasAmount 
-          ? `Borrow More` 
-          : 'Enter an amount'
-        }
+            ? 'Amount exceeds max borrow'
+            : isLtvExceedingLimit
+              ? 'LTV exceeds limit'
+              : hasAmount
+                ? `Borrow More`
+                : 'Enter an amount'}
       </button>
     </div>
   );

@@ -12,6 +12,7 @@ interface TabNavigationProps {
   filterLabel?: string;
   fullWidth?: boolean;
   onFilterChange?: (filter: string) => void;
+  filterOptions?: string[];
 }
 
 export default function TabNavigation({
@@ -22,6 +23,7 @@ export default function TabNavigation({
   filterLabel = 'All',
   fullWidth = false,
   onFilterChange,
+  filterOptions = ['All', 'Borrow', 'Supply', 'Repay', 'Withdraw'],
 }: TabNavigationProps) {
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
@@ -44,8 +46,6 @@ export default function TabNavigation({
       setSelectedFilter(filterLabel);
     }
   }, [filterLabel, selectedFilter]);
-
-  const filterOptions = ['All', 'Borrow', 'Supply', 'Repay', 'Withdraw'];
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);

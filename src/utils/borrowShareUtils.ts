@@ -16,7 +16,7 @@ export const calculateSharesFromAmount = (
     const totalShares = BigInt(totalBorrowShares);
 
     const shares = (amountWei * totalShares + totalAssets / BigInt(2)) / totalAssets;
-    
+
     return shares.toString();
   } catch (error) {
     console.error('Error calculating shares from amount:', error);
@@ -40,7 +40,7 @@ export const calculateAmountFromShares = (
     const totalShares = BigInt(totalBorrowShares);
 
     const amountWei = (sharesBigInt * totalAssets) / totalShares;
-    
+
     return formatUnits(amountWei, decimals);
   } catch (error) {
     console.error('Error calculating amount from shares:', error);
@@ -60,11 +60,11 @@ export const calculateMaxRepayAmount = (
 export const formatShares = (shares: string): string => {
   try {
     const sharesBigInt = BigInt(shares);
-    
+
     if (sharesBigInt > BigInt(1000000)) {
       return sharesBigInt.toLocaleString();
     }
-    
+
     return shares;
   } catch (error) {
     console.error('Error formatting shares:', error);

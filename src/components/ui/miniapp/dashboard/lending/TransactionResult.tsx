@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Copy, Check } from 'lucide-react';
-import TokenNetworkPair from '../../TokenNetworkPair';
+import { Copy, Check, ExternalLink } from 'lucide-react';
+import TokenPair from '../../TokenPair';
 import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
+import { getNetworkById } from '@/constants/networkConstants';
 
 interface TransactionResultProps {
   selectedMarket: LendingMarket | null;
@@ -48,6 +49,16 @@ export default function TransactionResult({
     }
   };
 
+  const handleOpenExplorer = () => {
+    if (transactionData.fullTxHash && selectedNetwork) {
+      const network = getNetworkById(selectedNetwork.id);
+      if (network?.explorerUrl) {
+        const explorerUrl = `${network.explorerUrl}/tx/${transactionData.fullTxHash}`;
+        window.open(explorerUrl, '_blank', 'noopener,noreferrer');
+      }
+    }
+  };
+
   if (!selectedNetwork || !selectedMarket) return <></>;
 
   return (
@@ -78,7 +89,7 @@ export default function TransactionResult({
             <h2 className="text-md font-semibold text-gray-900">
               Lend {selectedMarket.tokenSymbol} on {selectedNetwork.name}
             </h2>
-            <TokenNetworkPair
+            <TokenPair
               tokenLogo={selectedMarket.tokenLogo}
               networkLogo={selectedNetwork.networkLogo}
               size={24}
@@ -100,17 +111,28 @@ export default function TransactionResult({
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-gray-900">{transactionData.txHash}</span>
             {transactionData.fullTxHash && (
-              <button
-                onClick={handleCopyHash}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                title="Copy transaction hash"
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 text-green-600" />
-                ) : (
-                  <Copy className="w-4 h-4 text-gray-500 hover:text-gray-700" />
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleCopyHash}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  title="Copy transaction hash"
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-gray-500 hover:text-gray-700" />
+                  )}
+                </button>
+                {transactionData.success && (
+                  <button
+                    onClick={handleOpenExplorer}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="View on block explorer"
+                  >
+                    <ExternalLink className="w-4 h-4 text-gray-500 hover:text-gray-700" />
+                  </button>
                 )}
-              </button>
+              </div>
             )}
           </div>
         </div>

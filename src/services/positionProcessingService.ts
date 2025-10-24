@@ -6,35 +6,41 @@ export const mapEntries = (entries?: any[]) => {
   return entries.map(entry => {
     const usdValue = toUsd(entry.usdValueRay);
     const interestUsd = entry.interestUsdRay ? toUsd(entry.interestUsdRay) : null;
-    
-    const market = entry.market ? {
-      id: entry.market.id,
-      tokenId: entry.market.tokenId,
-      borrowRateRay: entry.market.borrowRateRay,
-      borrowRatePercent: rayToPercentString(entry.market.borrowRateRay),
-      supplyRateRay: entry.market.supplyRateRay,
-      supplyRatePercent: rayToPercentString(entry.market.supplyRateRay),
-      utilizationRay: entry.market.utilizationRay,
-      utilizationPercent: rayToPercentString(entry.market.utilizationRay),
-      reserveFactorBps: entry.market.reserveFactorBps,
-    } : null;
 
-    const token = entry.token ? {
-      id: entry.token.id,
-      symbol: entry.token.symbol,
-      name: entry.token.name ?? entry.token.symbol,
-      decimals: entry.token.decimals,
-      collateralFactorBps: entry.token.collateralFactorBps,
-      collateralFactorPercent: bpsToPercent(entry.token.collateralFactorBps),
-      liquidationThresholdBps: entry.token.liquidationThresholdBps ?? null,
-      liquidationThresholdPercent: bpsToPercent(entry.token.liquidationThresholdBps ?? null),
-    } : null;
+    const market = entry.market
+      ? {
+          id: entry.market.id,
+          tokenId: entry.market.tokenId,
+          borrowRateRay: entry.market.borrowRateRay,
+          borrowRatePercent: rayToPercentString(entry.market.borrowRateRay),
+          supplyRateRay: entry.market.supplyRateRay,
+          supplyRatePercent: rayToPercentString(entry.market.supplyRateRay),
+          utilizationRay: entry.market.utilizationRay,
+          utilizationPercent: rayToPercentString(entry.market.utilizationRay),
+          reserveFactorBps: entry.market.reserveFactorBps,
+        }
+      : null;
 
-    const loan = entry.loan ? {
-      ...entry.loan,
-      durationSeconds: entry.loan.durationSeconds ?? null,
-      estimatedInterestUsd: entry.loan.estimatedInterestUsdRay ? toUsd(entry.loan.estimatedInterestUsdRay) : null,
-    } : null;
+    const token = entry.token
+      ? {
+          id: entry.token.id,
+          symbol: entry.token.symbol,
+          name: entry.token.name ?? entry.token.symbol,
+          decimals: entry.token.decimals,
+          collateralFactorBps: entry.token.collateralFactorBps,
+          collateralFactorPercent: bpsToPercent(entry.token.collateralFactorBps),
+          liquidationThresholdBps: entry.token.liquidationThresholdBps ?? null,
+          liquidationThresholdPercent: bpsToPercent(entry.token.liquidationThresholdBps ?? null),
+        }
+      : null;
+
+    const loan = entry.loan
+      ? {
+          ...entry.loan,
+          durationSeconds: entry.loan.durationSeconds ?? null,
+          estimatedInterestUsd: entry.loan.estimatedInterestUsdRay ? toUsd(entry.loan.estimatedInterestUsdRay) : null,
+        }
+      : null;
 
     return {
       type: entry.type,

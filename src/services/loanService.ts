@@ -75,13 +75,13 @@ export const getCollateralTokenFromPosition = async (account: string): Promise<s
 
     const result = await response.json();
     const position = result.data?.[0];
-    
+
     if (position?.entries) {
       const collateralEntry = position.entries.find((entry: any) => entry.type === 'supply_collateral');
       if (collateralEntry?.token?.symbol) {
         return collateralEntry.token.symbol;
       }
-      
+
       if (collateralEntry?.tokenId) {
         const symbol = getTokenSymbolFromId(collateralEntry.tokenId);
         if (symbol !== 'TOKEN') {
@@ -89,7 +89,7 @@ export const getCollateralTokenFromPosition = async (account: string): Promise<s
         }
       }
     }
-    
+
     return 'CNGN';
   } catch (error) {
     return 'CNGN';
@@ -110,11 +110,11 @@ export const formatCurrency = (value: number): string => {
 
 export const formatDuration = (seconds: number): string => {
   if (seconds === 0) return '0s';
-  
+
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  
+
   if (days > 0) {
     return `${days}D:${hours}H:${minutes}M`;
   } else if (hours > 0) {
@@ -129,14 +129,14 @@ export const formatTimestamp = (timestamp: number): string => {
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   });
 };
 
 export const getTokenSymbolFromAddress = (address: string, chainId: string): string => {
   const normalizedAddress = address.toLowerCase();
   const chainIdNum = parseInt(chainId);
-  
+
   for (const [tokenId, tokenData] of Object.entries(SUPPORTED_LENDING_POOLS)) {
     for (const network of tokenData.networks) {
       if (network.chainId === chainIdNum && network.address.toLowerCase() === normalizedAddress) {
@@ -144,7 +144,7 @@ export const getTokenSymbolFromAddress = (address: string, chainId: string): str
       }
     }
   }
-  
+
   for (const [tokenId, tokenData] of Object.entries(SUPPORTED_BORROWING_POOLS)) {
     for (const network of tokenData.networks) {
       if (network.chainId === chainIdNum && network.address.toLowerCase() === normalizedAddress) {
@@ -152,7 +152,7 @@ export const getTokenSymbolFromAddress = (address: string, chainId: string): str
       }
     }
   }
-  
+
   for (const [tokenId, tokenData] of Object.entries(SUPPORTED_COLLATERAL)) {
     for (const network of tokenData.networks) {
       if (network.chainId === chainIdNum && network.address.toLowerCase() === normalizedAddress) {
@@ -160,7 +160,7 @@ export const getTokenSymbolFromAddress = (address: string, chainId: string): str
       }
     }
   }
-  
+
   return 'TOKEN';
 };
 
@@ -180,7 +180,7 @@ export const getCollateralTokenSymbolFromLoan = (loan: LoanData): string => {
 
 export const getTokenAssetPath = (symbol: string): string => {
   const lowerSymbol = symbol.toLowerCase();
-  
+
   const token = getTokenById(lowerSymbol);
   if (token) {
     return token.logo;
@@ -209,14 +209,17 @@ export const getNetworkNameFromChainId = (chainId: string): string => {
   return network?.name || 'Unknown';
 };
 
-export const createBorrowTransaction = (loan: LoanData, borrowedTokenSymbol: string): {
+export const createBorrowTransaction = (
+  loan: LoanData,
+  borrowedTokenSymbol: string
+): {
   token1: string;
   token2: string;
   title: string;
   type: 'borrow';
 } => {
   const collateralTokenSymbol = getCollateralTokenSymbolFromLoan(loan);
-  
+
   return {
     token1: getTokenAssetPath(collateralTokenSymbol),
     token2: getTokenAssetPath(borrowedTokenSymbol),
@@ -225,7 +228,10 @@ export const createBorrowTransaction = (loan: LoanData, borrowedTokenSymbol: str
   };
 };
 
-export const createLendTransaction = (tokenSymbol: string, networkName: string): {
+export const createLendTransaction = (
+  tokenSymbol: string,
+  networkName: string
+): {
   token1: string;
   token2: string;
   title: string;
@@ -233,7 +239,7 @@ export const createLendTransaction = (tokenSymbol: string, networkName: string):
 } => {
   const network = NETWORKS.find(n => n.name === networkName);
   const networkLogo = network?.logo || `/assets/network/${networkName.toLowerCase()}.png`;
-  
+
   return {
     token1: getTokenAssetPath(tokenSymbol),
     token2: networkLogo,
@@ -242,7 +248,9 @@ export const createLendTransaction = (tokenSymbol: string, networkName: string):
   };
 };
 
-export const createSupplyTransaction = (loan: LoanData): {
+export const createSupplyTransaction = (
+  loan: LoanData
+): {
   token1: string;
   token2: string;
   title: string;
@@ -252,7 +260,7 @@ export const createSupplyTransaction = (loan: LoanData): {
   const networkName = getNetworkNameFromChainId(loan.chainId);
   const network = NETWORKS.find(n => n.name === networkName);
   const networkLogo = network?.logo || `/assets/network/${networkName.toLowerCase()}.png`;
-  
+
   return {
     token1: getTokenAssetPath(tokenSymbol),
     token2: networkLogo,
@@ -261,7 +269,9 @@ export const createSupplyTransaction = (loan: LoanData): {
   };
 };
 
-export const createWithdrawTransaction = (loan: LoanData): {
+export const createWithdrawTransaction = (
+  loan: LoanData
+): {
   token1: string;
   token2: string;
   title: string;
@@ -271,7 +281,7 @@ export const createWithdrawTransaction = (loan: LoanData): {
   const networkName = getNetworkNameFromChainId(loan.chainId);
   const network = NETWORKS.find(n => n.name === networkName);
   const networkLogo = network?.logo || `/assets/network/${networkName.toLowerCase()}.png`;
-  
+
   return {
     token1: getTokenAssetPath(tokenSymbol),
     token2: networkLogo,
@@ -289,7 +299,7 @@ export const getTransactionType = (loan: LoanData): 'lend' | 'borrow' => {
 
 export const getTransactionTitle = (loan: LoanData): string => {
   const tokenSymbol = getTokenSymbolFromId(loan.borrowTokenId);
-  
+
   if (loan.historyType === 'borrow') {
     if (loan.action === 'borrow') {
       return `${tokenSymbol} Borrow`;
@@ -298,24 +308,24 @@ export const getTransactionTitle = (loan: LoanData): string => {
     }
     return `${tokenSymbol} Borrow`;
   }
-  
+
   if (loan.action === 'withdraw') {
     const entryType = loan.entryType === 'liquidity' ? 'Liquidity' : 'Collateral';
     return `${tokenSymbol} ${entryType} Withdraw`;
   }
-  
+
   if (loan.action === 'supply') {
     const entryType = loan.entryType === 'liquidity' ? 'Liquidity' : 'Collateral';
     return `${tokenSymbol} ${entryType} Supply`;
   }
-  
+
   return `${tokenSymbol} Supply`;
 };
 
 export const getTransactionSubtitle = (loan: LoanData): string => {
   const usdValue = loan.usdValue ?? loan.borrowUsd;
   const formattedValue = formatCurrency(Math.abs(usdValue));
-  
+
   if (loan.historyType === 'borrow') {
     if (loan.action === 'borrow') {
       return `Borrow ${formattedValue}`;
@@ -324,14 +334,14 @@ export const getTransactionSubtitle = (loan: LoanData): string => {
     }
     return `Borrow ${formattedValue}`;
   }
-  
+
   if (loan.action === 'withdraw') {
     return `Withdraw ${formattedValue}`;
   }
-  
+
   if (loan.action === 'supply') {
     return `Supply ${formattedValue}`;
   }
-  
+
   return `Supply ${formattedValue}`;
 };

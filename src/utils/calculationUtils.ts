@@ -18,7 +18,7 @@ export const formatPercent = (ray: string) => {
     if (calculationCache.has(`percent_${ray}`)) {
       return calculationCache.get(`percent_${ray}`)!.toFixed(2);
     }
-    
+
     const percent = rayToNumber(BigInt(ray)) * 100;
     calculationCache.set(`percent_${ray}`, percent);
     return percent.toFixed(2);
@@ -32,7 +32,7 @@ export const toUsd = (valueRay: string) => {
     if (calculationCache.has(`usd_${valueRay}`)) {
       return calculationCache.get(`usd_${valueRay}`)!;
     }
-    
+
     const result = rayToNumber(BigInt(valueRay));
     calculationCache.set(`usd_${valueRay}`, result);
     return result;
@@ -60,11 +60,11 @@ export const computeInterestUsd = (loan: {
 }) => {
   try {
     const cacheKey = `interest_${loan.borrowUsdRay}_${loan.borrowAprRay}_${loan.startTimestamp}_${loan.endTimestamp || 'null'}`;
-    
+
     if (calculationCache.has(cacheKey)) {
       return calculationCache.get(cacheKey)!;
     }
-    
+
     const principal = BigInt(loan.borrowUsdRay);
     const apr = BigInt(loan.borrowAprRay);
     const start = BigInt(loan.startTimestamp);
@@ -72,7 +72,7 @@ export const computeInterestUsd = (loan: {
     const duration = end > start ? end - start : 0n;
     const interestRay = (principal * apr * duration) / (RAY * SECONDS_IN_YEAR);
     const result = rayToNumber(interestRay);
-    
+
     calculationCache.set(cacheKey, result);
     return result;
   } catch {
@@ -85,13 +85,13 @@ export const rayToPercentString = (value: string) => {
     if (calculationCache.has(`percent_${value}`)) {
       return calculationCache.get(`percent_${value}`)!.toString() + '%';
     }
-    
+
     const ray = BigInt(value);
     const hundredthPercents = (ray * 10000n) / RAY;
     const integerPart = hundredthPercents / 100n;
     const fractionalPart = Number(hundredthPercents % 100n);
     const result = `${integerPart.toString()}.${fractionalPart.toString().padStart(2, '0')}%`;
-    
+
     calculationCache.set(`percent_${value}`, parseFloat(result));
     return result;
   } catch {

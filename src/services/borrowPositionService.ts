@@ -41,7 +41,7 @@ export const fetchBorrowingMarketsFromPositions = async (
   positions?: PonderPosition[] // Allow passing existing positions to avoid redundant API calls
 ): Promise<BorrowingMarketData[]> => {
   try {
-    const positionsData = positions || await fetchUserPositions(account, chain);
+    const positionsData = positions || (await fetchUserPositions(account, chain));
     const markets = new Map<string, BorrowingMarketData>();
 
     positionsData.forEach(position => {
@@ -78,7 +78,7 @@ export const fetchBorrowingPositionsFromPositions = async (
   positions?: PonderPosition[] // Allow passing existing positions to avoid redundant API calls
 ): Promise<BorrowingPositionData[]> => {
   try {
-    const positionsData = positions || await fetchUserPositions(account, chain);
+    const positionsData = positions || (await fetchUserPositions(account, chain));
     const borrowingPositions: BorrowingPositionData[] = [];
 
     positionsData.forEach(position => {

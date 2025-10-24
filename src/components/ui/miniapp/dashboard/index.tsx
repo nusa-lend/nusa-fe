@@ -20,10 +20,13 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     try {
-      disconnect();
+      await disconnect();
       setIsProfileSheetOpen(false);
-      router.push('/miniapp/connect');
+      setTimeout(() => {
+        router.push('/miniapp/connect');
+      }, 100);
     } catch (error) {
+      console.error('Logout error:', error);
       setIsProfileSheetOpen(false);
       router.push('/miniapp/connect');
     }

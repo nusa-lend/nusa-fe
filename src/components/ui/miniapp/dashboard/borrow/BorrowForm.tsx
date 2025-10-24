@@ -2,17 +2,19 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+import TokenPair from '@/components/ui/miniapp/TokenPair';
 import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 import Tooltip from '@/components/ui/miniapp/Tooltip';
 import { hasSufficientAllowance } from '@/hooks/useAllowances';
 import { useUserBorrowingPosition } from '@/hooks/useUserPositions';
 import { Wallet } from 'lucide-react';
 import { formatBalance } from '@/utils/formatBalance';
+import type { BorrowingTokenOption } from '@/utils/borrowingUtils';
 
 interface BorrowFormProps {
   selectedMarket: BorrowingMarket | null;
   selectedNetwork: BorrowingNetworkOption | null;
+  selectedBorrowToken: BorrowingTokenOption | null;
   onBack: () => void;
   onBorrow: (collateralAmount: string, borrowAmount: string) => Promise<void>;
   onApprove: (amount: string) => Promise<void>;
@@ -26,6 +28,7 @@ interface BorrowFormProps {
 export default function BorrowForm({
   selectedMarket,
   selectedNetwork,
+  selectedBorrowToken,
   onBack,
   onBorrow,
   onApprove,
@@ -49,7 +52,7 @@ export default function BorrowForm({
         .toString()
     : '0';
   const isInsufficientBalance = parseFloat(selectedBalanceStr || '0') === 0;
-  const collateralNetworkId = selectedMarket?.networks[0]?.id;
+  const collateralNetworkId = selectedMarket?.networks.find(net => net.chainId === 8453)?.id;
   const hasAllowance = collateralNetworkId
     ? hasSufficientAllowance(allowances, collateralNetworkId, collateralAmount || '0')
     : false;
@@ -68,11 +71,7 @@ export default function BorrowForm({
 
   const marginCallLtv = liquidationLtv * 0.8;
   const healthFactorColor =
-    accountHealthFactor < 1
-      ? 'text-red-600'
-      : accountHealthFactor < 1.5
-        ? 'text-yellow-600'
-        : 'text-green-600';
+    accountHealthFactor < 1 ? 'text-red-600' : accountHealthFactor < 1.5 ? 'text-yellow-600' : 'text-green-600';
   const healthFactorDisplay = accountHealthFactor.toFixed(2);
 
   const interestCalculations = useMemo(() => {
@@ -140,11 +139,11 @@ export default function BorrowForm({
         </button>
         <div className="w-full flex items-center justify-between">
           <h2 className="text-md font-semibold text-gray-900">
-            Borrow {selectedNetwork.name} using {selectedMarket.token.symbol}
+            {selectedMarket.token.symbol} on {selectedBorrowToken?.name}
           </h2>
-          <TokenNetworkPair
+          <TokenPair
             tokenLogo={selectedMarket.token.logo}
-            networkLogo={selectedNetwork.networkLogo}
+            networkLogo={selectedBorrowToken?.icon || selectedNetwork.networkLogo}
             size={30}
             overlap={25}
           />
@@ -178,10 +177,10 @@ export default function BorrowForm({
             />
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-gray-400 font-thin text-sm">USD</span>
-            <button className="p-1 hover:bg-gray-200 rounded transition">
+            <span className="text-gray-400 font-thin text-sm">{selectedMarket.token.symbol}</span>
+            {/* <button className="p-1 hover:bg-gray-200 rounded transition">
               <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
-            </button>
+            </button> */}
           </div>
         </div>
         <div className="mt-5 flex items-center gap-1">
@@ -201,12 +200,12 @@ export default function BorrowForm({
 
       {/* Borrow Input */}
       <div className="rounded-xl border border-gray-200 bg-[#f8fafc] p-3">
-        <div className="text-sm text-gray-600 mb-3">Borrow {selectedNetwork.name}</div>
+        <div className="text-sm text-gray-600 mb-3">Borrow {selectedBorrowToken?.name || 'Select token first'}</div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
               <img
-                src={selectedNetwork.networkLogo}
+                src={selectedBorrowToken?.icon || selectedNetwork.networkLogo}
                 alt={selectedNetwork.name}
                 width={24}
                 height={24}
@@ -225,10 +224,10 @@ export default function BorrowForm({
             />
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-gray-400 font-thin text-sm">USD</span>
-            <button className="p-1 hover:bg-gray-200 rounded transition">
-              <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
-            </button>
+            <span className="text-gray-400 font-thin text-sm">{selectedBorrowToken?.name || selectedNetwork.name}</span>
+            {/* <button className="p-1 hover:bg-gray-200 rounded transition">
+                <img src="/assets/icons/arrow_swap.png" alt="Swap Arrow" className="w-4 h-4 object-contain" />
+              </button> */}
           </div>
         </div>
 
@@ -248,7 +247,7 @@ export default function BorrowForm({
 
         {hasCollateralAmount && (
           <div className="mt-2 text-xs text-gray-500">
-            Max borrow: {formatBalance(maxBorrowAmount.toString())} {selectedNetwork.name}
+            Max borrow: {formatBalance(maxBorrowAmount.toString())} {selectedBorrowToken?.name || selectedNetwork.name}
           </div>
         )}
       </div>

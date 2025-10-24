@@ -20,10 +20,10 @@ export interface ActivePosition {
 
 export const getTokenBySymbol = (symbol: string) => {
   let token = ALL_TOKENS.find(t => t.symbol.toLowerCase() === symbol.toLowerCase());
-  
+
   if (!token) {
-    const collateralToken = Object.values(SUPPORTED_COLLATERAL).find(t => 
-      t.name.toLowerCase() === symbol.toLowerCase()
+    const collateralToken = Object.values(SUPPORTED_COLLATERAL).find(
+      t => t.name.toLowerCase() === symbol.toLowerCase()
     );
     if (collateralToken) {
       token = {
@@ -32,11 +32,11 @@ export const getTokenBySymbol = (symbol: string) => {
         name: collateralToken.name,
         id: collateralToken.id,
         category: 'rwa' as const,
-        description: collateralToken.name
+        description: collateralToken.name,
       };
     }
   }
-  
+
   return token;
 };
 
@@ -72,25 +72,26 @@ const formatUsdValue = (value: number): string => {
   }
 };
 
-export const mapPositionEntriesToActivePositions = (positions: PonderPosition[], filter: string = 'All'): ActivePosition[] => {
+export const mapPositionEntriesToActivePositions = (
+  positions: PonderPosition[],
+  filter: string = 'All'
+): ActivePosition[] => {
   const activePositions: ActivePosition[] = [];
 
   positions.forEach(position => {
-    const collateralEntries = position.entries.filter(e => 
-      (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
+    const collateralEntries = position.entries.filter(
+      e => (e.type === 'supply_collateral' || e.type === 'supply_liquidity') && e.token
     );
 
-    const borrowEntries = position.entries.filter(e => 
-      e.type === 'borrow' && e.token && e.usdValue > 0
-    );
+    const borrowEntries = position.entries.filter(e => e.type === 'borrow' && e.token && e.usdValue > 0);
 
     collateralEntries.forEach(entry => {
       if (!entry.token) return;
-      
+
       const tokenLogo = getTokenLogo(entry.token.symbol);
       const networkLogo = getNetworkLogo(position.chainId);
       const networkName = getNetworkName(position.chainId);
-      
+
       const rate = entry.market?.supplyRatePercent || '0.00%';
       const apyColor = getApyColor(rate);
       const formattedValue = formatUsdValue(entry.usdValue);
@@ -115,15 +116,15 @@ export const mapPositionEntriesToActivePositions = (positions: PonderPosition[],
 
     borrowEntries.forEach(entry => {
       if (!entry.token) return;
-      
-      const primaryCollateral = collateralEntries.reduce((max, current) => 
+
+      const primaryCollateral = collateralEntries.reduce((max, current) =>
         current.usdValue > max.usdValue ? current : max
       );
 
       if (primaryCollateral && primaryCollateral.token) {
         const collateralLogo = getTokenLogo(primaryCollateral.token.symbol);
         const borrowedLogo = getTokenLogo(entry.token.symbol);
-        
+
         const rate = entry.market?.borrowRatePercent || '0.00%';
         const apyColor = getApyColor(rate);
         const formattedValue = formatUsdValue(entry.usdValue);

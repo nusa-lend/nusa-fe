@@ -4,10 +4,7 @@ import { config } from '@/lib/wagmi';
 import { CONTRACTS } from '@/constants/contractsConstants';
 import LendingPoolAbi from '@/abis/LendingPool.json';
 
-export const useBorrowPoolData = (
-  tokenAddress: string,
-  chainId: number
-) => {
+export const useBorrowPoolData = (tokenAddress: string, chainId: number) => {
   return useQuery({
     queryKey: ['borrowPoolData', tokenAddress, chainId],
     enabled: Boolean(tokenAddress),

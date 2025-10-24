@@ -1,9 +1,4 @@
-import { 
-  toUsd, 
-  formatPercent, 
-  computeDurationSeconds, 
-  computeInterestUsd 
-} from '@/utils/calculationUtils';
+import { toUsd, formatPercent, computeDurationSeconds, computeInterestUsd } from '@/utils/calculationUtils';
 
 export type HistoryLoanData = {
   id: string;
@@ -62,7 +57,7 @@ export type HistorySupplyData = {
 export type HistoryData = HistoryLoanData | HistorySupplyData;
 
 export const processLoanData = (loanItems: any[]): HistoryLoanData[] => {
-  return loanItems.map((loan) => {
+  return loanItems.map(loan => {
     const durationSeconds = computeDurationSeconds(loan.startTimestamp, loan.endTimestamp);
     const interestUsd = computeInterestUsd(loan);
     const usdValue = toUsd(loan.borrowUsdRay);
@@ -71,7 +66,7 @@ export const processLoanData = (loanItems: any[]): HistoryLoanData[] => {
     const collateralUsd = toUsd(loan.collateralUsdRay);
     const debtUsd = toUsd(loan.debtUsdRay);
     const action = loan.status === 'closed' ? 'repay' : 'borrow';
-    
+
     return {
       id: loan.id,
       positionId: loan.positionId,
@@ -101,14 +96,17 @@ export const processLoanData = (loanItems: any[]): HistoryLoanData[] => {
   });
 };
 
-export const processSupplyData = (supplyItems: any[], marketRates?: Map<string, { supplyRateRay: string; borrowRateRay: string }>): HistorySupplyData[] => {
-  return supplyItems.map((event) => {
+export const processSupplyData = (
+  supplyItems: any[],
+  marketRates?: Map<string, { supplyRateRay: string; borrowRateRay: string }>
+): HistorySupplyData[] => {
+  return supplyItems.map(event => {
     const timestamp = Number(event.blockTimestamp);
     const usdValue = toUsd(event.usdValueRay);
     const entryType = typeof event.entryType === 'string' ? event.entryType.toLowerCase() : '';
     const rawAction = typeof event.action === 'string' ? event.action.toLowerCase() : '';
     const normalizedAction = rawAction === 'withdraw' ? 'withdraw' : 'supply';
-    
+
     // Get market rates if available
     const market = marketRates?.get(event.marketId);
     const isLiquidity = entryType === 'liquidity';
@@ -118,7 +116,7 @@ export const processSupplyData = (supplyItems: any[], marketRates?: Map<string, 
         : formatPercent(market.borrowRateRay)
       : '0.00';
     const apyPercent = aprPercent;
-    
+
     return {
       id: event.id,
       positionId: event.positionId,
@@ -149,14 +147,12 @@ export const processSupplyData = (supplyItems: any[], marketRates?: Map<string, 
 };
 
 export const processHistoryData = (
-  loanItems: any[], 
-  supplyItems: any[], 
+  loanItems: any[],
+  supplyItems: any[],
   marketRates?: Map<string, { supplyRateRay: string; borrowRateRay: string }>
 ): HistoryData[] => {
   const loans = processLoanData(loanItems);
   const supplies = processSupplyData(supplyItems, marketRates);
 
-  return [...loans, ...supplies].sort(
-    (a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0)
-  );
+  return [...loans, ...supplies].sort((a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0));
 };

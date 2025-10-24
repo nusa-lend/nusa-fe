@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import BottomSheet from '@/components/ui/miniapp/BottomSheet';
-import SelectCoin from './SelectCoin';
+import NetworkSelector from './NetworkSelector';
+import TokenSelection from './TokenSelection';
 import type { BorrowingMarket, BorrowingNetworkOption } from '@/types/borrowing';
 import type { BorrowingTokenOption } from '@/utils/borrowingUtils';
 import BorrowForm from './BorrowForm';
 import TransactionResult from './TransactionResult';
-import { useAccount } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
 import { useTokenBalances } from '@/hooks/useUserBalances';
 import { useAllowances } from '@/hooks/useAllowances';
 import { useApproveToken } from '@/hooks/useApproveToken';
@@ -16,9 +17,12 @@ import { CONTRACTS } from '@/constants/contractsConstants';
 import { writeContract, waitForTransactionReceipt } from '@wagmi/core';
 import { config } from '@/lib/wagmi';
 import BorrowingPoolAbi from '@/abis/LendingPool.json';
+import GetFeeAbi from '@/abis/GetFee.json';
 import { parseUnitsString } from '@/utils/borrowingUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGSAP } from '@gsap/react';
+import { SUPPORTED_BORROWING_POOLS } from '@/constants/borrowConstants';
+import { readContract } from '@wagmi/core';
 
 interface BorrowSheetProps {
   isOpen: boolean;
@@ -35,36 +39,27 @@ export default function BorrowSheet({
   selectedMarket,
   borrowingTokens,
 }: BorrowSheetProps) {
-  const [currentStep, setCurrentStep] = useState<'select' | 'form' | 'result'>('select');
+  const [currentStep, setCurrentStep] = useState<'select' | 'network' | 'form' | 'result'>('select');
   const [selectedNetwork, setSelectedNetwork] = useState<BorrowingNetworkOption | null>(null);
+  const [selectedBorrowToken, setSelectedBorrowToken] = useState<BorrowingTokenOption | null>(null);
   const [borrowedAmount, setBorrowedAmount] = useState<string>('');
-  const [isAnimating, setIsAnimating] = useState(false);
   const [isBorrowing, setIsBorrowing] = useState(false);
   const [transactionInfo, setTransactionInfo] = useState<{ hash?: `0x${string}`; success: boolean } | undefined>();
   const sheetHeight = currentStep === 'result' ? '65vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);
+  const networkRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null!);
 
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
+  const { switchChain } = useSwitchChain();
   const queryClient = useQueryClient();
   const { data: balances } = useTokenBalances({ userAddress: address, market: selectedMarket });
 
-  const aggregatedBalance = balances
-    ? Object.values(balances).reduce((total, balance) => {
-        return total + parseFloat(balance || '0');
-      }, 0)
-    : 0;
-
-  const spenderAddress = (() => {
-    if (!selectedNetwork?.chainId) return undefined;
-    if (selectedNetwork.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
-    if (selectedNetwork.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
-    return undefined;
-  })();
+  const spenderAddress = CONTRACTS.base.Proxy as `0x${string}`;
 
   const { data: allowances } = useAllowances({
     userAddress: address,
@@ -74,14 +69,16 @@ export default function BorrowSheet({
 
   const collateralNetworkOption = selectedMarket
     ? {
-        id: selectedMarket.networks[0].id,
+        id: 'base-collateral',
         name: selectedMarket.token.symbol,
         networkLogo: selectedMarket.token.logo,
         interestRate: '0%',
         maxBorrowAmount: 100000,
-        chainId: selectedMarket.networks[0].chainId,
-        address: selectedMarket.networks[0].address,
-        decimals: selectedMarket.networks[0].decimals,
+        chainId: 8453,
+        address:
+          selectedMarket.networks.find(net => net.chainId === 8453)?.address || selectedMarket.networks[0].address,
+        decimals:
+          selectedMarket.networks.find(net => net.chainId === 8453)?.decimals || selectedMarket.networks[0].decimals,
       }
     : null;
 
@@ -95,6 +92,9 @@ export default function BorrowSheet({
   const handleApprove = async (amount: string) => {
     try {
       await approveToken(amount);
+      await queryClient.invalidateQueries({
+        queryKey: ['allowances', address, spenderAddress, selectedMarket?.id],
+      });
     } catch (e) {
       console.error('Approve failed:', e);
     }
@@ -102,7 +102,16 @@ export default function BorrowSheet({
 
   const handleBorrow = async (collateralAmount: string, borrowAmount: string) => {
     try {
-      if (!address || !selectedMarket || !selectedNetwork) return;
+      if (!address || !selectedMarket || !selectedNetwork || !selectedBorrowToken) return;
+
+      if (chainId !== 8453) {
+        try {
+          await switchChain({ chainId: 8453 });
+        } catch (switchError) {
+          console.error('Failed to switch to Base chain:', switchError);
+          throw new Error('Please switch to Base network to supply collateral');
+        }
+      }
 
       const collateralAmt = (collateralAmount || '').replace(/,/g, '');
       const collateralNum = parseFloat(collateralAmt);
@@ -112,56 +121,116 @@ export default function BorrowSheet({
       const borrowNum = parseFloat(borrowAmt);
       if (!borrowAmt || Number.isNaN(borrowNum) || borrowNum <= 0) return;
 
+      const tokenPool = SUPPORTED_BORROWING_POOLS[selectedBorrowToken.id as keyof typeof SUPPORTED_BORROWING_POOLS];
+      if (!tokenPool) {
+        console.error('Token pool not found for:', selectedBorrowToken.id);
+        return;
+      }
+
+      const tokenNetwork = tokenPool.networks.find(net => net.chainId === selectedNetwork.chainId);
+      if (!tokenNetwork) {
+        console.error('Token network not found for chainId:', selectedNetwork.chainId);
+        return;
+      }
+
       const collateralDecimals = selectedMarket.networks[0].decimals ?? 18;
-      const borrowDecimals = selectedNetwork.decimals ?? 6;
+      const borrowDecimals = tokenNetwork.decimals ?? 6;
       const collateralValue = parseUnitsString(collateralAmt, collateralDecimals);
-      const borrowValue = parseUnitsString(borrowAmt, borrowDecimals);
 
-      const proxy = (() => {
-        if (selectedNetwork.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
-        if (selectedNetwork.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
-        return undefined;
-      })();
+      let borrowValue: string;
+      if (selectedNetwork.chainId === 8453) {
+        borrowValue = parseUnitsString(borrowAmt, borrowDecimals);
+      } else {
+        try {
+          const getFeeContract = CONTRACTS.base.GetFee as `0x${string}`;
+          const feeAmount = await readContract(config, {
+            abi: GetFeeAbi as any,
+            address: getFeeContract,
+            chainId: 8453,
+            functionName: 'getFee',
+            args: [
+              address,
+              tokenNetwork.address as `0x${string}`,
+              selectedNetwork.chainId || 0,
+              parseUnitsString(borrowAmt, borrowDecimals),
+            ],
+          });
+          borrowValue = (feeAmount as { toString: () => string }).toString();
+        } catch (error) {
+          console.error('Failed to get cross-chain fee:', error);
+          throw new Error(`Failed to get cross-chain fee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
 
-      if (!proxy) return;
+      const baseProxy = CONTRACTS.base.Proxy as `0x${string}`;
+      if (!baseProxy) return;
 
       setIsBorrowing(true);
 
-      const collateralTokenAddress = selectedMarket.networks.find(net => net.id === selectedNetwork.id)?.address;
+      const collateralTokenAddress = selectedMarket.networks.find(net => net.chainId === 8453)?.address;
       if (!collateralTokenAddress) return;
 
       const supplyHash = await writeContract(config, {
         abi: BorrowingPoolAbi as any,
-        address: proxy,
-        chainId: selectedNetwork.chainId as any,
+        address: baseProxy,
+        chainId: 8453,
         functionName: 'supplyCollateral',
         args: [address, collateralTokenAddress as `0x${string}`, collateralValue],
       });
       await waitForTransactionReceipt(config, { hash: supplyHash });
 
+      const borrowProxy = (() => {
+        if (selectedNetwork.chainId === 8453) return CONTRACTS.base.Proxy as `0x${string}`;
+        if (selectedNetwork.chainId === 42161) return CONTRACTS.arbitrum.Proxy as `0x${string}`;
+        return undefined;
+      })();
+
+      if (!borrowProxy) {
+        console.error('No proxy contract found for chainId:', selectedNetwork.chainId);
+        throw new Error(`No proxy contract found for chainId: ${selectedNetwork.chainId}`);
+      }
+
+      if (selectedNetwork.chainId !== chainId) {
+        try {
+          await switchChain({ chainId: selectedNetwork.chainId! });
+        } catch (switchError) {
+          console.error('Failed to switch chain:', switchError);
+          throw new Error(`Please switch to ${selectedNetwork.name} network to complete the borrow transaction`);
+        }
+      }
+
       let borrowHash: `0x${string}`;
       try {
         borrowHash = await writeContract(config, {
           abi: BorrowingPoolAbi as any,
-          address: proxy,
+          address: borrowProxy,
           chainId: selectedNetwork.chainId as any,
           functionName: 'borrow',
-          args: [address, selectedNetwork.address as `0x${string}`, borrowValue, selectedNetwork.chainId || 0],
+          args: [address, tokenNetwork.address as `0x${string}`, borrowValue, selectedNetwork.chainId || 0],
         });
+
         await waitForTransactionReceipt(config, { hash: borrowHash });
       } catch (borrowError) {
         console.error('Borrow failed after supply success, attempting to withdraw collateral:', borrowError);
 
+        if (chainId !== 8453) {
+          try {
+            await switchChain({ chainId: 8453 });
+          } catch (switchError) {
+            console.error('Failed to switch back to Base chain:', switchError);
+            throw new Error('Borrow failed. Please manually switch to Base network to withdraw your collateral.');
+          }
+        }
+
         try {
           const withdrawHash = await writeContract(config, {
             abi: BorrowingPoolAbi as any,
-            address: proxy,
-            chainId: selectedNetwork.chainId as any,
+            address: baseProxy,
+            chainId: 8453,
             functionName: 'withdrawCollateral',
             args: [address, collateralTokenAddress as `0x${string}`, collateralValue],
           });
           await waitForTransactionReceipt(config, { hash: withdrawHash });
-          console.log('Successfully withdrew collateral after borrow failure');
         } catch (withdrawError) {
           console.error('Failed to withdraw collateral after borrow failure:', withdrawError);
           throw new Error(
@@ -174,7 +243,7 @@ export default function BorrowSheet({
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['tokenBalances', address, selectedMarket.id] }),
-        queryClient.invalidateQueries({ queryKey: ['allowances', address, proxy, selectedMarket.id] }),
+        queryClient.invalidateQueries({ queryKey: ['allowances', address, baseProxy, selectedMarket.id] }),
         queryClient.invalidateQueries({ queryKey: ['aggregatedBalances', address] }),
       ]);
 
@@ -186,10 +255,14 @@ export default function BorrowSheet({
     }
   };
 
+  const handleTokenSelect = (token: BorrowingTokenOption) => {
+    setSelectedBorrowToken(token);
+    setCurrentStep('network');
+  };
+
   const handleNetworkSelect = (network: BorrowingNetworkOption) => {
-    if (isAnimating) return;
-    setIsAnimating(true);
     setSelectedNetwork(network);
+    setCurrentStep('form');
   };
 
   const handleResultComplete = () => {
@@ -198,6 +271,7 @@ export default function BorrowSheet({
     }
     setCurrentStep('select');
     setSelectedNetwork(null);
+    setSelectedBorrowToken(null);
     setBorrowedAmount('');
     setTransactionInfo(undefined);
     onClose();
@@ -206,6 +280,7 @@ export default function BorrowSheet({
   const handleClose = () => {
     setCurrentStep('select');
     setSelectedNetwork(null);
+    setSelectedBorrowToken(null);
     setBorrowedAmount('');
     setTransactionInfo(undefined);
     resetApproving();
@@ -213,113 +288,83 @@ export default function BorrowSheet({
   };
 
   const handleBack = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setCurrentStep('select');
-    setSelectedNetwork(null);
-    resetApproving();
+    if (currentStep === 'form') setCurrentStep('network');
+    else if (currentStep === 'network') setCurrentStep('select');
+    else onClose();
   };
 
   const handleBorrowComplete = (amount: string, tx?: { hash?: `0x${string}`; success: boolean }) => {
     setBorrowedAmount(amount);
     setTransactionInfo(tx);
-
-    if (isAnimating) return;
-    setIsAnimating(true);
+    setCurrentStep('result');
   };
 
-  useGSAP(() => {
-    if (selectedNetwork && isAnimating && currentStep === 'select' && selectRef.current && formRef.current) {
-      const tl = gsap.timeline({
-        defaults: { duration: 0.3, ease: 'power2.inOut' },
-        onComplete: () => {
-          setCurrentStep('form');
-          setIsAnimating(false);
-
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
-          }
-        },
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth',
       });
-
-      tl.to(selectRef.current, { xPercent: -100, opacity: 0 }, 0).fromTo(
-        formRef.current,
-        { xPercent: 100, opacity: 0 },
-        { xPercent: 0, opacity: 1 },
-        0
-      );
     }
-  }, [selectedNetwork, isAnimating, currentStep]);
+  }, [currentStep]);
 
   useGSAP(() => {
-    if (isAnimating && currentStep === 'select' && !selectedNetwork && formRef.current && selectRef.current) {
-      const tl = gsap.timeline({
-        defaults: { duration: 0.3, ease: 'power2.inOut' },
-        onComplete: () => {
-          setIsAnimating(false);
+    if (!selectRef.current || !networkRef.current || !formRef.current || !resultRef.current) return;
 
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
-          }
-        },
-      });
-
-      tl.to(formRef.current, { xPercent: 100, opacity: 0 }, 0).fromTo(
-        selectRef.current,
-        { xPercent: -100, opacity: 0 },
-        { xPercent: 0, opacity: 1 },
-        0
-      );
-    }
-  }, [isAnimating, currentStep, selectedNetwork]);
+    const panels = [selectRef.current, networkRef.current, formRef.current, resultRef.current];
+    gsap.set(panels, { xPercent: 100, opacity: 0, visibility: 'hidden' });
+    gsap.set(selectRef.current, { xPercent: 0, opacity: 1, visibility: 'visible' });
+  }, []);
 
   useGSAP(() => {
-    if (
-      isAnimating &&
-      currentStep === 'form' &&
-      borrowedAmount &&
-      transactionInfo &&
-      formRef.current &&
-      resultRef.current
-    ) {
-      const tl = gsap.timeline({
-        defaults: { duration: 0.3, ease: 'power2.inOut' },
-        onComplete: () => {
-          setCurrentStep('result');
-          setIsAnimating(false);
+    const refs: Record<typeof currentStep, HTMLElement | null> = {
+      select: selectRef.current,
+      network: networkRef.current,
+      form: formRef.current,
+      result: resultRef.current,
+    };
 
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
-          }
-        },
-      });
+    const prevStepRef = (useGSAP as any)._prevStepRef ?? ((useGSAP as any)._prevStepRef = { current: currentStep });
+    const prevStep = prevStepRef.current;
+    prevStepRef.current = currentStep;
 
-      tl.to(formRef.current, { xPercent: -100, opacity: 0 }, 0).fromTo(
-        resultRef.current,
-        { xPercent: 100, opacity: 0, visibility: 'hidden' },
-        { xPercent: 0, opacity: 1, visibility: 'visible' },
-        0
-      );
-    }
-  }, [isAnimating, currentStep, borrowedAmount, transactionInfo]);
+    if (!prevStep || prevStep === currentStep) return;
 
-  useGSAP(() => {
-    if (isOpen && selectRef.current && formRef.current && resultRef.current) {
-      gsap.set(selectRef.current, { xPercent: 0, opacity: 1 });
-      gsap.set(formRef.current, { xPercent: 100, opacity: 0 });
-      gsap.set(resultRef.current, {
-        xPercent: 100,
-        opacity: 0,
-        visibility: 'hidden',
-      });
-      setCurrentStep('select');
-      setSelectedNetwork(null);
-      setBorrowedAmount('');
-      setTransactionInfo(undefined);
-      setIsAnimating(false);
-      resetApproving();
-    }
-  }, [isOpen]);
+    const fromRef = refs[prevStep as keyof typeof refs];
+    const toRef = refs[currentStep as keyof typeof refs];
+    if (!fromRef || !toRef) return;
+
+    const direction =
+      (prevStep === 'select' && currentStep === 'network') ||
+      (prevStep === 'network' && currentStep === 'form') ||
+      (prevStep === 'form' && currentStep === 'result')
+        ? 'next'
+        : 'back';
+
+    const xOut = direction === 'next' ? -100 : 100;
+    const xIn = direction === 'next' ? 100 : -100;
+
+    const tl = gsap.timeline({
+      defaults: { duration: 0.35, ease: 'power2.inOut' },
+      onStart: () => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      },
+      onComplete: () => {
+        if (contentRef.current) {
+          contentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      },
+    });
+
+    tl.to(fromRef, { xPercent: xOut, opacity: 0, visibility: 'hidden' }, 0).fromTo(
+      toRef,
+      { xPercent: xIn, opacity: 0, visibility: 'hidden' },
+      { xPercent: 0, opacity: 1, visibility: 'visible' },
+      0
+    );
+  }, [currentStep]);
 
   return (
     <BottomSheet
@@ -341,12 +386,29 @@ export default function BorrowSheet({
           }}
         >
           {selectedMarket && (
-            <SelectCoin
+            <TokenSelection
+              tokens={borrowingTokens}
+              selectedToken={selectedBorrowToken}
+              onTokenSelect={handleTokenSelect}
+              onBack={handleBack}
+            />
+          )}
+        </div>
+
+        <div
+          ref={networkRef}
+          className="absolute inset-0 w-full"
+          style={{
+            zIndex: currentStep === 'network' ? 25 : 1,
+            visibility: currentStep === 'network' ? 'visible' : 'hidden',
+          }}
+        >
+          {selectedMarket && selectedBorrowToken && (
+            <NetworkSelector
               market={selectedMarket}
-              onSelect={handleNetworkSelect}
-              balance={aggregatedBalance.toString()}
-              borrowingTokens={borrowingTokens}
-              selectedMarketId={selectedMarket.id}
+              selectedBorrowToken={selectedBorrowToken}
+              onNetworkSelect={handleNetworkSelect}
+              onBack={handleBack}
             />
           )}
         </div>
@@ -362,6 +424,7 @@ export default function BorrowSheet({
           <BorrowForm
             selectedMarket={selectedMarket}
             selectedNetwork={selectedNetwork}
+            selectedBorrowToken={selectedBorrowToken}
             onBack={handleBack}
             onBorrow={handleBorrow}
             onApprove={handleApprove}

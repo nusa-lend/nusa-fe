@@ -1,9 +1,6 @@
 'use client';
 
-import { useAccount } from 'wagmi';
-import { Wallet } from 'lucide-react';
-import { useTokenBalances } from '@/hooks/useUserBalances';
-import TokenNetworkPair from '@/components/ui/miniapp/TokenNetworkPair';
+import TokenPair from '@/components/ui/miniapp/TokenPair';
 import type { LendingMarket, LendingNetworkOption } from '@/types/lending';
 
 interface NetworkSelectorProps {
@@ -12,9 +9,6 @@ interface NetworkSelectorProps {
 }
 
 export default function NetworkSelector({ market, onNetworkSelect }: NetworkSelectorProps) {
-  const { address } = useAccount();
-  const { data: balances } = useTokenBalances({ userAddress: address, market });
-
   const handleNetworkSelect = (network: LendingNetworkOption) => {
     onNetworkSelect(network);
   };
@@ -46,12 +40,7 @@ export default function NetworkSelector({ market, onNetworkSelect }: NetworkSele
           >
             <div className="flex flex-col">
               <div className="flex items-center space-x-3">
-                <TokenNetworkPair
-                  tokenLogo={market.tokenLogo}
-                  networkLogo={network.networkLogo}
-                  size={30}
-                  overlap={25}
-                />
+                <TokenPair tokenLogo={market.tokenLogo} networkLogo={network.networkLogo} size={30} overlap={25} />
                 <div className="text-left">
                   <div className="font-medium text-gray-900">
                     <div className="text-gray-900">{market.tokenSymbol}</div>

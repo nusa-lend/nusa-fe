@@ -201,7 +201,7 @@ const processPositionsData = (positions: PonderPosition[]) => {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const account = searchParams.get('account');
-  
+
   if (!account) {
     return NextResponse.json(
       { error: 'Missing account' },

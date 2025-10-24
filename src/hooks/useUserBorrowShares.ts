@@ -5,10 +5,7 @@ import { config } from '@/lib/wagmi';
 import { CONTRACTS } from '@/constants/contractsConstants';
 import LendingPoolAbi from '@/abis/LendingPool.json';
 
-export const useUserBorrowShares = (
-  tokenAddress: string,
-  chainId: number
-) => {
+export const useUserBorrowShares = (tokenAddress: string, chainId: number) => {
   const { address } = useAccount();
 
   return useQuery({
