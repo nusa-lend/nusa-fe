@@ -1,0 +1,21 @@
+{
+  "name": "Nusa",
+  "short_name": "Nusa",
+  "description": "Nusa is a local stablecoin lending hub.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#F8FAFC",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "lending", "borrowing"],
+  "lang": "en",
+  "dir": "ltr"
+}
