@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { APP_NAME, APP_DESCRIPTION, APP_URL, APP_OG_IMAGE_URL, APP_ICON_URL } from '@/constants/appConstants';
+import { getFarcasterEmbedMetaTags } from '@/lib/utils';
 import Providers from '@/components/providers/Providers';
 import './globals.css';
 
@@ -110,6 +111,7 @@ export const metadata: Metadata = {
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
     'apple-mobile-web-app-title': APP_NAME,
+    ...getFarcasterEmbedMetaTags(),
   },
 };
 

@@ -27,25 +27,28 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getMiniAppEmbedMetadata(ogImageUrl?: string) {
   return {
-    version: 'next',
+    version: '1',
     imageUrl: ogImageUrl ?? APP_OG_IMAGE_URL,
-    ogTitle: APP_NAME,
-    ogDescription: APP_DESCRIPTION,
-    ogImageUrl: ogImageUrl ?? APP_OG_IMAGE_URL,
     button: {
       title: APP_BUTTON_TEXT,
       action: {
-        type: 'launch_frame',
+        type: 'launch_miniapp',
         name: APP_NAME,
         url: APP_URL,
         splashImageUrl: APP_SPLASH_URL,
-        iconUrl: APP_ICON_URL,
         splashBackgroundColor: APP_SPLASH_BACKGROUND_COLOR,
-        description: APP_DESCRIPTION,
-        primaryCategory: APP_PRIMARY_CATEGORY,
-        tags: APP_TAGS,
       },
     },
+  };
+}
+
+export function getFarcasterEmbedMetaTags(ogImageUrl?: string) {
+  const embedData = getMiniAppEmbedMetadata(ogImageUrl);
+  const embedJson = JSON.stringify(embedData);
+  
+  return {
+    'fc:miniapp': embedJson,
+    'fc:frame': embedJson, // For backward compatibility
   };
 }
 
