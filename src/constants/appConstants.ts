@@ -18,7 +18,7 @@ export const APP_SCREENSHOT_URLS = [`${APP_URL}/screenshot.png`];
 export const APP_CAST_SHARE_URL = `${APP_URL}/share`;
 
 export const APP_ACCOUNT_ASSOCIATION = {
-  header: 'BASE64URL_HEADER',
-  payload: 'BASE64URL_PAYLOAD',
-  signature: 'BASE64URL_SIGNATURE',
+  header: process.env.NEXT_PUBLIC_ACCOUNT_ASSOCIATION_HEADER!,
+  payload: process.env.NEXT_PUBLIC_ACCOUNT_ASSOCIATION_PAYLOAD!,
+  signature: process.env.NEXT_PUBLIC_ACCOUNT_ASSOCIATION_SIGNATURE!,
 };
