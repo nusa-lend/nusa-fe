@@ -45,6 +45,7 @@ export default function BorrowSheet({
   const [borrowedAmount, setBorrowedAmount] = useState<string>('');
   const [isBorrowing, setIsBorrowing] = useState(false);
   const [transactionInfo, setTransactionInfo] = useState<{ hash?: `0x${string}`; success: boolean } | undefined>();
+  const previousChainIdRef = useRef<number | null>(null);
   const sheetHeight = currentStep === 'result' ? '65vh' : '100vh';
 
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -100,9 +101,21 @@ export default function BorrowSheet({
     }
   };
 
+  const switchBackToPreviousNetwork = async () => {
+    try {
+      if (previousChainIdRef.current) {
+        await switchChain({ chainId: previousChainIdRef.current });
+      }
+    } catch (error) {
+      console.error('Failed to switch back to previous network:', error);
+    }
+  };
+
   const handleBorrow = async (collateralAmount: string, borrowAmount: string) => {
     try {
       if (!address || !selectedMarket || !selectedNetwork || !selectedBorrowToken) return;
+
+      previousChainIdRef.current = chainId || null;
 
       if (chainId !== 8453) {
         try {
@@ -143,6 +156,8 @@ export default function BorrowSheet({
       } else {
         try {
           const getFeeContract = CONTRACTS.base.GetFee as `0x${string}`;
+          const parsedAmount = parseUnitsString(borrowAmt, borrowDecimals);
+          
           const feeAmount = await readContract(config, {
             abi: GetFeeAbi as any,
             address: getFeeContract,
@@ -152,10 +167,20 @@ export default function BorrowSheet({
               address,
               tokenNetwork.address as `0x${string}`,
               selectedNetwork.chainId || 0,
-              parseUnitsString(borrowAmt, borrowDecimals),
+              parsedAmount,
             ],
           });
-          borrowValue = (feeAmount as { toString: () => string }).toString();
+          
+          const feeResult = (feeAmount as { toString: () => string }).toString();
+          
+          const originalAmount = BigInt(parsedAmount);
+          const feeAmountBigInt = BigInt(feeResult);
+          
+          if (feeAmountBigInt < originalAmount / BigInt(100)) {
+            borrowValue = parsedAmount;
+          } else {
+            borrowValue = feeResult;
+          }
         } catch (error) {
           console.error('Failed to get cross-chain fee:', error);
           throw new Error(`Failed to get cross-chain fee: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -248,8 +273,14 @@ export default function BorrowSheet({
       ]);
 
       handleBorrowComplete(borrowAmount, { hash: borrowHash, success: true });
+      setTimeout(async () => {
+        await switchBackToPreviousNetwork();
+      }, 2000);
     } catch (e) {
       handleBorrowComplete(borrowAmount, { success: false });
+      setTimeout(async () => {
+        await switchBackToPreviousNetwork();
+      }, 2000);
     } finally {
       setIsBorrowing(false);
     }
@@ -283,6 +314,7 @@ export default function BorrowSheet({
     setSelectedBorrowToken(null);
     setBorrowedAmount('');
     setTransactionInfo(undefined);
+    previousChainIdRef.current = null;
     resetApproving();
     onClose();
   };
@@ -447,6 +479,7 @@ export default function BorrowSheet({
           <TransactionResult
             selectedMarket={selectedMarket}
             selectedNetwork={selectedNetwork}
+            selectedBorrowToken={selectedBorrowToken}
             amount={borrowedAmount}
             transaction={transactionInfo}
             onComplete={handleResultComplete}

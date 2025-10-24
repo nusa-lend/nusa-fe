@@ -10,6 +10,7 @@ import { getNetworkById } from '@/constants/networkConstants';
 interface TransactionResultProps {
   selectedMarket: BorrowingMarket | null;
   selectedNetwork: BorrowingNetworkOption | null;
+  selectedBorrowToken?: any;
   amount?: string;
   transaction?: { hash?: `0x${string}`; success: boolean };
   onComplete: () => void;
@@ -18,6 +19,7 @@ interface TransactionResultProps {
 export default function TransactionResult({
   selectedMarket,
   selectedNetwork,
+  selectedBorrowToken,
   amount,
   transaction,
   onComplete,
@@ -87,10 +89,10 @@ export default function TransactionResult({
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <h2 className="text-md font-semibold text-gray-900">
-              Borrow {selectedMarket.token.symbol} on {selectedNetwork.name}
+              Borrow {selectedBorrowToken?.name || selectedMarket.token.symbol} on {selectedNetwork.name}
             </h2>
             <TokenPair
-              tokenLogo={selectedMarket.token.logo}
+              tokenLogo={selectedBorrowToken?.icon || selectedMarket.token.logo}
               networkLogo={selectedNetwork.networkLogo}
               size={24}
               overlap={25}
@@ -140,7 +142,7 @@ export default function TransactionResult({
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Amount</span>
           <span className="text-sm font-semibold text-gray-900">
-            {selectedMarket.token.symbol} {transactionData.amount}
+            {selectedBorrowToken?.name || selectedMarket.token.symbol} {transactionData.amount}
           </span>
         </div>
 
@@ -151,7 +153,7 @@ export default function TransactionResult({
               <span className="text-gray-400 text-xs font-bold">i</span>
             </div>
           </div>
-          <span className="text-sm font-semibold text-green-600">~{transactionData.apr}%</span>
+          <span className="text-sm font-semibold text-green-600">{transactionData.apr}</span>
         </div>
       </div>
 

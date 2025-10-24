@@ -79,14 +79,20 @@ export const formatBorrowingMarkets = async (
 };
 
 export const parseUnitsString = (value: string, decimals: number): string => {
-  const num = parseFloat(value);
-  if (Number.isNaN(num) || num === 0) return '0';
-
-  const [integerPart, decimalPart = ''] = value.split('.');
-  const paddedDecimal = decimalPart.padEnd(decimals, '0').slice(0, decimals);
-  const fullNumber = integerPart + paddedDecimal;
-
-  return fullNumber;
+  const clean = (value || '').replace(/,/g, '').trim();
+  if (!clean) return '0';
+  const neg = clean.startsWith('-');
+  const s = neg ? clean.slice(1) : clean;
+  const parts = s.split('.');
+  const whole = parts[0] || '0';
+  const frac = (parts[1] || '').slice(0, decimals).padEnd(decimals, '0');
+  const digits = whole + frac;
+  let acc = BigInt(0);
+  for (let i = 0; i < digits.length; i++) {
+    const code = digits.charCodeAt(i) - 48;
+    acc = acc * BigInt(10) + BigInt(code < 0 ? 0 : code);
+  }
+  return (neg ? -acc : acc).toString();
 };
 
 export async function formatBorrowingTokens(

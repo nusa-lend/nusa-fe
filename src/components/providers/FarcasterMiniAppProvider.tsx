@@ -18,7 +18,6 @@ export default function FarcasterMiniAppProvider({ children }: { children: React
 
         if (isMiniApp) {
           await sdk.actions.ready();
-          console.log('Mini App ready - splash screen hidden');
         }
       } catch (error) {
         console.error('Error initializing Mini App:', error);
