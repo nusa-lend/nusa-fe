@@ -14,6 +14,11 @@ import {
   APP_TAGS,
   APP_WEBHOOK_URL,
   APP_ACCOUNT_ASSOCIATION,
+  APP_SUBTITLE,
+  APP_TAGLINE,
+  APP_HERO_IMAGE_URL,
+  APP_SCREENSHOT_URLS,
+  APP_CAST_SHARE_URL,
 } from '@/constants/appConstants';
 
 export function cn(...inputs: ClassValue[]) {
@@ -57,6 +62,17 @@ export async function getFarcasterDomainManifest(): Promise<Manifest> {
       splashImageUrl: APP_SPLASH_URL,
       splashBackgroundColor: APP_SPLASH_BACKGROUND_COLOR,
       webhookUrl: APP_WEBHOOK_URL,
-    },
+      subtitle: APP_SUBTITLE,
+      description: APP_DESCRIPTION,
+      screenshotUrls: APP_SCREENSHOT_URLS,
+      primaryCategory: APP_PRIMARY_CATEGORY,
+      tags: APP_TAGS,
+      heroImageUrl: APP_HERO_IMAGE_URL,
+      tagline: APP_TAGLINE,
+      ogTitle: APP_NAME,
+      ogDescription: APP_DESCRIPTION,
+      ogImageUrl: APP_OG_IMAGE_URL,
+      castShareUrl: APP_CAST_SHARE_URL,
+    } as any,
   };
 }
